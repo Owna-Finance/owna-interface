@@ -128,7 +128,7 @@ export interface CTASectionProps {
   title: string
   description: string
   primaryCTA: CTAButton
-  secondaryCTA: CTAButton
+  secondaryCTA?: CTAButton
   urgency?: {
     text: string
     emphasized: boolean
@@ -217,34 +217,11 @@ export interface LandingPageContent {
     steps: ProcessStep[]
   }
   
-  benefits: {
-    title: string
-    subtitle?: string
-    description?: string
-    features: FeatureItem[]
-  }
-  
-  socialProof: {
-    title: string
-    statistics: Array<{
-      id: string
-      value: string
-      label: string
-      description?: string
-    }>
-    trustIndicators: Array<{
-      id: string
-      icon: LucideIcon
-      title: string
-      description: string
-    }>
-  }
-  
   finalCTA: {
     title: string
     description: string
     primaryCTA: Omit<CTAButton, 'onClick'>
-    secondaryCTA: Omit<CTAButton, 'onClick'>
+    secondaryCTA?: Omit<CTAButton, 'onClick'>
     urgency?: {
       text: string
       emphasized: boolean

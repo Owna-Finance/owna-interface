@@ -65,22 +65,24 @@ export function CTASection({
             </a>
           </Button>
           
-          <Button
-            asChild
-            variant="ghost"
-            size="lg"
-            className="text-white hover:bg-white/10 px-12 py-4 text-lg font-medium min-w-[240px] rounded-none border border-white/30 btn-minimal"
-            disabled={secondaryCTA.disabled}
-          >
-            <a
-              href={secondaryCTA.href}
-              onClick={() => handleCTAClick(secondaryCTA, 'final-secondary')}
-              aria-busy={secondaryCTA.loading}
-              aria-disabled={secondaryCTA.disabled}
+          {secondaryCTA && (
+            <Button
+              asChild
+              variant="ghost"
+              size="lg"
+              className="text-white hover:bg-white/10 px-12 py-4 text-lg font-medium min-w-[240px] rounded-none border border-white/30 btn-minimal"
+              disabled={secondaryCTA.disabled}
             >
-              {secondaryCTA.loading ? 'Loading...' : secondaryCTA.text}
-            </a>
-          </Button>
+              <a
+                href={secondaryCTA.href}
+                onClick={() => handleCTAClick(secondaryCTA, 'final-secondary')}
+                aria-busy={secondaryCTA.loading}
+                aria-disabled={secondaryCTA.disabled}
+              >
+                {secondaryCTA.loading ? 'Loading...' : secondaryCTA.text}
+              </a>
+            </Button>
+          )}
         </div>
       </div>
     </SectionContainer>

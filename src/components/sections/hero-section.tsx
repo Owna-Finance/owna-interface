@@ -54,20 +54,12 @@ export function HeroSection({
 
   const navItems = [
     {
-      name: "Invest",
-      link: "#invest",
-    },
-    {
-      name: "About",
-      link: "#about",
+      name: "Mission",
+      link: "#value-proposition",
     },
     {
       name: "How it Works",
       link: "#how-it-works",
-    },
-    {
-      name: "Contact",
-      link: "#contact",
     },
   ]
 
@@ -75,6 +67,19 @@ export function HeroSection({
     trackCTAClick(ctaId, cta.text, cta.href)
     if (cta.onClick) {
       cta.onClick()
+    }
+  }
+
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, link: string) => {
+    e.preventDefault()
+    const targetId = link.substring(1) // Remove the # from the link
+    const targetElement = document.getElementById(targetId)
+    
+    if (targetElement) {
+      targetElement.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      })
     }
   }
 
@@ -118,7 +123,8 @@ export function HeroSection({
               <a
                 key={`nav-link-${idx}`}
                 href={item.link}
-                className="text-white/80 hover:text-white transition-colors duration-200 font-medium"
+                onClick={(e) => handleNavClick(e, item.link)}
+                className="text-white/80 hover:text-white transition-colors duration-200 font-medium cursor-pointer"
               >
                 {item.name}
               </a>
@@ -161,8 +167,11 @@ export function HeroSection({
                 <a
                   key={`mobile-nav-link-${idx}`}
                   href={item.link}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="text-white/80 hover:text-white transition-colors duration-200 font-medium"
+                  onClick={(e) => {
+                    handleNavClick(e, item.link)
+                    setIsMobileMenuOpen(false)
+                  }}
+                  className="text-white/80 hover:text-white transition-colors duration-200 font-medium cursor-pointer"
                 >
                   {item.name}
                 </a>

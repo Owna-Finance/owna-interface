@@ -36,7 +36,7 @@ export function ValueProposition({
             {/* Current Challenge Card */}
             <WobbleCard containerClassName="bg-black border border-white/10 h-[320px] lg:h-[360px]">
               <div className="relative z-10">
-                <div className="w-12 h-1 bg-cyan-400 mb-6"></div>
+                <div className="w-12 h-1 bg-white mb-6"></div>
                 <h3 className="text-2xl font-light text-white mb-6">Current Challenge</h3>
                 <p className="text-white/80 leading-relaxed font-light text-base">
                   {problemStatement}
@@ -61,7 +61,7 @@ export function ValueProposition({
             {/* Key Advantage Card - Full Width */}
             <WobbleCard containerClassName="bg-black border border-cyan-400/20 h-[280px] lg:h-[320px]">
               <div className="relative z-10">
-                <div className="w-12 h-1 bg-cyan-400 mb-8"></div>
+                <div className="w-12 h-1 bg-white mb-8"></div>
                 <h3 className="text-3xl font-light text-white mb-8">Key Advantage</h3>
                 <p className="text-white/90 leading-relaxed font-light text-lg max-w-5xl">
                   {keyDifferentiator}
