@@ -7,6 +7,7 @@ import { usePortfolioStore } from '@/stores/portfolio-store';
 import { formatCurrency, formatPercentage, getTokenById } from '@/lib/utils';
 import { RefreshCw, Info, ChevronDown, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState('portfolio');
@@ -56,10 +57,7 @@ export default function DashboardPage() {
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
           <div className="flex items-center space-x-3">
-            <div className="flex items-center space-x-2 text-sm text-gray-600">
-              <span>0xe...179</span>
-              <ChevronDown className="w-4 h-4" />
-            </div>
+            <ConnectButton />
           </div>
         </div>
 

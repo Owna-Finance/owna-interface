@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Kantumruy_Pro } from "next/font/google";
+import { OnchainProviders } from "@/providers/onchainkit-provider";
 import "./globals.css";
 
 const kantumruyPro = Kantumruy_Pro({
@@ -79,7 +80,9 @@ export default function RootLayout({
       <body
         className={`${kantumruyPro.variable} antialiased`}
       >
-        {children}
+        <OnchainProviders>
+          {children}
+        </OnchainProviders>
       </body>
     </html>
   );

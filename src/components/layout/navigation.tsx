@@ -4,13 +4,12 @@ import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Image from 'next/image';
+import { WalletComponents } from '@/components/wallet/connect-wallet';
 import { 
   LayoutDashboard, 
   ArrowRightLeft, 
   TrendingUp, 
-  Droplets, 
-  DollarSign, 
-  Vote 
+  DollarSign
 } from 'lucide-react';
 
 interface NavigationProps {
@@ -34,19 +33,9 @@ const navigationItems = [
     icon: TrendingUp
   },
   {
-    name: 'Pool',
-    href: '/pool',
-    icon: Droplets
-  },
-  {
     name: 'Cashflow',
     href: '/cashflow',
     icon: DollarSign
-  },
-  {
-    name: 'Governance',
-    href: '/governance',
-    icon: Vote
   }
 ];
 
@@ -62,7 +51,7 @@ export function Navigation({ className }: NavigationProps) {
             alt="Owna Logo"
             width={32}
             height={32}
-            className="rounded-lg"
+            className="rounded-lg bg-black"
           />
           <span className="text-xl font-bold text-gray-900">Owna</span>
         </div>
@@ -90,6 +79,7 @@ export function Navigation({ className }: NavigationProps) {
           );
         })}
       </div>
+
 
       <div className="absolute bottom-6">
         <div className="text-xs text-gray-400">

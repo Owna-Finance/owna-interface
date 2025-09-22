@@ -6,15 +6,14 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
+import { WalletComponents } from '@/components/wallet/connect-wallet';
 import { 
   Menu, 
   X,
   LayoutDashboard, 
   ArrowRightLeft, 
   TrendingUp, 
-  Droplets, 
-  DollarSign, 
-  Vote 
+  DollarSign
 } from 'lucide-react';
 
 interface MobileNavProps {
@@ -38,19 +37,9 @@ const navigationItems = [
     icon: TrendingUp
   },
   {
-    name: 'Pool',
-    href: '/pool',
-    icon: Droplets
-  },
-  {
     name: 'Cashflow',
     href: '/cashflow',
     icon: DollarSign
-  },
-  {
-    name: 'Governance',
-    href: '/governance',
-    icon: Vote
   }
 ];
 
@@ -77,14 +66,17 @@ export function MobileNav({ className }: MobileNavProps) {
             <span className="text-xl font-bold text-gray-900">Owna</span>
           </div>
           
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={toggleMenu}
-            className="text-gray-900"
-          >
-            {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </Button>
+          {/* <div className="flex items-center space-x-3">
+            <WalletComponents />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleMenu}
+              className="text-gray-900"
+            >
+              {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </Button>
+          </div> */}
         </div>
       </header>
 

@@ -12,6 +12,7 @@
 dashboard-feature
 specs
 CLAUDE.md
+.env.local
 
 # testing
 /coverage

@@ -1,11 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/dashboard-layout';
-import { MOCK_LENDING_MARKETS, formatCurrency, formatPercentage } from '@/data/mock-data';
+import { MOCK_LENDING_MARKETS, formatCurrency } from '@/data/mock-data';
 import { Button } from '@/components/ui/button';
-import { ChevronDown, Info, Eye, EyeOff } from 'lucide-react';
-import Image from 'next/image';
+import { ChevronDown, Info, Eye, EyeOff, CheckCircle, XCircle } from 'lucide-react';
 
 export default function MarketPage() {
   const [activeTab, setActiveTab] = useState('supply');
@@ -170,10 +169,20 @@ export default function MarketPage() {
                       <ChevronDown className="w-3 h-3" />
                     </div>
                   </th>
+                  <th className="text-center p-4 text-sm font-medium text-gray-600">
+                    <div className="flex items-center justify-center space-x-1">
+                      <span>Collateral asset</span>
+                    </div>
+                  </th>
+                  <th className="text-center p-4 text-sm font-medium text-gray-600">
+                    <div className="flex items-center justify-center space-x-1">
+                      <span>Borrow asset</span>
+                    </div>
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                {userPositions.map((position, index) => (
+                {userPositions.map((position) => (
                   <tr 
                     key={position.tokenId}
                     className="border-b border-gray-50 hover:bg-gray-50 cursor-pointer"
@@ -227,6 +236,19 @@ export default function MarketPage() {
                     </td>
                     <td className="p-4 text-right">
                       <div className="text-sm font-medium text-gray-500">-</div>
+                    </td>
+                    <td className="p-4 text-center">
+                      <div className="flex justify-center">
+                        <CheckCircle className="w-5 h-5 text-green-500" />
+                      </div>
+                    </td>
+                    <td className="p-4 text-center">
+                      <div className="flex justify-center">
+                        {position.tokenId === 'yrt-usdc' || position.tokenId === 'yrt-usdt' || position.tokenId === 'yrt-base' ? 
+                          <CheckCircle className="w-5 h-5 text-green-500" /> : 
+                          <XCircle className="w-5 h-5 text-red-500" />
+                        }
+                      </div>
                     </td>
                   </tr>
                 ))}
