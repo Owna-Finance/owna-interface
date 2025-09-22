@@ -7,7 +7,7 @@ import Image from 'next/image'
 export function BaseSection() {
   const words = [
     {
-      text: "Build",
+      text: "Built",
       className: "text-white",
     },
     {
@@ -41,7 +41,7 @@ export function BaseSection() {
         
         <div className="mt-8 space-y-4 max-w-4xl">
           <p className="text-2xl sm:text-3xl md:text-2xl lg:text-4xl font-medium text-white">
-            We will make <span className="text-blue-500">Base</span> the center of the <span className="text-blue-500">onchain</span> economy with highly liquid, always-on, global capital markets.
+            We will make <span className="text-blue-500">Base</span> the center of the <span className="text-blue-500">RWA</span> where tokenized assets fuel liquid, borderless, global markets.
           </p>
         </div>
         
