@@ -54,12 +54,16 @@ export function HeroSection({
 
   const navItems = [
     {
-      name: "Mission",
+      name: "Solution",
       link: "#value-proposition",
     },
     {
       name: "How it Works",
       link: "#how-it-works",
+    },
+    {
+      name: "Mission",
+      link: "#built-on-base",
     },
   ]
 
