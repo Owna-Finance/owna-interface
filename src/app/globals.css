@@ -217,6 +217,47 @@
     border: 1px solid rgba(255, 255, 255, 0.3);
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
   }
+
+  /* Dashboard Specific Styles */
+  .dashboard-sidebar {
+    @apply bg-white dark:bg-black border-r border-gray-200 dark:border-gray-800;
+    backdrop-filter: blur(8px);
+  }
+  
+  .dashboard-card {
+    @apply bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-lg shadow-sm;
+    transition: all 0.2s ease-in-out;
+  }
+  
+  .dashboard-card:hover {
+    @apply shadow-md border-gray-300 dark:border-gray-700;
+  }
+  
+  .metric-positive {
+    @apply text-green-600 dark:text-green-400;
+  }
+  
+  .metric-negative {
+    @apply text-red-600 dark:text-red-400;
+  }
+  
+  .metric-neutral {
+    @apply text-gray-600 dark:text-gray-400;
+  }
+  
+  /* Dashboard Tables */
+  .dashboard-table {
+    @apply w-full border-collapse;
+  }
+  
+  .dashboard-table th,
+  .dashboard-table td {
+    @apply px-4 py-3 text-left border-b border-gray-100 dark:border-gray-800;
+  }
+  
+  .dashboard-table th {
+    @apply font-medium text-gray-600 dark:text-gray-400 text-sm;
+  }
 }
 
 @layer utilities {
