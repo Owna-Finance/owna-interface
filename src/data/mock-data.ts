@@ -62,6 +62,62 @@ export const MOCK_TOKENS: Token[] = [
     marketCap: 5200000000,
     type: 'stablecoin'
   },
+  // Yield-bearing tokens (yrt)
+  {
+    id: 'yrt-btc',
+    symbol: 'yrtBTC',
+    name: 'Yield BTC',
+    decimals: 8,
+    logoUrl: '/tokens/btc.svg',
+    price: 43150.20,
+    priceChange24h: -1.15,
+    marketCap: 420000000,
+    type: 'crypto'
+  },
+  {
+    id: 'yrt-eth',
+    symbol: 'yrtETH',
+    name: 'Yield ETH',
+    decimals: 18,
+    logoUrl: '/tokens/eth.svg',
+    price: 2040.85,
+    priceChange24h: 2.12,
+    marketCap: 156000000,
+    type: 'crypto'
+  },
+  {
+    id: 'yrt-usdt',
+    symbol: 'yrtUSDT',
+    name: 'Yield USDT',
+    decimals: 6,
+    logoUrl: '/tokens/usdt.svg',
+    price: 1.002,
+    priceChange24h: 0.02,
+    marketCap: 85000000,
+    type: 'stablecoin'
+  },
+  {
+    id: 'yrt-usdc',
+    symbol: 'yrtUSDC',
+    name: 'Yield USDC',
+    decimals: 6,
+    logoUrl: '/tokens/usdc.svg',
+    price: 1.001,
+    priceChange24h: 0.01,
+    marketCap: 92000000,
+    type: 'stablecoin'
+  },
+  {
+    id: 'yrt-base',
+    symbol: 'yrtBase',
+    name: 'Yield Base',
+    decimals: 18,
+    logoUrl: '/Images/Logo/base-logo.png',
+    price: 1.85,
+    priceChange24h: 1.23,
+    marketCap: 12000000,
+    type: 'crypto'
+  },
   {
     id: 'hotel-rwa-1',
     symbol: 'HRTL1',
@@ -156,6 +212,62 @@ export const MOCK_LENDING_MARKETS: LendingMarket[] = [
     utilizationRate: 70,
     liquidityAvailable: 2670000,
     minimumAmount: 100
+  },
+  // Yield-bearing tokens for market
+  {
+    tokenId: 'yrt-btc',
+    token: MOCK_TOKENS.find(t => t.id === 'yrt-btc')!,
+    supplyAPY: 5.85,
+    borrowAPY: 8.45,
+    totalSupplied: 2500000,
+    totalBorrowed: 1750000,
+    utilizationRate: 70,
+    liquidityAvailable: 750000,
+    minimumAmount: 0.001
+  },
+  {
+    tokenId: 'yrt-eth',
+    token: MOCK_TOKENS.find(t => t.id === 'yrt-eth')!,
+    supplyAPY: 4.89,
+    borrowAPY: 7.65,
+    totalSupplied: 8500000,
+    totalBorrowed: 5950000,
+    utilizationRate: 70,
+    liquidityAvailable: 2550000,
+    minimumAmount: 0.01
+  },
+  {
+    tokenId: 'yrt-usdt',
+    token: MOCK_TOKENS.find(t => t.id === 'yrt-usdt')!,
+    supplyAPY: 4.65,
+    borrowAPY: 6.95,
+    totalSupplied: 6250000,
+    totalBorrowed: 4375000,
+    utilizationRate: 70,
+    liquidityAvailable: 1875000,
+    minimumAmount: 100
+  },
+  {
+    tokenId: 'yrt-usdc',
+    token: MOCK_TOKENS.find(t => t.id === 'yrt-usdc')!,
+    supplyAPY: 4.58,
+    borrowAPY: 6.85,
+    totalSupplied: 7800000,
+    totalBorrowed: 5460000,
+    utilizationRate: 70,
+    liquidityAvailable: 2340000,
+    minimumAmount: 100
+  },
+  {
+    tokenId: 'yrt-base',
+    token: MOCK_TOKENS.find(t => t.id === 'yrt-base')!,
+    supplyAPY: 6.25,
+    borrowAPY: 9.15,
+    totalSupplied: 1200000,
+    totalBorrowed: 840000,
+    utilizationRate: 70,
+    liquidityAvailable: 360000,
+    minimumAmount: 10
   }
 ];
 
