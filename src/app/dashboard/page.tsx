@@ -219,7 +219,7 @@ export default function DashboardPage() {
               onClick={() => setActiveTab('portfolio')}
               className={`px-6 py-3 rounded-xl font-medium text-sm transition-all duration-300 relative ${
                 activeTab === 'portfolio'
-                  ? 'bg-white text-gray-900 shadow-[0_0_20px_rgba(255,255,255,0.3)] border border-gray-200'
+                  ? 'text-white'
                   : 'text-gray-400 hover:text-white hover:bg-[#2A2A2A]/50'
               }`}
             >
@@ -229,7 +229,7 @@ export default function DashboardPage() {
               onClick={() => setActiveTab('markets')}
               className={`px-6 py-3 rounded-xl font-medium text-sm transition-all duration-300 relative ${
                 activeTab === 'markets'
-                  ? 'bg-white text-gray-900 shadow-[0_0_20px_rgba(255,255,255,0.3)] border border-gray-200'
+                  ? 'text-white'
                   : 'text-gray-400 hover:text-white hover:bg-[#2A2A2A]/50'
               }`}
             >
@@ -239,7 +239,7 @@ export default function DashboardPage() {
               onClick={() => setActiveTab('activity')}
               className={`px-6 py-3 rounded-xl font-medium text-sm transition-all duration-300 relative ${
                 activeTab === 'activity'
-                  ? 'bg-white text-gray-900 shadow-[0_0_20px_rgba(255,255,255,0.3)] border border-gray-200'
+                  ? 'text-white'
                   : 'text-gray-400 hover:text-white hover:bg-[#2A2A2A]/50'
               }`}
             >

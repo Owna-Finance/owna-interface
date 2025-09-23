@@ -116,14 +116,14 @@ export function MobileNav({ className }: MobileNavProps) {
                     className={cn(
                       'flex items-center space-x-4 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 group',
                       isActive
-                        ? 'bg-white text-black border border-gray-200 shadow-[0_0_20px_rgba(255,255,255,0.3)]'
+                        ? 'text-white'
                         : 'text-gray-400 hover:text-white hover:bg-[#1A1A1A]/70'
                     )}
                   >
                     <Icon className={cn(
                       "w-5 h-5 transition-all duration-300",
                       isActive 
-                        ? "text-black drop-shadow-[0_0_4px_rgba(0,0,0,0.3)]"
+                        ? "text-white"
                         : "group-hover:text-white"
                     )} />
                     <span>{item.name}</span>
