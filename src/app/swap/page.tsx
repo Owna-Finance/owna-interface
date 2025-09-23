@@ -52,7 +52,7 @@ export default function SwapPage() {
         {/* Swap Interface */}
         <div className="flex justify-center">
           <div className="w-full max-w-md">
-            <div className="bg-[#1A1A1A]/70 backdrop-blur-sm rounded-2xl border border-[#2A2A2A] p-8 shadow-[0_0_30px_rgba(255,255,255,0.05)] transition-all duration-300 hover:shadow-[0_0_40px_rgba(255,255,255,0.1)] hover:border-[#3A3A3A]">
+            <div className="bg-gradient-to-b from-[#0F0F0F] to-[#1A1A1A] backdrop-blur-sm rounded-2xl border border-[#2A2A2A] p-8 shadow-[0_0_20px_rgba(0,0,0,0.3)] transition-all duration-300 hover:shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:border-[#3A3A3A]">
               <style dangerouslySetInnerHTML={{
                 __html: `
                   .swap-dark [data-testid="ockSwapAmountInput_Container"] {
@@ -194,7 +194,7 @@ export default function SwapPage() {
                   </div>
                   <h3 className="text-2xl font-semibold text-white mb-3">Connect Your Wallet</h3>
                   <p className="text-gray-400 mb-8 text-lg">Connect your wallet to start trading tokens</p>
-                  <div className="bg-[#2A2A2A]/50 border border-[#3A3A3A] rounded-xl p-1 inline-block">
+                  <div className="bg-gradient-to-b from-[#0F0F0F] to-[#1A1A1A] border border-[#3A3A3A] rounded-xl p-1 inline-block">
                     <Wallet>
                       <ConnectWallet>
                         <Avatar className="h-6 w-6" />
