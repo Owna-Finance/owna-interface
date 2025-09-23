@@ -5,6 +5,7 @@ import { DashboardLayout } from '@/components/layout/dashboard-layout';
 import { MOCK_LENDING_MARKETS, formatCurrency } from '@/data/mock-data';
 import { Button } from '@/components/ui/button';
 import { ChevronDown, Info, Eye, EyeOff, CheckCircle, XCircle } from 'lucide-react';
+import Image from 'next/image';
 
 export default function MarketPage() {
   const [activeTab, setActiveTab] = useState('supply');
@@ -23,6 +24,18 @@ export default function MarketPage() {
     userBalance: 0.00,
     userPositionValue: 0.00
   }));
+
+  // Function to get token logo
+  const getTokenLogo = (tokenId: string) => {
+    const logoMap: { [key: string]: string } = {
+      'yrt-eth': '/Images/Logo/eth-logo.svg',
+      'yrt-usdc': '/Images/Logo/usdc-logo.png',
+      'yrt-usdt': '/Images/Logo/usdt-logo.png',
+      'yrt-base': '/Images/Logo/base-logo.png',
+      'yrt-btc': '/Images/Logo/cbbtc.png',
+    };
+    return logoMap[tokenId] || '/Images/Logo/eth-logo.svg';
+  };
 
   const supplyAPY = '0%';
   const borrowAPY = '0%';
@@ -115,7 +128,7 @@ export default function MarketPage() {
               onClick={() => setActiveTab('supply')}
               className={`px-6 py-3 rounded-xl font-medium text-sm transition-all duration-300 relative ${
                 activeTab === 'supply'
-                  ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-[0_0_20px_rgba(59,130,246,0.3)] border border-blue-400/20'
+                  ? 'bg-white text-gray-900 shadow-[0_0_20px_rgba(255,255,255,0.3)] border border-gray-200'
                   : 'text-gray-400 hover:text-white hover:bg-[#2A2A2A]/50'
               }`}
             >
@@ -125,7 +138,7 @@ export default function MarketPage() {
               onClick={() => setActiveTab('borrow')}
               className={`px-6 py-3 rounded-xl font-medium text-sm transition-all duration-300 relative ${
                 activeTab === 'borrow'
-                  ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-[0_0_20px_rgba(59,130,246,0.3)] border border-blue-400/20'
+                  ? 'bg-white text-gray-900 shadow-[0_0_20px_rgba(255,255,255,0.3)] border border-gray-200'
                   : 'text-gray-400 hover:text-white hover:bg-[#2A2A2A]/50'
               }`}
             >
@@ -192,22 +205,15 @@ export default function MarketPage() {
                     <td className="p-6">
                       <div className="flex items-center space-x-4">
                         <div className="relative">
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center shadow-[0_0_12px_rgba(59,130,246,0.3)]">
-                            <span className="text-white text-sm font-bold">
-                              {position.token.symbol.slice(3, 4).toUpperCase()}
-                            </span>
+                          <div className="w-10 h-10 rounded-full bg-white p-1 flex items-center justify-center shadow-[0_0_8px_rgba(0,0,0,0.1)]">
+                            <Image
+                              src={getTokenLogo(position.tokenId)}
+                              alt={position.token.symbol}
+                              width={32}
+                              height={32}
+                              className="rounded-full"
+                            />
                           </div>
-                          {/* Token-specific styling */}
-                          {position.tokenId === 'yrt-usdt' && (
-                            <div className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center shadow-[0_0_8px_rgba(34,197,94,0.3)]">
-                              <div className="w-2 h-2 bg-white rounded-full"></div>
-                            </div>
-                          )}
-                          {position.tokenId === 'yrt-base' && (
-                            <div className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-full flex items-center justify-center shadow-[0_0_8px_rgba(59,130,246,0.3)]">
-                              <div className="w-2 h-2 bg-white rounded-full"></div>
-                            </div>
-                          )}
                         </div>
                         <div>
                           <div className="font-medium text-white">{position.token.symbol}</div>

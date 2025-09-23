@@ -53,7 +53,7 @@ export function MobileNav({ className }: MobileNavProps) {
   return (
     <>
       {/* Mobile Header */}
-      <header className={cn('lg:hidden bg-[#0A0A0A] border-b border-[#2A2A2A] px-4 py-3', className)}>
+      <header className={cn('lg:hidden bg-white border-b border-gray-200 px-4 py-3', className)}>
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <Image
@@ -61,9 +61,9 @@ export function MobileNav({ className }: MobileNavProps) {
               alt="Owna Logo"
               width={32}
               height={32}
-              className="rounded-lg bg-gradient-to-br from-blue-600 to-cyan-400 p-1 shadow-[0_0_8px_rgba(59,130,246,0.3)]"
+              className="rounded-lg bg-black p-1"
             />
-            <span className="text-xl font-bold text-white">Owna</span>
+            <span className="text-xl font-medium text-black">Owna</span>
           </div>
           
           {/* <div className="flex items-center space-x-3">
@@ -96,9 +96,9 @@ export function MobileNav({ className }: MobileNavProps) {
                   height={32}
                   className="rounded-lg bg-white p-1 shadow-[0_0_8px_rgba(59,130,246,0.3)]"
                 />
-                <span className="text-xl font-bold text-white">Owna</span>
+                <span className="text-xl font-medium text-white">Owna</span>
               </div>
-              <Button variant="ghost" size="sm" onClick={closeMenu} className="text-gray-400 hover:text-white hover:bg-[#1A1A1A]">
+              <Button variant="ghost" size="sm" onClick={closeMenu} className="text-gray-400 hover:text-white hover:bg-transparent border-none">
                 <X className="w-5 h-5" />
               </Button>
             </div>
