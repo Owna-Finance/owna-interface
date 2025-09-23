@@ -7,6 +7,7 @@ import { HeroSectionProps, VideoState } from '@/types/landing-page'
 import { cn } from '@/lib/utils'
 import { trackCTAClick } from '@/lib/analytics'
 import { useLandingPageStore } from '@/stores/landing-page-store'
+import Link from 'next/dist/client/link'
 
 export function HeroSection({
   title,
@@ -137,12 +138,11 @@ export function HeroSection({
           
           {/* Action Button */}
           <div className="hidden md:block">
-            <button 
-              onClick={() => handleCTAClick(primaryCTA, 'nav-cta')}
-              className="bg-white text-black px-6 py-2 rounded-xl font-medium hover:bg-white/90 transition-colors duration-200"
-            >
-              Launch app
-            </button>
+            <Link href='/dashboard' target='_blank' rel='noopener noreferrer'>
+              <button className="bg-white cursor-pointer text-black px-6 py-2 rounded-xl font-medium hover:bg-white/90 transition-colors duration-200">
+                Launch app
+              </button>
+            </Link>
           </div>
           
           {/* Mobile Menu Toggle */}
@@ -180,16 +180,12 @@ export function HeroSection({
                   {item.name}
                 </a>
               ))}
-              <button 
-                onClick={() => {
-                  handleCTAClick(primaryCTA, 'mobile-nav-cta')
-                  setIsMobileMenuOpen(false)
-                }}
-                className="bg-white text-black px-6 py-2 rounded-xl font-medium hover:bg-white/90 transition-colors duration-200 text-left"
-              >
-                Launch app
-              </button>
-            </div>
+              <Link href='/dashboard' target='_blank' rel='noopener noreferrer'>
+                  <button className="bg-white text-black px-6 py-2 rounded-xl font-medium hover:bg-white/90 transition-colors duration-200 text-left">
+                    Launch app
+                  </button>
+                </Link>
+              </div>
           </div>
         )}
       </div>
@@ -212,13 +208,13 @@ export function HeroSection({
               className="bg-white text-black hover:bg-white/90 px-8 py-3 text-sm font-medium rounded-none btn-minimal"
               disabled={primaryCTA.disabled}
             >
-              <a
-                href={primaryCTA.href}
-                onClick={() => handleCTAClick(primaryCTA, 'hero-primary')}
-                aria-busy={primaryCTA.loading}
+              <Link
+                href='dashboard'
+                target='_blank'
+                rel='noopener noreferrer'
               >
                 {primaryCTA.loading ? 'Loading...' : primaryCTA.text}
-              </a>
+              </Link>
             </Button>
             
             <Button

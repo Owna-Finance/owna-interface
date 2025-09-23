@@ -43,21 +43,21 @@ export function Navigation({ className }: NavigationProps) {
   const pathname = usePathname();
 
   return (
-    <nav className={cn('bg-white border-r border-gray-200 w-64 h-full px-4 py-6', className)}>
-      <div className="flex items-center mb-8">
+    <nav className={cn('bg-[#0A0A0A] border-r border-[#2A2A2A] w-64 h-full px-6 py-8 shadow-[0_0_30px_rgba(0,0,0,0.5)]', className)}>
+      <div className="flex items-center mb-12">
         <div className="flex items-center space-x-3">
           <Image
             src="/Images/Logo/owna-logo.png"
             alt="Owna Logo"
-            width={32}
-            height={32}
-            className="rounded-lg bg-black"
+            width={36}
+            height={36}
+            className="rounded-xl bg-white p-1 shadow-[0_0_12px_rgba(59,130,246,0.3)]"
           />
-          <span className="text-xl font-bold text-gray-900">Owna</span>
+          <span className="text-2xl font-bold text-white tracking-tight">Owna</span>
         </div>
       </div>
 
-      <div className="space-y-1">
+      <div className="space-y-2">
         {navigationItems.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href;
@@ -67,13 +67,18 @@ export function Navigation({ className }: NavigationProps) {
               key={item.href}
               href={item.href}
               className={cn(
-                'flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+                'flex items-center space-x-4 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 group',
                 isActive
-                  ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  ? 'bg-gradient-to-r from-blue-600/20 to-cyan-400/20 text-white border border-blue-400/30 shadow-[0_0_20px_rgba(59,130,246,0.2)]'
+                  : 'text-gray-400 hover:text-white hover:bg-[#1A1A1A]/70 hover:border hover:border-[#2A2A2A] hover:shadow-[0_0_10px_rgba(255,255,255,0.05)]'
               )}
             >
-              <Icon className="w-5 h-5" />
+              <Icon className={cn(
+                "w-5 h-5 transition-all duration-300",
+                isActive 
+                  ? "text-blue-400 drop-shadow-[0_0_4px_rgba(59,130,246,0.5)]"
+                  : "group-hover:text-white"
+              )} />
               <span>{item.name}</span>
             </Link>
           );
@@ -81,10 +86,10 @@ export function Navigation({ className }: NavigationProps) {
       </div>
 
 
-      <div className="absolute bottom-6">
-        <div className="text-xs text-gray-400">
-          <p>© 2025 Owna Finance</p>
-          <p>Real World Assets</p>
+      <div className="absolute bottom-8 left-6 right-6">
+        <div className="text-xs text-gray-500 space-y-1">
+          <p className="font-medium">© 2025 Owna Finance</p>
+          <p className="text-gray-600">Real World Assets</p>
         </div>
       </div>
     </nav>

@@ -12,7 +12,7 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children, className }: DashboardLayoutProps) {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-[#0A0A0A] via-[#111111] to-[#222222]">
       {/* Mobile Navigation */}
       <MobileNav />
       
@@ -28,9 +28,7 @@ export function DashboardLayout({ children, className }: DashboardLayoutProps) {
           'min-h-screen',
           className
         )}>
-          <div className="px-4 py-6 lg:px-8">
-            {children}
-          </div>
+          {children}
         </main>
       </div>
     </div>

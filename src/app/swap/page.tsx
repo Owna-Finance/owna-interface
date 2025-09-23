@@ -72,17 +72,7 @@ export default function SwapPage() {
                 .swap-light [data-testid="ockSwapAmountInput_Container"] span {
                   color: #374151 !important;
                 }
-                /* Token selector buttons */
-                .swap-light [data-testid="ockSwapAmountInput_TokenSelector"] {
-                  background-color: #ffffff !important;
-                  border: 1px solid #ffffff !important;
-                  color: #111827 !important;
-                  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05) !important;
-                }
-                .swap-light [data-testid="ockSwapAmountInput_TokenSelector"]:hover {
-                  background-color: #f9fafb !important;
-                  border: 1px solid #f9fafb !important;
-                }
+                /* Let OnchainKit handle token selector functionality completely */
                 /* Toggle button */
                 .swap-light [data-testid="ockSwapToggleButton"] {
                   background-color: #ffffff !important;
@@ -109,35 +99,28 @@ export default function SwapPage() {
                   stroke: #111827 !important;
                   color: #111827 !important;
                 }
-                /* Alternative selectors for token buttons */
-                .swap-light button[class*="token"] {
+                /* Alternative selectors for non-token buttons only */
+                .swap-light button[class*="swap"]:not([data-testid="ockSwapAmountInput_TokenSelector"]) {
                   background-color: #ffffff !important;
                   border: 1px solid #ffffff !important;
                   color: #111827 !important;
                   box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05) !important;
                 }
-                .swap-light button[class*="token"]:hover {
+                .swap-light button[class*="swap"]:not([data-testid="ockSwapAmountInput_TokenSelector"]):hover {
                   background-color: #f9fafb !important;
                   border: 1px solid #f9fafb !important;
                 }
-                /* General button overrides for OnchainKit */
-                .swap-light button[style*="background"] {
-                  background-color: #ffffff !important;
-                  color: #111827 !important;
-                  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05) !important;
-                  border: 1px solid #ffffff !important;
-                }
-                /* More specific selectors for OnchainKit buttons */
-                .swap-light button {
+                /* Only style non-functional aspects, avoid event interference */
+                .swap-light button:not([data-testid="ockSwapAmountInput_TokenSelector"]) {
                   background-color: #ffffff !important;
                   color: #111827 !important;
                   border: 1px solid #ffffff !important;
                 }
-                .swap-light button:hover {
+                .swap-light button:not([data-testid="ockSwapAmountInput_TokenSelector"]):hover {
                   background-color: #f9fafb !important;
                   border: 1px solid #f9fafb !important;
                 }
-                /* Token dropdown menus */
+                /* Token dropdown menus - only visual styling */
                 .swap-light [role="listbox"],
                 .swap-light [role="menu"],
                 .swap-light div[class*="dropdown"],
@@ -146,7 +129,7 @@ export default function SwapPage() {
                   border: 1px solid #ffffff !important;
                   box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1) !important;
                 }
-                /* Token dropdown options */
+                /* Token dropdown options - only visual styling */
                 .swap-light [role="option"],
                 .swap-light [role="menuitem"] {
                   background-color: #ffffff !important;
