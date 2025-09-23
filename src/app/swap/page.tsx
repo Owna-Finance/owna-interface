@@ -14,23 +14,23 @@ import { Wallet, ConnectWallet } from '@coinbase/onchainkit/wallet';
 import { useAccount } from 'wagmi';
 import type { Token } from '@coinbase/onchainkit/token';
 
-// Base chainId = 8453
+// Base Sepolia chainId = 84532
 const ETH: Token = {
   name: 'ETH',
   address: '', // native ETH
   symbol: 'ETH',
   decimals: 18,
   image: 'https://wallet-api-production.s3.amazonaws.com/uploads/tokens/eth_288.png',
-  chainId: 8453,
+  chainId: 84532,
 };
 
 const USDC: Token = {
   name: 'USDC',
-  address: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', // USDC on Base
+  address: '0x036CbD53842c5426634e7929541eC2318f3dCF7e', // USDC on Base Sepolia
   symbol: 'USDC',
   decimals: 6,
   image: 'https://dynamic-assets.coinbase.com/3c15df5e2ac7d4abbe9499ed9335041f00c620f28e8de2f93474a9f432058742cdf4674bd43f309e69778a26969372310135be97eb183d91c492154176d455b8/asset_icons/9d67b728b6c8f457717154b3a35f9ddc702eae7e76c4684ee39302c4d7fd0bb8.png',
-  chainId: 8453,
+  chainId: 84532,
 };
 
 // Swappable tokens for dropdown
@@ -56,13 +56,13 @@ export default function SwapPage() {
               <style dangerouslySetInnerHTML={{
                 __html: `
                   .swap-dark [data-testid="ockSwapAmountInput_Container"] {
-                    background-color: #2A2A2A !important;
-                    border: 1px solid #3A3A3A !important;
+                    background: linear-gradient(135deg, #0F0F0F, #1A1A1A) !important;
+                    border: 1px solid #2A2A2A !important;
                     border-radius: 16px !important;
                     box-shadow: 0 0 20px rgba(0,0,0,0.3) !important;
                   }
                   .swap-dark [data-testid="ockSwapAmountInput_Container"]:hover {
-                    border: 1px solid #4A4A4A !important;
+                    border: 1px solid #3A3A3A !important;
                     box-shadow: 0 0 25px rgba(255,255,255,0.05) !important;
                   }
                   .swap-dark [data-testid="ockSwapAmountInput_Container"] input {
@@ -151,16 +151,17 @@ export default function SwapPage() {
                   }
                   /* Token selector buttons */
                   .swap-dark [data-testid="ockSwapAmountInput_TokenSelector"] {
-                    background-color: #2A2A2A !important;
+                    background: linear-gradient(135deg, #1A1A1A, #2A2A2A) !important;
                     border: 1px solid #3A3A3A !important;
                     color: #ffffff !important;
-                    border-radius: 12px !important;
+                    border-radius: 16px !important;
                     transition: all 0.3s ease !important;
+                    box-shadow: 0 0 15px rgba(0,0,0,0.3) !important;
                   }
                   .swap-dark [data-testid="ockSwapAmountInput_TokenSelector"]:hover {
-                    background-color: #3A3A3A !important;
+                    background: linear-gradient(135deg, #2A2A2A, #3A3A3A) !important;
                     border: 1px solid #4A4A4A !important;
-                    box-shadow: 0 0 15px rgba(255,255,255,0.1) !important;
+                    box-shadow: 0 0 20px rgba(255,255,255,0.1) !important;
                   }
                 `
               }} />
