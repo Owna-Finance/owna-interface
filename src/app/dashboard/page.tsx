@@ -8,7 +8,8 @@ import { formatCurrency } from '@/lib/utils';
 import { RefreshCw, Info, ChevronDown, Eye, EyeOff, LogOut, Copy, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
-import { useAccount, useDisconnect } from 'wagmi';
+import { useAccount, useDisconnect, useBalance } from 'wagmi';
+import Image from 'next/image';
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState('portfolio');
@@ -19,6 +20,12 @@ export default function DashboardPage() {
   
   const { address, isConnected } = useAccount();
   const { disconnect } = useDisconnect();
+  
+  // Get ETH balance on Base Sepolia
+  const { data: balance, isLoading: balanceLoading } = useBalance({
+    address: address,
+    chainId: 84532, // Base Sepolia testnet
+  });
 
   const {
     portfolio,
@@ -66,9 +73,17 @@ export default function DashboardPage() {
             {isConnected ? (
               <>
                 {/* Balance Display */}
-                <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                  <span className="text-white font-medium text-lg">0.00</span>
+                <div className="flex items-center space-x-3">
+                  <Image
+                    src="/Images/Logo/eth-logo.svg"
+                    alt="ETH"
+                    width={20}
+                    height={20}
+                    className="rounded-full"
+                  />
+                  <span className="text-white font-medium text-lg">
+                    {balanceLoading ? '...' : balance ? (parseFloat(balance.value.toString()) / Math.pow(10, balance.decimals)).toFixed(4) : '0.0000'}
+                  </span>
                 </div>
                 
                 {/* Wallet Address - Clickable */}
