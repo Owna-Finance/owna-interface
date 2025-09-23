@@ -88,7 +88,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${kantumruyPro.variable} antialiased`}
+        className={`${kantumruyPro.variable} antialiased bg-black overscroll-none`}
+        style={{ overscrollBehavior: 'none' }}
       >
         <OnchainProviders>
           {children}
