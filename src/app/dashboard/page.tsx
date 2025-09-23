@@ -237,7 +237,7 @@ export default function DashboardPage() {
           <>
             {/* Total Portfolio Value */}
             <div className="mb-10">
-              <div className="bg-[#1A1A1A]/70 backdrop-blur-sm rounded-2xl border border-[#2A2A2A] p-8 shadow-[0_0_20px_rgba(255,255,255,0.05)] transition-all duration-300 hover:shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:border-[#3A3A3A]">
+              <div className="bg-gradient-to-b from-[#0F0F0F] to-[#1A1A1A] backdrop-blur-sm rounded-2xl border border-[#2A2A2A] p-8 shadow-[0_0_20px_rgba(0,0,0,0.3)] transition-all duration-300 hover:shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:border-[#3A3A3A]">
                 <div className="flex items-center space-x-3 mb-4">
                   <h2 className="text-xl font-semibold text-white">Total Spot Value</h2>
                   <Info className="w-5 h-5 text-gray-400 hover:text-gray-300 transition-colors cursor-help" />
@@ -272,7 +272,7 @@ export default function DashboardPage() {
             {/* Main Content Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
               {/* Health Factor */}
-              <div className="bg-[#1A1A1A]/70 backdrop-blur-sm rounded-2xl border border-[#2A2A2A] p-8 shadow-[0_0_20px_rgba(255,255,255,0.05)] transition-all duration-300 hover:shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:border-[#3A3A3A]">
+              <div className="bg-gradient-to-b from-[#0F0F0F] to-[#1A1A1A] backdrop-blur-sm rounded-2xl border border-[#2A2A2A] p-8 shadow-[0_0_20px_rgba(0,0,0,0.3)] transition-all duration-300 hover:shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:border-[#3A3A3A]">
                 <div className="flex items-center justify-between mb-8">
                   <div className="flex items-center space-x-3">
                     <h3 className="text-xl font-semibold text-white">Health Factor</h3>
@@ -329,7 +329,7 @@ export default function DashboardPage() {
               </div>
 
               {/* Your Position */}
-              <div className="bg-[#1A1A1A]/70 backdrop-blur-sm rounded-2xl border border-[#2A2A2A] p-8 shadow-[0_0_20px_rgba(255,255,255,0.05)] transition-all duration-300 hover:shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:border-[#3A3A3A]">
+              <div className="bg-gradient-to-b from-[#0F0F0F] to-[#1A1A1A] backdrop-blur-sm rounded-2xl border border-[#2A2A2A] p-8 shadow-[0_0_20px_rgba(0,0,0,0.3)] transition-all duration-300 hover:shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:border-[#3A3A3A]">
                 <div className="flex items-center justify-between mb-8">
                   <div className="flex items-center space-x-3">
                     <h3 className="text-xl font-semibold text-white">Your position</h3>
@@ -388,7 +388,7 @@ export default function DashboardPage() {
             {/* My deposits and My borrows */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* My deposits */}
-              <div className="bg-[#1A1A1A]/70 backdrop-blur-sm rounded-2xl border border-[#2A2A2A] shadow-[0_0_20px_rgba(255,255,255,0.05)] transition-all duration-300 hover:shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:border-[#3A3A3A]">
+              <div className="bg-gradient-to-b from-[#0F0F0F] to-[#1A1A1A] backdrop-blur-sm rounded-2xl border border-[#2A2A2A] shadow-[0_0_20px_rgba(0,0,0,0.3)] transition-all duration-300 hover:shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:border-[#3A3A3A]">
                 <div className="p-8 border-b border-[#2A2A2A]">
                   <div className="flex items-center justify-between">
                     <h3 className="text-xl font-semibold text-white">My deposits</h3>
@@ -437,7 +437,7 @@ export default function DashboardPage() {
               </div>
 
               {/* My borrows */}
-              <div className="bg-[#1A1A1A]/70 backdrop-blur-sm rounded-2xl border border-[#2A2A2A] shadow-[0_0_20px_rgba(255,255,255,0.05)] transition-all duration-300 hover:shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:border-[#3A3A3A]">
+              <div className="bg-gradient-to-b from-[#0F0F0F] to-[#1A1A1A] backdrop-blur-sm rounded-2xl border border-[#2A2A2A] shadow-[0_0_20px_rgba(0,0,0,0.3)] transition-all duration-300 hover:shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:border-[#3A3A3A]">
                 <div className="p-8 border-b border-[#2A2A2A]">
                   <div className="flex items-center justify-between">
                     <h3 className="text-xl font-semibold text-white">My borrows</h3>
