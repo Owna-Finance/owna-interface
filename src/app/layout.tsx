@@ -13,6 +13,16 @@ const kantumruyPro = Kantumruy_Pro({
 export const metadata: Metadata = {
   title: "Owna",
   description: "Access premium hotel property cashflows through blockchain tokenization.",
+  icons: {
+    icon: [
+      { url: '/Images/Logo/owna-logo.png', sizes: '32x32', type: 'image/png' },
+      { url: '/Images/Logo/owna-logo.png', sizes: '16x16', type: 'image/png' },
+    ],
+    shortcut: '/Images/Logo/owna-logo.png',
+    apple: [
+      { url: '/Images/Logo/owna-logo.png', sizes: '180x180', type: 'image/png' },
+    ],
+  },
   keywords: [
     "RWA tokenization",
     "hotel real estate investment", 
