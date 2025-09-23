@@ -117,7 +117,7 @@ export function MobileNav({ className }: MobileNavProps) {
                       'flex items-center space-x-4 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 group',
                       isActive
                         ? 'bg-white text-black border border-gray-200 shadow-[0_0_20px_rgba(255,255,255,0.3)]'
-                        : 'text-gray-400 hover:text-white hover:bg-[#1A1A1A]/70 hover:border hover:border-[#2A2A2A] hover:shadow-[0_0_10px_rgba(255,255,255,0.05)]'
+                        : 'text-gray-400 hover:text-white hover:bg-[#1A1A1A]/70'
                     )}
                   >
                     <Icon className={cn(
