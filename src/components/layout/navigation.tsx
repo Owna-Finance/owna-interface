@@ -8,7 +8,7 @@ import { WalletComponents } from '@/components/wallet/connect-wallet';
 import { 
   LayoutDashboard, 
   ArrowRightLeft, 
-  TrendingUp, 
+  Layers, 
   DollarSign
 } from 'lucide-react';
 
@@ -30,7 +30,7 @@ const navigationItems = [
   {
     name: 'Market',
     href: '/market',
-    icon: TrendingUp
+    icon: Layers
   },
   {
     name: 'Cashflow',
@@ -69,14 +69,14 @@ export function Navigation({ className }: NavigationProps) {
               className={cn(
                 'flex items-center space-x-4 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 group',
                 isActive
-                  ? 'bg-gradient-to-r from-blue-600/20 to-cyan-400/20 text-white border border-blue-400/30 shadow-[0_0_20px_rgba(59,130,246,0.2)]'
+                  ? 'bg-white text-black border border-gray-200 shadow-[0_0_20px_rgba(255,255,255,0.3)]'
                   : 'text-gray-400 hover:text-white hover:bg-[#1A1A1A]/70 hover:border hover:border-[#2A2A2A] hover:shadow-[0_0_10px_rgba(255,255,255,0.05)]'
               )}
             >
               <Icon className={cn(
                 "w-5 h-5 transition-all duration-300",
                 isActive 
-                  ? "text-blue-400 drop-shadow-[0_0_4px_rgba(59,130,246,0.5)]"
+                  ? "text-black drop-shadow-[0_0_4px_rgba(0,0,0,0.3)]"
                   : "group-hover:text-white"
               )} />
               <span>{item.name}</span>

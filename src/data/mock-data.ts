@@ -155,7 +155,7 @@ export const MOCK_TOKENS: Token[] = [
 
 // Mock Portfolio
 export const MOCK_PORTFOLIO: Portfolio = {
-  totalBalance: 23456.78,
+  totalBalance: 0,
   tokens: [
     { tokenId: 'eth', balance: 3.5, value: 7159.85 },
     { tokenId: 'btc', balance: 0.15, value: 6487.62 },

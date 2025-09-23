@@ -4,16 +4,21 @@ import { useEffect, useState } from 'react';
 import { DashboardLayout } from '@/components/layout/dashboard-layout';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { usePortfolioStore } from '@/stores/portfolio-store';
-import { formatCurrency, formatPercentage, getTokenById } from '@/lib/utils';
-import { RefreshCw, Info, ChevronDown, Eye, EyeOff } from 'lucide-react';
+import { formatCurrency } from '@/lib/utils';
+import { RefreshCw, Info, ChevronDown, Eye, EyeOff, LogOut, Copy, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { useAccount, useDisconnect } from 'wagmi';
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState('portfolio');
   const [hideZeroBalances, setHideZeroBalances] = useState(false);
   const [showDeposits, setShowDeposits] = useState(true);
   const [showBorrows, setShowBorrows] = useState(true);
+  const [showWalletDropdown, setShowWalletDropdown] = useState(false);
+  
+  const { address, isConnected } = useAccount();
+  const { disconnect } = useDisconnect();
 
   const {
     portfolio,
@@ -55,23 +60,151 @@ export default function DashboardPage() {
       <div className="min-h-screen bg-gradient-to-br from-[#0A0A0A] via-[#111111] to-[#222222]">
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-12">
+        <div className="flex items-center justify-between mb-6">
           <h1 className="text-4xl font-bold text-white tracking-tight">Dashboard</h1>
-          <div className="flex items-center space-x-4">
-            <div className="bg-[#1A1A1A]/70 border border-[#2A2A2A] rounded-xl p-1 backdrop-blur-sm">
-              <ConnectButton />
-            </div>
+          <div className="flex items-center space-x-6">
+            {isConnected ? (
+              <>
+                {/* Balance Display */}
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                  <span className="text-white font-medium text-lg">0.00</span>
+                </div>
+                
+                {/* Wallet Address - Clickable */}
+                <div className="relative">
+                  <button
+                    onClick={() => setShowWalletDropdown(!showWalletDropdown)}
+                    className="bg-[#1A1A1A]/70 border border-[#2A2A2A] rounded-2xl px-4 py-2 backdrop-blur-sm flex items-center space-x-3 hover:bg-[#2A2A2A]/50 hover:border-[#3A3A3A] transition-all duration-200 cursor-pointer"
+                  >
+                    <span className="text-gray-300 font-mono text-sm">
+                      {address ? `${address.slice(0, 6)}...${address.slice(-4)}` : '0xebFA...4179'}
+                    </span>
+                    <div className="w-6 h-6 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                      <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  </button>
+
+                  {/* Wallet Dropdown */}
+                  {showWalletDropdown && (
+                    <div className="absolute top-full right-0 mt-2 w-64 bg-[#1A1A1A] border border-[#2A2A2A] rounded-2xl shadow-[0_0_30px_rgba(0,0,0,0.5)] backdrop-blur-sm z-50">
+                      <div className="p-4">
+                        <div className="flex items-center space-x-3 mb-4">
+                          <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                            <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                            </svg>
+                          </div>
+                          <div>
+                            <div className="text-white font-medium text-sm">Connected Wallet</div>
+                            <div className="text-gray-400 text-xs font-mono">
+                              {address ? `${address.slice(0, 8)}...${address.slice(-6)}` : '0xebFA...4179'}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-1">
+                          <button
+                            onClick={() => {
+                              if (address) {
+                                navigator.clipboard.writeText(address);
+                              }
+                              setShowWalletDropdown(false);
+                            }}
+                            className="w-full flex items-center space-x-3 px-3 py-2 text-gray-300 hover:text-white hover:bg-[#2A2A2A]/50 rounded-xl transition-all duration-200"
+                          >
+                            <Copy className="w-4 h-4" />
+                            <span className="text-sm">Copy Address</span>
+                          </button>
+                          
+                          <button
+                            onClick={() => {
+                              if (address) {
+                                window.open(`https://basescan.org/address/${address}`, '_blank');
+                              }
+                              setShowWalletDropdown(false);
+                            }}
+                            className="w-full flex items-center space-x-3 px-3 py-2 text-gray-300 hover:text-white hover:bg-[#2A2A2A]/50 rounded-xl transition-all duration-200"
+                          >
+                            <ExternalLink className="w-4 h-4" />
+                            <span className="text-sm">View on Explorer</span>
+                          </button>
+                          
+                          <div className="border-t border-[#2A2A2A] my-2"></div>
+                          
+                          <button
+                            onClick={() => {
+                              disconnect();
+                              setShowWalletDropdown(false);
+                            }}
+                            className="w-full flex items-center space-x-3 px-3 py-2 text-red-400 hover:text-red-300 hover:bg-red-400/10 rounded-xl transition-all duration-200"
+                          >
+                            <LogOut className="w-4 h-4" />
+                            <span className="text-sm">Disconnect</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : (
+              <div className="relative">
+                <style dangerouslySetInnerHTML={{
+                  __html: `
+                    /* Override RainbowKit Connect Button Styles */
+                    [data-rk] button[data-testid="rk-connect-button"] {
+                      background: linear-gradient(135deg, #1A1A1A, #2A2A2A) !important;
+                      border: 1px solid #3A3A3A !important;
+                      color: #ffffff !important;
+                      border-radius: 16px !important;
+                      padding: 12px 24px !important;
+                      font-weight: 500 !important;
+                      font-size: 14px !important;
+                      box-shadow: 0 0 20px rgba(255,255,255,0.05) !important;
+                      transition: all 0.3s ease !important;
+                      backdrop-filter: blur(10px) !important;
+                    }
+                    [data-rk] button[data-testid="rk-connect-button"]:hover {
+                      background: linear-gradient(135deg, #2A2A2A, #3A3A3A) !important;
+                      border: 1px solid #4A4A4A !important;
+                      box-shadow: 0 0 30px rgba(255,255,255,0.1) !important;
+                      transform: translateY(-1px) !important;
+                    }
+                    /* Override any nested button styles */
+                    [data-rk] div[role="button"] {
+                      background: linear-gradient(135deg, #1A1A1A, #2A2A2A) !important;
+                      border: 1px solid #3A3A3A !important;
+                      color: #ffffff !important;
+                      border-radius: 16px !important;
+                      padding: 12px 24px !important;
+                      font-weight: 500 !important;
+                      box-shadow: 0 0 20px rgba(255,255,255,0.05) !important;
+                      transition: all 0.3s ease !important;
+                    }
+                    [data-rk] div[role="button"]:hover {
+                      background: linear-gradient(135deg, #2A2A2A, #3A3A3A) !important;
+                      border: 1px solid #4A4A4A !important;
+                      box-shadow: 0 0 30px rgba(255,255,255,0.1) !important;
+                    }
+                  `
+                }} />
+                <ConnectButton />
+              </div>
+            )}
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="mb-16">
+        <div className="mb-5">
           <div className="bg-[#1A1A1A]/40 backdrop-blur-sm rounded-2xl p-2 border border-[#2A2A2A]/50 shadow-[0_0_20px_rgba(0,0,0,0.3)] inline-flex">
             <button
               onClick={() => setActiveTab('portfolio')}
               className={`px-6 py-3 rounded-xl font-medium text-sm transition-all duration-300 relative ${
                 activeTab === 'portfolio'
-                  ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-[0_0_20px_rgba(59,130,246,0.3)] border border-blue-400/20'
+                  ? 'bg-white text-gray-900 shadow-[0_0_20px_rgba(255,255,255,0.3)] border border-gray-200'
                   : 'text-gray-400 hover:text-white hover:bg-[#2A2A2A]/50'
               }`}
             >
@@ -81,7 +214,7 @@ export default function DashboardPage() {
               onClick={() => setActiveTab('markets')}
               className={`px-6 py-3 rounded-xl font-medium text-sm transition-all duration-300 relative ${
                 activeTab === 'markets'
-                  ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-[0_0_20px_rgba(59,130,246,0.3)] border border-blue-400/20'
+                  ? 'bg-white text-gray-900 shadow-[0_0_20px_rgba(255,255,255,0.3)] border border-gray-200'
                   : 'text-gray-400 hover:text-white hover:bg-[#2A2A2A]/50'
               }`}
             >
@@ -91,7 +224,7 @@ export default function DashboardPage() {
               onClick={() => setActiveTab('activity')}
               className={`px-6 py-3 rounded-xl font-medium text-sm transition-all duration-300 relative ${
                 activeTab === 'activity'
-                  ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-[0_0_20px_rgba(59,130,246,0.3)] border border-blue-400/20'
+                  ? 'bg-white text-gray-900 shadow-[0_0_20px_rgba(255,255,255,0.3)] border border-gray-200'
                   : 'text-gray-400 hover:text-white hover:bg-[#2A2A2A]/50'
               }`}
             >
@@ -102,6 +235,40 @@ export default function DashboardPage() {
 
         {activeTab === 'portfolio' && (
           <>
+            {/* Total Portfolio Value */}
+            <div className="mb-10">
+              <div className="bg-[#1A1A1A]/70 backdrop-blur-sm rounded-2xl border border-[#2A2A2A] p-8 shadow-[0_0_20px_rgba(255,255,255,0.05)] transition-all duration-300 hover:shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:border-[#3A3A3A]">
+                <div className="flex items-center space-x-3 mb-4">
+                  <h2 className="text-xl font-semibold text-white">Total Spot Value</h2>
+                  <Info className="w-5 h-5 text-gray-400 hover:text-gray-300 transition-colors cursor-help" />
+                </div>
+                <div className="mb-4">
+                  <div className="text-5xl font-bold text-white mb-2">
+                    $0
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-green-400 text-sm font-medium">+$0</span>
+                    <span className="text-green-400 text-sm">(+0.00%)</span>
+                    <span className="text-gray-400 text-sm">Today</span>
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-6 mt-6 pt-6 border-t border-[#2A2A2A]">
+                  <div>
+                    <div className="text-sm text-gray-400 mb-1">Available Balance</div>
+                    <div className="text-lg font-semibold text-white">$0</div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-400 mb-1">Staked Assets</div>
+                    <div className="text-lg font-semibold text-white">$0</div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-400 mb-1">DeFi Positions</div>
+                    <div className="text-lg font-semibold text-white">$0</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Main Content Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
               {/* Health Factor */}
