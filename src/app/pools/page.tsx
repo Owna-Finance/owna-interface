@@ -136,6 +136,79 @@ export default function PoolsPage() {
           <h1 className="text-3xl font-semibold text-white mb-6">Pools</h1>
         </div>
 
+        {/* Pool Summary Stats */}
+        <div className="grid grid-cols-4 gap-6 mb-8">
+          <div className="bg-[#0A0A0A] rounded-xl border border-[#2A2A2A] p-6 hover:border-[#3A3A3A] transition-colors">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-white mb-2">$1,246.8M</div>
+              <div className="text-sm text-gray-400">Total Pool TVL</div>
+            </div>
+          </div>
+          <div className="bg-[#0A0A0A] rounded-xl border border-[#2A2A2A] p-6 hover:border-[#3A3A3A] transition-colors">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-green-400 mb-2">$182.13M</div>
+              <div className="text-sm text-gray-400">24h Pool Volume</div>
+            </div>
+          </div>
+          <div className="bg-[#0A0A0A] rounded-xl border border-[#2A2A2A] p-6 hover:border-[#3A3A3A] transition-colors">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-400 mb-2">11.19%</div>
+              <div className="text-sm text-gray-400">Highest LP APY</div>
+            </div>
+          </div>
+          <div className="bg-[#0A0A0A] rounded-xl border border-[#2A2A2A] p-6 hover:border-[#3A3A3A] transition-colors">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-white mb-2">{poolsData.length}</div>
+              <div className="text-sm text-gray-400">Active Pools</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Pool Categories */}
+        <div className="bg-[#0A0A0A] rounded-xl border border-[#2A2A2A] p-6 mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-white">Pool Categories</h2>
+            <button className="text-sm text-gray-400 hover:text-white transition-colors">
+              View All
+            </button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-[#111111] rounded-lg p-4 hover:bg-[#1A1A1A] transition-colors cursor-pointer">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                  <div className="w-4 h-4 bg-blue-400 rounded-full"></div>
+                </div>
+                <div>
+                  <div className="text-sm font-medium text-white">YT Pools</div>
+                  <div className="text-xs text-gray-400">2 pools • $591.5M TVL</div>
+                </div>
+              </div>
+            </div>
+            <div className="bg-[#111111] rounded-lg p-4 hover:bg-[#1A1A1A] transition-colors cursor-pointer">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-teal-500/20 rounded-lg flex items-center justify-center">
+                  <div className="w-4 h-4 bg-teal-400 rounded-full"></div>
+                </div>
+                <div>
+                  <div className="text-sm font-medium text-white">PT Pools</div>
+                  <div className="text-xs text-gray-400">2 pools • $655.3M TVL</div>
+                </div>
+              </div>
+            </div>
+            <div className="bg-[#111111] rounded-lg p-4 hover:bg-[#1A1A1A] transition-colors cursor-pointer">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-green-500/20 rounded-lg flex items-center justify-center">
+                  <div className="w-4 h-4 bg-green-400 rounded-full"></div>
+                </div>
+                <div>
+                  <div className="text-sm font-medium text-white">LP Pools</div>
+                  <div className="text-xs text-gray-400">4 pools • $1,246.8M TVL</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Controls Row */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center space-x-4">
