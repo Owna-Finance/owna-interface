@@ -8,37 +8,95 @@ import { ChevronDown, Info, Eye, EyeOff, CheckCircle, XCircle } from 'lucide-rea
 import Image from 'next/image';
 
 export default function MarketPage() {
-  const [activeTab, setActiveTab] = useState('supply');
+  const [activeTab, setActiveTab] = useState('assets');
   const [hideZeroBalance, setHideZeroBalance] = useState(false);
   const [showNetworks, setShowNetworks] = useState(true);
   const [showCategories, setShowCategories] = useState(true);
+  const [expandedAssets, setExpandedAssets] = useState<string[]>([]);
 
-  // Filter yield-bearing tokens for market display
-  const yieldBearingTokens = MOCK_LENDING_MARKETS.filter(market => 
-    market.tokenId.startsWith('yrt-')
-  );
+  // Mock Pendle-style data
+  const pendleAssets = [
+    {
+      id: 'yrt-btc',
+      symbol: 'yrtBTC',
+      name: 'Yield BTC Token',
+      logo: '/Images/Logo/cbbtc.png',
+      maturity: '27 Nov 2025 (62 days)',
+      totalLiquidity: 100.26,
+      totalTVL: 1.68,
+      volume24h: 108.44,
+      underlyingAPY: 7.48,
+      ytLeverage: 78,
+      fixedAPY: 7.78,
+      bestYTLeverage: 78,
+      bestFixedAPY: 7.78,
+      markets: 1,
+      hasYT: true,
+      hasPT: true
+    },
+    {
+      id: 'yrt-eth',
+      symbol: 'yrtETH',
+      name: 'Yield Ethereum Token',
+      logo: '/Images/Logo/eth-logo.svg',
+      maturity: '15 Dec 2025 (84 days)',
+      totalLiquidity: 245.8,
+      totalTVL: 12.4,
+      volume24h: 156.2,
+      underlyingAPY: 5.23,
+      ytLeverage: 45,
+      fixedAPY: 5.12,
+      bestYTLeverage: 45,
+      bestFixedAPY: 5.12,
+      markets: 2,
+      hasYT: true,
+      hasPT: true
+    },
+    {
+      id: 'yrt-usdc',
+      symbol: 'yrtUSDC',
+      name: 'Yield USDC Token',
+      logo: '/Images/Logo/usdc-logo.png',
+      maturity: '30 Jan 2026 (127 days)',
+      totalLiquidity: 89.5,
+      totalTVL: 3.2,
+      volume24h: 67.8,
+      underlyingAPY: 4.85,
+      ytLeverage: 25,
+      fixedAPY: 4.92,
+      bestYTLeverage: 25,
+      bestFixedAPY: 4.92,
+      markets: 1,
+      hasYT: true,
+      hasPT: true
+    },
+    {
+      id: 'yrt-usdt',
+      symbol: 'yrtUSDT',
+      name: 'Yield USDT Token',
+      logo: '/Images/Logo/usdt-logo.png',
+      maturity: '20 Feb 2026 (147 days)',
+      totalLiquidity: 156.3,
+      totalTVL: 4.8,
+      volume24h: 92.7,
+      underlyingAPY: 6.12,
+      ytLeverage: 35,
+      fixedAPY: 6.45,
+      bestYTLeverage: 35,
+      bestFixedAPY: 6.45,
+      markets: 1,
+      hasYT: true,
+      hasPT: true
+    }
+  ];
 
-  // Mock user positions (empty for now)
-  const userPositions = yieldBearingTokens.map(market => ({
-    ...market,
-    userBalance: 0.00,
-    userPositionValue: 0.00
-  }));
-
-  // Function to get token logo
-  const getTokenLogo = (tokenId: string) => {
-    const logoMap: { [key: string]: string } = {
-      'yrt-eth': '/Images/Logo/eth-logo.svg',
-      'yrt-usdc': '/Images/Logo/usdc-logo.png',
-      'yrt-usdt': '/Images/Logo/usdt-logo.png',
-      'yrt-base': '/Images/Logo/base-logo.png',
-      'yrt-btc': '/Images/Logo/cbbtc.png',
-    };
-    return logoMap[tokenId] || '/Images/Logo/eth-logo.svg';
+  const toggleAssetExpansion = (assetId: string) => {
+    setExpandedAssets(prev => 
+      prev.includes(assetId) 
+        ? prev.filter(id => id !== assetId)
+        : [...prev, assetId]
+    );
   };
-
-  const supplyAPY = '0%';
-  const borrowAPY = '0%';
 
   return (
     <DashboardLayout>
@@ -86,37 +144,34 @@ export default function MarketPage() {
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
           <div className="bg-gradient-to-b from-[#0F0F0F] to-[#1A1A1A] backdrop-blur-sm rounded-2xl border border-[#2A2A2A] p-8 shadow-[0_0_20px_rgba(0,0,0,0.3)] transition-all duration-300 hover:shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:border-[#3A3A3A]">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-semibold text-white">Earn</h3>
+              <h3 className="text-xl font-semibold text-white">Total TVL</h3>
             </div>
             <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-400">Supply APY</span>
-                <span className="text-sm font-medium text-white">{supplyAPY}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-400">Positions</span>
-                <span className="text-sm font-medium text-white">$0.00</span>
-              </div>
+              <div className="text-3xl font-bold text-white">$435.52M</div>
+              <div className="text-sm text-green-400">+12.3%</div>
             </div>
           </div>
 
-          {/* Position Summary */}
           <div className="bg-gradient-to-b from-[#0F0F0F] to-[#1A1A1A] backdrop-blur-sm rounded-2xl border border-[#2A2A2A] p-8 shadow-[0_0_20px_rgba(0,0,0,0.3)] transition-all duration-300 hover:shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:border-[#3A3A3A]">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-semibold text-white">Position Summary</h3>
+              <h3 className="text-xl font-semibold text-white">24h Volume</h3>
             </div>
             <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-400">Borrow APY</span>
-                <span className="text-sm font-medium text-white">{borrowAPY}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-400">Positions</span>
-                <span className="text-sm font-medium text-white">$0.00</span>
-              </div>
+              <div className="text-3xl font-bold text-white">$332.46M</div>
+              <div className="text-sm text-green-400">+8.7%</div>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-b from-[#0F0F0F] to-[#1A1A1A] backdrop-blur-sm rounded-2xl border border-[#2A2A2A] p-8 shadow-[0_0_20px_rgba(0,0,0,0.3)] transition-all duration-300 hover:shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:border-[#3A3A3A]">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-semibold text-white">Active Assets</h3>
+            </div>
+            <div className="space-y-4">
+              <div className="text-3xl font-bold text-white">{pendleAssets.length}</div>
+              <div className="text-sm text-blue-400">PT & YT Markets</div>
             </div>
           </div>
         </div>
@@ -125,145 +180,372 @@ export default function MarketPage() {
         <div className="mb-12">
           <div className="bg-[#1A1A1A]/40 backdrop-blur-sm rounded-2xl p-2 border border-[#2A2A2A]/50 shadow-[0_0_20px_rgba(0,0,0,0.3)] inline-flex">
             <button
-              onClick={() => setActiveTab('supply')}
+              onClick={() => setActiveTab('assets')}
               className={`px-6 py-3 rounded-xl font-medium text-sm transition-all duration-300 relative ${
-                activeTab === 'supply'
+                activeTab === 'assets'
                   ? 'text-white'
                   : 'text-gray-400 hover:text-white hover:bg-[#2A2A2A]/50'
               }`}
             >
-              Supply pools
+              Assets
             </button>
             <button
-              onClick={() => setActiveTab('borrow')}
+              onClick={() => setActiveTab('markets')}
               className={`px-6 py-3 rounded-xl font-medium text-sm transition-all duration-300 relative ${
-                activeTab === 'borrow'
+                activeTab === 'markets'
                   ? 'text-white'
                   : 'text-gray-400 hover:text-white hover:bg-[#2A2A2A]/50'
               }`}
             >
-              Borrow pools
+              Point markets
             </button>
           </div>
         </div>
 
-        {/* Market Table */}
-        <div className="bg-[#1A1A1A]/70 backdrop-blur-sm rounded-2xl border border-[#2A2A2A] shadow-[0_0_20px_rgba(255,255,255,0.05)] overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-[#2A2A2A]">
-                  <th className="text-left p-6 text-sm font-medium text-gray-400">
-                    <div className="flex items-center space-x-2">
-                      <span>Assets</span>
-                      <ChevronDown className="w-3 h-3 hover:text-gray-200 transition-colors" />
-                    </div>
-                  </th>
-                  <th className="text-right p-6 text-sm font-medium text-gray-400">
-                    <div className="flex items-center justify-end space-x-2">
-                      <span>Positions</span>
-                      <ChevronDown className="w-3 h-3 hover:text-gray-200 transition-colors" />
-                    </div>
-                  </th>
-                  <th className="text-right p-6 text-sm font-medium text-gray-400">
-                    <div className="flex items-center justify-end space-x-2">
-                      <span>TVL</span>
-                      <ChevronDown className="w-3 h-3 hover:text-gray-200 transition-colors" />
-                    </div>
-                  </th>
-                  <th className="text-right p-6 text-sm font-medium text-gray-400">
-                    <div className="flex items-center justify-end space-x-2">
-                      <span>APY</span>
-                      <Info className="w-3 h-3 hover:text-gray-200 transition-colors" />
-                      <ChevronDown className="w-3 h-3 hover:text-gray-200 transition-colors" />
-                    </div>
-                  </th>
-                  <th className="text-right p-6 text-sm font-medium text-gray-400">
-                    <div className="flex items-center justify-end space-x-2">
-                      <span>Bonus</span>
-                      <ChevronDown className="w-3 h-3 hover:text-gray-200 transition-colors" />
-                    </div>
-                  </th>
-                  <th className="text-center p-6 text-sm font-medium text-gray-400">
-                    <div className="flex items-center justify-center space-x-2">
-                      <span>Collateral asset</span>
-                    </div>
-                  </th>
-                  <th className="text-center p-6 text-sm font-medium text-gray-400">
-                    <div className="flex items-center justify-center space-x-2">
-                      <span>Borrow asset</span>
-                    </div>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {userPositions.map((position) => (
-                  <tr 
-                    key={position.tokenId}
-                    className="border-b border-[#2A2A2A]/50 hover:bg-[#2A2A2A]/30 cursor-pointer transition-all duration-200"
+        {/* Assets List - Pendle Style with Dropdown */}
+        {activeTab === 'assets' && (
+          <div className="bg-[#1A1A1A]/70 backdrop-blur-sm rounded-2xl border border-[#2A2A2A] shadow-[0_0_20px_rgba(255,255,255,0.05)] overflow-hidden">
+            {/* Table Header */}
+            <div className="grid grid-cols-6 gap-4 p-4 bg-[#0F0F0F]/50 border-b border-[#2A2A2A]/50">
+              <div className="text-xs font-medium text-gray-400 uppercase tracking-wider">
+                <div className="flex items-center space-x-2">
+                  <span>Asset</span>
+                  <ChevronDown className="w-3 h-3" />
+                </div>
+              </div>
+              <div className="text-xs font-medium text-gray-400 uppercase tracking-wider text-center">
+                Total Liquidity<br />
+                <span className="text-xs text-gray-500">Total TVL</span>
+              </div>
+              <div className="text-xs font-medium text-gray-400 uppercase tracking-wider text-center">
+                Total 24h Vol
+              </div>
+              <div className="text-xs font-medium text-gray-400 uppercase tracking-wider text-center">
+                Best YT Leverage
+              </div>
+              <div className="text-xs font-medium text-gray-400 uppercase tracking-wider text-center">
+                Best Fixed APY
+              </div>
+              <div className="text-xs font-medium text-gray-400 uppercase tracking-wider text-center">
+                Actions
+              </div>
+            </div>
+
+            {/* Assets List */}
+            <div className="divide-y divide-[#2A2A2A]/30">
+              {pendleAssets.map((asset) => (
+                <div key={asset.id}>
+                  {/* Asset Row */}
+                  <div 
+                    className="grid grid-cols-6 gap-4 p-4 hover:bg-[#2A2A2A]/20 transition-all duration-200 cursor-pointer"
+                    onClick={() => toggleAssetExpansion(asset.id)}
                   >
-                    <td className="p-6">
-                      <div className="flex items-center space-x-4">
-                        <div className="relative">
-                          <div className="w-10 h-10 rounded-full bg-white p-1 flex items-center justify-center shadow-[0_0_8px_rgba(0,0,0,0.1)]">
-                            <Image
-                              src={getTokenLogo(position.tokenId)}
-                              alt={position.token.symbol}
-                              width={32}
-                              height={32}
-                              className="rounded-full"
-                            />
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 rounded-full bg-white p-2 flex items-center justify-center shadow-[0_0_8px_rgba(0,0,0,0.1)]">
+                        <Image
+                          src={asset.logo}
+                          alt={asset.symbol}
+                          width={24}
+                          height={24}
+                          className="rounded-full"
+                        />
+                      </div>
+                      <div>
+                        <div className="flex items-center space-x-2">
+                          <h3 className="text-sm font-semibold text-white">{asset.symbol}</h3>
+                          <div className="w-3 h-3 bg-gray-600 rounded-full flex items-center justify-center">
+                            <Info className="w-1.5 h-1.5 text-gray-300" />
                           </div>
                         </div>
-                        <div>
-                          <div className="font-medium text-white">{position.token.symbol}</div>
-                          <div className="text-sm text-gray-400">{position.token.name}</div>
-                        </div>
+                        <p className="text-xs text-gray-400">{asset.name}</p>
                       </div>
-                    </td>
-                    <td className="p-6 text-right">
-                      <div className="text-sm font-medium text-white">
-                        {position.userBalance.toFixed(2)}
+                    </div>
+                    
+                    <div className="text-center">
+                      <div className="text-sm font-medium text-white">${asset.totalLiquidity}M</div>
+                      <div className="text-xs text-gray-400">${asset.totalTVL}B</div>
+                    </div>
+                    
+                    <div className="text-center">
+                      <div className="text-sm font-medium text-white">${asset.volume24h}M</div>
+                    </div>
+                    
+                    <div className="text-center">
+                      <div className="text-sm font-medium text-blue-400">{asset.bestYTLeverage}x</div>
+                    </div>
+                    
+                    <div className="text-center">
+                      <div className="text-sm font-medium text-green-400">{asset.bestFixedAPY}%</div>
+                    </div>
+                    
+                    <div className="flex justify-center">
+                      <ChevronDown 
+                        className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
+                          expandedAssets.includes(asset.id) ? 'rotate-180' : ''
+                        }`} 
+                      />
+                    </div>
+                  </div>
+
+                  {/* Expanded Markets Table */}
+                  {expandedAssets.includes(asset.id) && (
+                    <div className="bg-[#0A0A0A]/30 border-t border-[#2A2A2A]/30">
+                      <div className="overflow-x-auto">
+                        <table className="w-full">
+                          <thead>
+                            <tr className="border-b border-[#2A2A2A]/30 bg-[#0A0A0A]/50">
+                              <th className="text-left p-3 text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                Market
+                              </th>
+                              <th className="text-center p-3 text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                Liquidity<br />
+                                <span className="text-xs text-gray-500">Total TVL</span>
+                              </th>
+                              <th className="text-center p-3 text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                24h Volume
+                              </th>
+                              <th className="text-center p-3 text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                Underlying APY
+                              </th>
+                              <th className="text-center p-3 text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                YT Leverage
+                              </th>
+                              <th className="text-center p-3 text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                Fixed APY
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr className="border-b border-[#2A2A2A]/20 hover:bg-[#2A2A2A]/10 transition-all duration-200">
+                              <td className="p-3">
+                                <div className="flex items-center space-x-3">
+                                  <div className="flex items-center space-x-2">
+                                    <div className="w-5 h-5 rounded-full bg-white p-1 flex items-center justify-center">
+                                      <Image
+                                        src={asset.logo}
+                                        alt={asset.symbol}
+                                        width={12}
+                                        height={12}
+                                        className="rounded-full"
+                                      />
+                                    </div>
+                                    <span className="text-xs font-medium text-white">{asset.symbol}</span>
+                                  </div>
+                                  <div className="text-xs text-gray-400">{asset.maturity}</div>
+                                </div>
+                              </td>
+                              <td className="p-3 text-center">
+                                <div className="text-xs font-medium text-white">${asset.totalLiquidity}M</div>
+                                <div className="text-xs text-gray-400">${asset.totalTVL}B</div>
+                              </td>
+                              <td className="p-3 text-center">
+                                <div className="text-xs font-medium text-white">${asset.volume24h}M</div>
+                              </td>
+                              <td className="p-3 text-center">
+                                <div className="text-xs font-medium text-white">{asset.underlyingAPY}%</div>
+                              </td>
+                              <td className="p-3 text-center">
+                                <div className="flex items-center justify-center space-x-2">
+                                  <div className="bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded text-xs font-medium">
+                                    YT
+                                  </div>
+                                  <span className="text-xs font-medium text-white">{asset.ytLeverage}x</span>
+                                </div>
+                              </td>
+                              <td className="p-3 text-center">
+                                <div className="flex items-center justify-center space-x-2">
+                                  <div className="bg-teal-500/20 text-teal-400 px-1.5 py-0.5 rounded text-xs font-medium">
+                                    PT
+                                  </div>
+                                  <span className="text-xs font-medium text-white">{asset.fixedAPY}%</span>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
                       </div>
-                      <div className="text-xs text-gray-400">
-                        ${position.userPositionValue.toFixed(2)}
-                      </div>
-                    </td>
-                    <td className="p-6 text-right">
-                      <div className="text-sm font-medium text-white">
-                        {formatCurrency(position.totalSupplied).replace('$', '')}M
-                      </div>
-                    </td>
-                    <td className="p-6 text-right">
-                      <div className="text-sm font-medium text-blue-400 bg-blue-400/10 px-3 py-1 rounded-lg inline-block">
-                        {activeTab === 'supply' 
-                          ? `${position.supplyAPY.toFixed(2)}%`
-                          : `${position.borrowAPY.toFixed(2)}%`
-                        }
-                      </div>
-                    </td>
-                    <td className="p-6 text-right">
-                      <div className="text-sm font-medium text-gray-500">-</div>
-                    </td>
-                    <td className="p-6 text-center">
-                      <div className="flex justify-center">
-                        <CheckCircle className="w-5 h-5 text-green-400 drop-shadow-[0_0_4px_rgba(34,197,94,0.3)]" />
-                      </div>
-                    </td>
-                    <td className="p-6 text-center">
-                      <div className="flex justify-center">
-                        {position.tokenId === 'yrt-usdc' || position.tokenId === 'yrt-usdt' || position.tokenId === 'yrt-base' ? 
-                          <CheckCircle className="w-5 h-5 text-green-400 drop-shadow-[0_0_4px_rgba(34,197,94,0.3)]" /> : 
-                          <XCircle className="w-5 h-5 text-red-400 drop-shadow-[0_0_4px_rgba(239,68,68,0.3)]" />
-                        }
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* Point Markets Tab Content */}
+        {activeTab === 'markets' && (
+          <div className="space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* yrtBTC Point Market */}
+              <div className="bg-gradient-to-b from-[#0F0F0F] to-[#1A1A1A] backdrop-blur-sm rounded-2xl border border-[#2A2A2A] p-6 shadow-[0_0_20px_rgba(0,0,0,0.3)] transition-all duration-300 hover:shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:border-[#3A3A3A]">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 rounded-full bg-white p-2 flex items-center justify-center">
+                      <Image
+                        src="/Images/Logo/cbbtc.png"
+                        alt="yrtBTC"
+                        width={24}
+                        height={24}
+                        className="rounded-full"
+                      />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-white">yrtBTC</h3>
+                      <p className="text-xs text-gray-400">27 Nov 2025 (62 days)</p>
+                    </div>
+                  </div>
+                  <div className="w-6 h-6 bg-gray-700 rounded-full flex items-center justify-center">
+                    <span className="text-xs text-gray-300">⚡</span>
+                  </div>
+                </div>
+                
+                <div className="mb-4">
+                  <div className="text-center">
+                    <div className="text-xs text-gray-400 mb-1">Owna Points</div>
+                    <div className="text-2xl font-bold text-white">78x</div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-400">Fixed Yield</span>
+                    <span className="text-sm font-medium text-teal-400">7.78%</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-400">LP Yield</span>
+                    <span className="text-sm font-medium text-green-400">17.76%</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* yrtETH Point Market */}
+              <div className="bg-gradient-to-b from-[#0F0F0F] to-[#1A1A1A] backdrop-blur-sm rounded-2xl border border-[#2A2A2A] p-6 shadow-[0_0_20px_rgba(0,0,0,0.3)] transition-all duration-300 hover:shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:border-[#3A3A3A]">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 rounded-full bg-white p-2 flex items-center justify-center">
+                      <Image
+                        src="/Images/Logo/eth-logo.svg"
+                        alt="yrtETH"
+                        width={24}
+                        height={24}
+                        className="rounded-full"
+                      />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-white">yrtETH</h3>
+                      <p className="text-xs text-gray-400">15 Dec 2025 (84 days)</p>
+                    </div>
+                  </div>
+                  <div className="w-6 h-6 bg-gray-700 rounded-full flex items-center justify-center">
+                    <span className="text-xs text-gray-300">⚡</span>
+                  </div>
+                </div>
+                
+                <div className="mb-4">
+                  <div className="text-center">
+                    <div className="text-xs text-gray-400 mb-1">Owna Points</div>
+                    <div className="text-2xl font-bold text-white">45x</div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-400">Fixed Yield</span>
+                    <span className="text-sm font-medium text-teal-400">5.12%</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-400">LP Yield</span>
+                    <span className="text-sm font-medium text-green-400">8.45%</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* yrtUSDC Point Market */}
+              <div className="bg-gradient-to-b from-[#0F0F0F] to-[#1A1A1A] backdrop-blur-sm rounded-2xl border border-[#2A2A2A] p-6 shadow-[0_0_20px_rgba(0,0,0,0.3)] transition-all duration-300 hover:shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:border-[#3A3A3A]">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 rounded-full bg-white p-2 flex items-center justify-center">
+                      <Image
+                        src="/Images/Logo/usdc-logo.png"
+                        alt="yrtUSDC"
+                        width={24}
+                        height={24}
+                        className="rounded-full"
+                      />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-white">yrtUSDC</h3>
+                      <p className="text-xs text-gray-400">30 Jan 2026 (127 days)</p>
+                    </div>
+                  </div>
+                  <div className="w-6 h-6 bg-gray-700 rounded-full flex items-center justify-center">
+                    <span className="text-xs text-gray-300">⚡</span>
+                  </div>
+                </div>
+                
+                <div className="mb-4">
+                  <div className="text-center">
+                    <div className="text-xs text-gray-400 mb-1">Owna Points</div>
+                    <div className="text-2xl font-bold text-white">25x</div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-400">Fixed Yield</span>
+                    <span className="text-sm font-medium text-teal-400">4.92%</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-400">LP Yield</span>
+                    <span className="text-sm font-medium text-green-400">6.85%</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* yrtUSDT Point Market */}
+              <div className="bg-gradient-to-b from-[#0F0F0F] to-[#1A1A1A] backdrop-blur-sm rounded-2xl border border-[#2A2A2A] p-6 shadow-[0_0_20px_rgba(0,0,0,0.3)] transition-all duration-300 hover:shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:border-[#3A3A3A]">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 rounded-full bg-white p-2 flex items-center justify-center">
+                      <Image
+                        src="/Images/Logo/usdt-logo.png"
+                        alt="yrtUSDT"
+                        width={24}
+                        height={24}
+                        className="rounded-full"
+                      />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-white">yrtUSDT</h3>
+                      <p className="text-xs text-gray-400">20 Feb 2026 (147 days)</p>
+                    </div>
+                  </div>
+                  <div className="w-6 h-6 bg-gray-700 rounded-full flex items-center justify-center">
+                    <span className="text-xs text-gray-300">⚡</span>
+                  </div>
+                </div>
+                
+                <div className="mb-4">
+                  <div className="text-center">
+                    <div className="text-xs text-gray-400 mb-1">Owna Points</div>
+                    <div className="text-2xl font-bold text-white">35x</div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-400">Fixed Yield</span>
+                    <span className="text-sm font-medium text-teal-400">6.45%</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-400">LP Yield</span>
+                    <span className="text-sm font-medium text-green-400">9.25%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </DashboardLayout>
   );

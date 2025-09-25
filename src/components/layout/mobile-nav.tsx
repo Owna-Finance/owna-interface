@@ -13,7 +13,7 @@ import {
   LayoutDashboard, 
   ArrowRightLeft, 
   Layers, 
-  DollarSign
+  Droplet
 } from 'lucide-react';
 
 interface MobileNavProps {
@@ -37,9 +37,9 @@ const navigationItems = [
     icon: Layers
   },
   {
-    name: 'Cashflow',
-    href: '/cashflow',
-    icon: DollarSign
+    name: 'Pools',
+    href: '/pools',
+    icon: Droplet
   }
 ];
 
