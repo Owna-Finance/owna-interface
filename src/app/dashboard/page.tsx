@@ -5,7 +5,7 @@ import { DashboardLayout } from '@/components/layout/dashboard-layout';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { usePortfolioStore } from '@/stores/portfolio-store';
 import { formatCurrency } from '@/lib/utils';
-import { RefreshCw, Info, ChevronDown, Eye, EyeOff, LogOut, Copy, ExternalLink } from 'lucide-react';
+import { RefreshCw, Info, LogOut, Copy, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount, useDisconnect, useBalance } from 'wagmi';
@@ -14,8 +14,6 @@ import Image from 'next/image';
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState('portfolio');
   const [hideZeroBalances, setHideZeroBalances] = useState(false);
-  const [showDeposits, setShowDeposits] = useState(true);
-  const [showBorrows, setShowBorrows] = useState(true);
   const [showWalletDropdown, setShowWalletDropdown] = useState(false);
   
   const { address, isConnected } = useAccount();
@@ -250,256 +248,207 @@ export default function DashboardPage() {
 
         {activeTab === 'portfolio' && (
           <>
-            {/* Total Portfolio Value */}
-            <div className="mb-10">
-              <div className="bg-gradient-to-b from-[#0F0F0F] to-[#1A1A1A] backdrop-blur-sm rounded-2xl border border-[#2A2A2A] p-8 shadow-[0_0_20px_rgba(0,0,0,0.3)] transition-all duration-300 hover:shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:border-[#3A3A3A]">
-                <div className="flex items-center space-x-3 mb-4">
-                  <h2 className="text-xl font-semibold text-white">Total Spot Value</h2>
+            {/* Portfolio Summary Stats */}
+            <div className="grid grid-cols-4 gap-6 mb-10">
+              <div className="bg-[#0A0A0A] rounded-xl border border-[#2A2A2A] p-6 hover:border-[#3A3A3A] transition-colors">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-white mb-2">$0</div>
+                  <div className="text-sm text-gray-400">Total Portfolio</div>
+                </div>
+              </div>
+              <div className="bg-[#0A0A0A] rounded-xl border border-[#2A2A2A] p-6 hover:border-[#3A3A3A] transition-colors">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-blue-400 mb-2">$0</div>
+                  <div className="text-sm text-gray-400">YT Positions</div>
+                </div>
+              </div>
+              <div className="bg-[#0A0A0A] rounded-xl border border-[#2A2A2A] p-6 hover:border-[#3A3A3A] transition-colors">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-teal-400 mb-2">$0</div>
+                  <div className="text-sm text-gray-400">PT Positions</div>
+                </div>
+              </div>
+              <div className="bg-[#0A0A0A] rounded-xl border border-[#2A2A2A] p-6 hover:border-[#3A3A3A] transition-colors">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-green-400 mb-2">$0</div>
+                  <div className="text-sm text-gray-400">LP Positions</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Portfolio Analytics */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-12">
+              {/* Portfolio Distribution */}
+              <div className="bg-[#0A0A0A] rounded-xl border border-[#2A2A2A] p-6 hover:border-[#3A3A3A] transition-colors">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg font-semibold text-white">Portfolio Distribution</h3>
                   <Info className="w-5 h-5 text-gray-400 hover:text-gray-300 transition-colors cursor-help" />
                 </div>
-                <div className="mb-4">
-                  <div className="text-5xl font-bold text-white mb-2">
-                    $0
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <span className="text-green-400 text-sm font-medium">+$0</span>
-                    <span className="text-green-400 text-sm">(+0.00%)</span>
-                    <span className="text-gray-400 text-sm">Today</span>
-                  </div>
-                </div>
-                <div className="grid grid-cols-3 gap-6 mt-6 pt-6 border-t border-[#2A2A2A]">
-                  <div>
-                    <div className="text-sm text-gray-400 mb-1">Available Balance</div>
-                    <div className="text-lg font-semibold text-white">$0</div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-gray-400 mb-1">Staked Assets</div>
-                    <div className="text-lg font-semibold text-white">$0</div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-gray-400 mb-1">DeFi Positions</div>
-                    <div className="text-lg font-semibold text-white">$0</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Main Content Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-              {/* Health Factor */}
-              <div className="bg-gradient-to-b from-[#0F0F0F] to-[#1A1A1A] backdrop-blur-sm rounded-2xl border border-[#2A2A2A] p-8 shadow-[0_0_20px_rgba(0,0,0,0.3)] transition-all duration-300 hover:shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:border-[#3A3A3A]">
-                <div className="flex items-center justify-between mb-8">
-                  <div className="flex items-center space-x-3">
-                    <h3 className="text-xl font-semibold text-white">Health Factor</h3>
-                    <Info className="w-5 h-5 text-gray-400 hover:text-gray-300 transition-colors" />
-                  </div>
-                  <div className="bg-[#2A2A2A]/50 px-4 py-2 rounded-xl border border-[#3A3A3A]">
-                    <span className="text-sm font-medium text-white">{healthFactor}</span>
-                  </div>
-                </div>
                 
-                {/* Circular Health Factor Gauge */}
-                <div className="flex items-center justify-center relative">
-                  <svg className="w-48 h-48 transform -rotate-90" viewBox="0 0 200 200">
-                    <defs>
-                      <linearGradient id="healthGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" stopColor="#3B82F6" />
-                        <stop offset="100%" stopColor="#06B6D4" />
-                      </linearGradient>
-                    </defs>
-                    <circle
-                      cx="100"
-                      cy="100"
-                      r="80"
-                      stroke="#2A2A2A"
-                      strokeWidth="8"
-                      fill="none"
-                    />
-                    <circle
-                      cx="100"
-                      cy="100"
-                      r="80"
-                      stroke="url(#healthGradient)"
-                      strokeWidth="8"
-                      fill="none"
-                      strokeDasharray={`${(healthFactor / 5) * 502} 502`}
-                      strokeLinecap="round"
-                      className="transition-all duration-1000 ease-in-out drop-shadow-[0_0_8px_rgba(59,130,246,0.4)]"
-                    />
-                    {/* Scale markers */}
-                    <g className="transform rotate-90" style={{ transformOrigin: '100px 100px' }}>
-                      <text x="100" y="50" textAnchor="middle" className="text-xs fill-gray-400">4</text>
-                      <text x="150" y="75" textAnchor="middle" className="text-xs fill-gray-400">3.5</text>
-                      <text x="175" y="105" textAnchor="middle" className="text-xs fill-gray-400">3</text>
-                      <text x="150" y="135" textAnchor="middle" className="text-xs fill-gray-400">2.5</text>
-                      <text x="100" y="160" textAnchor="middle" className="text-xs fill-gray-400">2</text>
-                      <text x="50" y="135" textAnchor="middle" className="text-xs fill-gray-400">1.5</text>
-                      <text x="25" y="105" textAnchor="middle" className="text-xs fill-gray-400">1</text>
-                    </g>
-                  </svg>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-4xl font-bold text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">{healthFactor}</span>
+                {/* Distribution Chart Placeholder */}
+                <div className="flex items-center justify-center h-48 mb-6">
+                  <div className="relative">
+                    <svg className="w-32 h-32" viewBox="0 0 100 100">
+                      <circle cx="50" cy="50" r="40" fill="none" stroke="#2A2A2A" strokeWidth="8"/>
+                      <circle cx="50" cy="50" r="40" fill="none" stroke="#3B82F6" strokeWidth="8" 
+                        strokeDasharray="0 251" strokeLinecap="round" className="transition-all duration-1000"/>
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="text-2xl font-bold text-white">0%</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Legend */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 rounded-full bg-blue-400"></div>
+                      <span className="text-sm text-gray-300">YT Positions</span>
+                    </div>
+                    <span className="text-sm font-medium text-white">0%</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 rounded-full bg-teal-400"></div>
+                      <span className="text-sm text-gray-300">PT Positions</span>
+                    </div>
+                    <span className="text-sm font-medium text-white">0%</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 rounded-full bg-green-400"></div>
+                      <span className="text-sm text-gray-300">LP Positions</span>
+                    </div>
+                    <span className="text-sm font-medium text-white">0%</span>
                   </div>
                 </div>
               </div>
 
-              {/* Your Position */}
-              <div className="bg-gradient-to-b from-[#0F0F0F] to-[#1A1A1A] backdrop-blur-sm rounded-2xl border border-[#2A2A2A] p-8 shadow-[0_0_20px_rgba(0,0,0,0.3)] transition-all duration-300 hover:shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:border-[#3A3A3A]">
-                <div className="flex items-center justify-between mb-8">
-                  <div className="flex items-center space-x-3">
-                    <h3 className="text-xl font-semibold text-white">Your position</h3>
-                    <Info className="w-5 h-5 text-gray-400 hover:text-gray-300 transition-colors" />
-                  </div>
-                  <div className="text-right">
-                    <div className="text-xs text-gray-400">Net APY</div>
-                    <div className="text-sm font-medium text-white">{netAPY}%</div>
-                  </div>
+              {/* Net APY & Rewards */}
+              <div className="bg-[#0A0A0A] rounded-xl border border-[#2A2A2A] p-6 hover:border-[#3A3A3A] transition-colors">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg font-semibold text-white">Net APY & Rewards</h3>
+                  <Info className="w-5 h-5 text-gray-400 hover:text-gray-300 transition-colors cursor-help" />
                 </div>
 
-                {/* Collateral deposited */}
-                <div className="mb-8">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-sm text-gray-400">Collateral deposited</span>
-                    <span className="text-sm font-medium text-white">
-                      {formatCurrency(summary.totalValue)}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
-                    <span>0</span>
-                    <span>22.5K</span>
-                    <span>45K</span>
-                    <span>67.5K</span>
-                    <span>90K</span>
-                  </div>
-                  <div className="w-full bg-[#2A2A2A] rounded-full h-3">
-                    <div 
-                      className="bg-gradient-to-r from-blue-500 to-cyan-400 h-3 rounded-full shadow-[0_0_8px_rgba(59,130,246,0.4)] transition-all duration-500" 
-                      style={{ width: `${Math.min((summary.totalValue / 90000) * 100, 100)}%` }}
-                    />
-                  </div>
+                {/* Net APY Display */}
+                <div className="text-center mb-8">
+                  <div className="text-4xl font-bold text-white mb-2">0.00%</div>
+                  <div className="text-sm text-gray-400">Net APY</div>
                 </div>
 
-                {/* Borrow */}
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-sm text-gray-400">Borrow</span>
-                    <span className="text-sm font-medium text-white">-</span>
+                {/* Rewards Breakdown */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-3 bg-[#111111] rounded-lg">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-2 h-2 rounded-full bg-yellow-400"></div>
+                      <span className="text-sm text-gray-300">Owna Points</span>
+                    </div>
+                    <span className="text-sm font-medium text-yellow-400">0</span>
                   </div>
-                  <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
-                    <span>0</span>
-                    <span>22.5K</span>
-                    <span>45K</span>
-                    <span>67.5K</span>
-                    <span>90K</span>
+                  <div className="flex items-center justify-between p-3 bg-[#111111] rounded-lg">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-2 h-2 rounded-full bg-blue-400"></div>
+                      <span className="text-sm text-gray-300">YT Rewards</span>
+                    </div>
+                    <span className="text-sm font-medium text-blue-400">$0</span>
                   </div>
-                  <div className="w-full bg-[#2A2A2A] rounded-full h-3">
-                    <div className="bg-gradient-to-r from-red-500 to-orange-400 h-3 rounded-full shadow-[0_0_8px_rgba(239,68,68,0.4)]" style={{ width: '0%' }} />
+                  <div className="flex items-center justify-between p-3 bg-[#111111] rounded-lg">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-2 h-2 rounded-full bg-green-400"></div>
+                      <span className="text-sm text-gray-300">LP Fees</span>
+                    </div>
+                    <span className="text-sm font-medium text-green-400">$0</span>
                   </div>
                 </div>
               </div>
             </div>
 
 
-            {/* My deposits and My borrows */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* My deposits */}
-              <div className="bg-gradient-to-b from-[#0F0F0F] to-[#1A1A1A] backdrop-blur-sm rounded-2xl border border-[#2A2A2A] shadow-[0_0_20px_rgba(0,0,0,0.3)] transition-all duration-300 hover:shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:border-[#3A3A3A]">
-                <div className="p-8 border-b border-[#2A2A2A]">
+            {/* PT/YT/LP Positions Tables */}
+            <div className="space-y-6">
+              {/* PT Positions */}
+              <div className="bg-[#0A0A0A] rounded-xl border border-[#2A2A2A] overflow-hidden hover:border-[#3A3A3A] transition-colors">
+                <div className="p-6 border-b border-[#2A2A2A]">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-xl font-semibold text-white">My deposits</h3>
                     <div className="flex items-center space-x-3">
-                      <button 
-                        onClick={() => setShowDeposits(!showDeposits)}
-                        className="text-gray-400 hover:text-gray-200 transition-colors duration-200"
-                      >
-                        {showDeposits ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
-                      </button>
-                      <span className="text-sm text-gray-400">Hide</span>
-                      <ChevronDown className="w-5 h-5 text-gray-400 hover:text-gray-200 transition-colors" />
+                      <div className="w-3 h-3 rounded-full bg-teal-400"></div>
+                      <h3 className="text-lg font-semibold text-white">PT Positions</h3>
+                      <div className="px-2 py-1 bg-teal-400/10 rounded text-xs text-teal-400 font-medium">
+                        Fixed Yield
+                      </div>
                     </div>
+                    <div className="text-sm text-gray-400">Total Value: $0</div>
                   </div>
                 </div>
-                <div className="p-8">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="text-left border-b border-[#2A2A2A]">
-                        <th className="pb-4 text-sm font-medium text-gray-400">Assets</th>
-                        <th className="pb-4 text-sm font-medium text-gray-400">
-                          <div className="flex items-center space-x-1">
-                            <span>Balance</span>
-                            <ChevronDown className="w-3 h-3 hover:text-gray-200 transition-colors" />
-                          </div>
-                        </th>
-                        <th className="pb-4 text-sm font-medium text-gray-400">
-                          <div className="flex items-center space-x-1">
-                            <span>APY</span>
-                            <Info className="w-3 h-3 hover:text-gray-200 transition-colors" />
-                            <ChevronDown className="w-3 h-3 hover:text-gray-200 transition-colors" />
-                          </div>
-                        </th>
-                        <th className="pb-4 text-sm font-medium text-gray-400">Collateral</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td colSpan={4} className="pt-12 text-center">
-                          <div className="text-gray-500 text-sm">No data to display</div>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
+                <div className="p-6">
+                  <div className="grid grid-cols-5 gap-4 mb-4 text-xs font-medium text-gray-400 uppercase">
+                    <div>Asset</div>
+                    <div className="text-right">Balance</div>
+                    <div className="text-right">Value</div>
+                    <div className="text-right">Fixed APY</div>
+                    <div className="text-right">Maturity</div>
+                  </div>
+                  <div className="text-center py-8 text-gray-500 text-sm">
+                    No PT positions found
+                  </div>
                 </div>
               </div>
 
-              {/* My borrows */}
-              <div className="bg-gradient-to-b from-[#0F0F0F] to-[#1A1A1A] backdrop-blur-sm rounded-2xl border border-[#2A2A2A] shadow-[0_0_20px_rgba(0,0,0,0.3)] transition-all duration-300 hover:shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:border-[#3A3A3A]">
-                <div className="p-8 border-b border-[#2A2A2A]">
+              {/* YT Positions */}
+              <div className="bg-[#0A0A0A] rounded-xl border border-[#2A2A2A] overflow-hidden hover:border-[#3A3A3A] transition-colors">
+                <div className="p-6 border-b border-[#2A2A2A]">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-xl font-semibold text-white">My borrows</h3>
                     <div className="flex items-center space-x-3">
-                      <span className="text-sm text-gray-400">E-Mode</span>
-                      <div className="w-10 h-5 bg-[#2A2A2A] rounded-full relative border border-[#3A3A3A]">
-                        <div className="w-4 h-4 bg-gray-300 rounded-full absolute top-0.5 left-0.5 shadow-sm transition-all duration-200"></div>
+                      <div className="w-3 h-3 rounded-full bg-blue-400"></div>
+                      <h3 className="text-lg font-semibold text-white">YT Positions</h3>
+                      <div className="px-2 py-1 bg-blue-400/10 rounded text-xs text-blue-400 font-medium">
+                        Variable Yield
                       </div>
-                      <button 
-                        onClick={() => setShowBorrows(!showBorrows)}
-                        className="text-gray-400 hover:text-gray-200 transition-colors duration-200"
-                      >
-                        {showBorrows ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
-                      </button>
-                      <span className="text-sm text-gray-400">Hide</span>
-                      <ChevronDown className="w-5 h-5 text-gray-400 hover:text-gray-200 transition-colors" />
                     </div>
+                    <div className="text-sm text-gray-400">Total Value: $0</div>
                   </div>
                 </div>
-                <div className="p-8">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="text-left border-b border-[#2A2A2A]">
-                        <th className="pb-4 text-sm font-medium text-gray-400">Assets</th>
-                        <th className="pb-4 text-sm font-medium text-gray-400">
-                          <div className="flex items-center space-x-1">
-                            <span>Debt</span>
-                            <ChevronDown className="w-3 h-3 hover:text-gray-200 transition-colors" />
-                          </div>
-                        </th>
-                        <th className="pb-4 text-sm font-medium text-gray-400">
-                          <div className="flex items-center space-x-1">
-                            <span>APY</span>
-                            <Info className="w-3 h-3 hover:text-gray-200 transition-colors" />
-                            <ChevronDown className="w-3 h-3 hover:text-gray-200 transition-colors" />
-                          </div>
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td colSpan={3} className="pt-12 text-center">
-                          <div className="text-gray-500 text-sm">No data to display</div>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
+                <div className="p-6">
+                  <div className="grid grid-cols-5 gap-4 mb-4 text-xs font-medium text-gray-400 uppercase">
+                    <div>Asset</div>
+                    <div className="text-right">Balance</div>
+                    <div className="text-right">Value</div>
+                    <div className="text-right">Current APY</div>
+                    <div className="text-right">Leverage</div>
+                  </div>
+                  <div className="text-center py-8 text-gray-500 text-sm">
+                    No YT positions found
+                  </div>
+                </div>
+              </div>
+
+              {/* LP Positions */}
+              <div className="bg-[#0A0A0A] rounded-xl border border-[#2A2A2A] overflow-hidden hover:border-[#3A3A3A] transition-colors">
+                <div className="p-6 border-b border-[#2A2A2A]">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-3 h-3 rounded-full bg-green-400"></div>
+                      <h3 className="text-lg font-semibold text-white">LP Positions</h3>
+                      <div className="px-2 py-1 bg-green-400/10 rounded text-xs text-green-400 font-medium">
+                        Liquidity Providing
+                      </div>
+                    </div>
+                    <div className="text-sm text-gray-400">Total Value: $0</div>
+                  </div>
+                </div>
+                <div className="p-6">
+                  <div className="grid grid-cols-5 gap-4 mb-4 text-xs font-medium text-gray-400 uppercase">
+                    <div>Pool</div>
+                    <div className="text-right">LP Balance</div>
+                    <div className="text-right">Value</div>
+                    <div className="text-right">APY</div>
+                    <div className="text-right">Fees Earned</div>
+                  </div>
+                  <div className="text-center py-8 text-gray-500 text-sm">
+                    No LP positions found
+                  </div>
                 </div>
               </div>
             </div>
