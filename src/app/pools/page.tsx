@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/dashboard-layout';
 import { Button } from '@/components/ui/button';
-import { ChevronDown, Eye, EyeOff, Star, Search, Grid3X3, List, BarChart3 } from 'lucide-react';
+import { ChevronDown, Eye, EyeOff, Star, Search, Grid3X3, List } from 'lucide-react';
 import Image from 'next/image';
 
 export default function PoolsPage() {
@@ -195,9 +195,6 @@ export default function PoolsPage() {
               >
                 <Grid3X3 className="w-4 h-4" />
               </button>
-              <button className="p-2 rounded text-gray-400 hover:text-white transition-colors">
-                <BarChart3 className="w-4 h-4" />
-              </button>
             </div>
 
             {/* Search */}
@@ -216,30 +213,33 @@ export default function PoolsPage() {
 
         {/* Pools Table */}
         <div className="bg-[#0A0A0A] rounded-xl border border-[#2A2A2A] overflow-hidden">
-          {/* Table Header */}
-          <div className="grid grid-cols-5 gap-4 p-4 bg-[#111111] border-b border-[#2A2A2A]">
-            <div className="text-xs font-medium text-gray-400 uppercase">
-              <div className="flex items-center space-x-2">
-                <span>Asset</span>
-                <ChevronDown className="w-3 h-3" />
+          {/* List View */}
+          {viewMode === 'list' && (
+            <>
+              {/* Table Header */}
+              <div className="grid grid-cols-5 gap-4 p-4 bg-[#111111] border-b border-[#2A2A2A]">
+                <div className="text-xs font-medium text-gray-400 uppercase">
+                  <div className="flex items-center space-x-2">
+                    <span>Asset</span>
+                    <ChevronDown className="w-3 h-3" />
+                  </div>
+                </div>
+                <div className="text-xs font-medium text-gray-400 uppercase text-center">
+                  24h Volume
+                </div>
+                <div className="text-xs font-medium text-gray-400 uppercase text-center">
+                  Total Liquidity<br />
+                  <span className="text-xs text-gray-500">Total TVL</span>
+                </div>
+                <div className="text-xs font-medium text-gray-400 uppercase text-center">
+                  Best LP APY
+                </div>
+                <div className="text-xs font-medium text-gray-400 uppercase text-center">
+                  Actions
+                </div>
               </div>
-            </div>
-            <div className="text-xs font-medium text-gray-400 uppercase text-center">
-              24h Volume
-            </div>
-            <div className="text-xs font-medium text-gray-400 uppercase text-center">
-              Total Liquidity<br />
-              <span className="text-xs text-gray-500">Total TVL</span>
-            </div>
-            <div className="text-xs font-medium text-gray-400 uppercase text-center">
-              Best LP APY
-            </div>
-            <div className="text-xs font-medium text-gray-400 uppercase text-center">
-              Actions
-            </div>
-          </div>
 
-          {/* Pools List */}
+              {/* Pools List */}
           <div>
             {filteredPools.map((pool, index) => (
               <div key={pool.id}>
@@ -361,6 +361,106 @@ export default function PoolsPage() {
               </div>
             ))}
           </div>
+            </>
+          )}
+
+          {/* Grid View */}
+          {viewMode === 'grid' && (
+            <div className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredPools.map((pool) => (
+                  <div key={pool.id} className="bg-[#111111] rounded-xl border border-[#2A2A2A] p-6 hover:border-[#3A3A3A] transition-colors">
+                    <div className="flex items-center space-x-3 mb-4">
+                      <div className="w-10 h-10 rounded-full bg-white p-2 flex items-center justify-center">
+                        <Image
+                          src={pool.logo}
+                          alt={pool.symbol}
+                          width={24}
+                          height={24}
+                          className="rounded-full"
+                        />
+                      </div>
+                      <div>
+                        <div className="flex items-center space-x-2">
+                          <h3 className="text-lg font-semibold text-white">{pool.symbol}</h3>
+                          <div className="bg-blue-500/20 text-blue-400 px-2 py-1 rounded text-xs font-medium">
+                            {pool.markets} Markets
+                          </div>
+                        </div>
+                        <p className="text-xs text-gray-400">{pool.name}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-3 mb-4">
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-400">24h Volume</span>
+                        <span className="text-sm font-medium text-white">${pool.volume24h}M</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-400">Total Liquidity</span>
+                        <span className="text-sm font-medium text-white">${pool.totalLiquidity}M</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-400">Total TVL</span>
+                        <span className="text-sm font-medium text-gray-300">${pool.totalTVL}M</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-400">Best LP APY</span>
+                        <span className="text-sm font-medium text-green-400">{pool.bestLPAPY}%</span>
+                      </div>
+                    </div>
+
+                    <div className="pt-4 border-t border-[#2A2A2A]">
+                      <button 
+                        onClick={() => togglePoolExpansion(pool.id)}
+                        className="w-full bg-[#1E293B] hover:bg-[#334155] text-blue-400 py-2 px-4 rounded-lg text-sm font-medium transition-colors border border-[#334155] flex items-center justify-center space-x-2"
+                      >
+                        <span>View Details</span>
+                        <ChevronDown 
+                          className={`w-4 h-4 transition-transform duration-200 ${
+                            expandedPools.includes(pool.id) ? 'rotate-180' : ''
+                          }`} 
+                        />
+                      </button>
+                      
+                      {/* Expanded Pool Details in Grid */}
+                      {expandedPools.includes(pool.id) && (
+                        <div className="mt-4 pt-4 border-t border-[#2A2A2A]">
+                          <h4 className="text-sm font-medium text-white mb-3">Pool Details</h4>
+                          <div className="space-y-2">
+                            {pool.pools.map((individualPool) => (
+                              <div key={individualPool.id} className="bg-[#0A0A0A] rounded-lg p-3">
+                                <div className="flex items-center justify-between mb-2">
+                                  <div className="flex items-center space-x-2">
+                                    <div className="w-4 h-4 rounded-full bg-white p-0.5 flex items-center justify-center">
+                                      <Image
+                                        src={pool.logo}
+                                        alt={individualPool.symbol}
+                                        width={12}
+                                        height={12}
+                                        className="rounded-full"
+                                      />
+                                    </div>
+                                    <span className="text-xs font-medium text-white">{individualPool.symbol}</span>
+                                  </div>
+                                  <span className="text-xs text-green-400 font-medium">{individualPool.lpApy}%</span>
+                                </div>
+                                <div className="text-xs text-gray-400">{individualPool.maturity}</div>
+                                <div className="flex justify-between mt-1">
+                                  <span className="text-xs text-gray-500">Volume: ${individualPool.volume24h}M</span>
+                                  <span className="text-xs text-gray-500">TVL: ${individualPool.totalTVL}M</span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </DashboardLayout>
