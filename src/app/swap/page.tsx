@@ -44,26 +44,24 @@ export default function SwapPage() {
     <DashboardLayout>
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Header */}
-        <div className="text-center mb-16">
-          <h1 className="text-4xl font-bold text-white tracking-tight mb-4">Swap</h1>
-          <p className="text-gray-400 text-lg">Trade tokens instantly on Base</p>
+        <div className="mb-8">
+          <h1 className="text-3xl font-semibold text-white mb-6">Swap</h1>
+          <p className="text-gray-400">Trade tokens instantly on Base</p>
         </div>
 
         {/* Swap Interface */}
         <div className="flex justify-center">
           <div className="w-full max-w-md">
-            <div className="bg-gradient-to-b from-[#0F0F0F] to-[#1A1A1A] backdrop-blur-sm rounded-2xl border border-[#2A2A2A] p-8 shadow-[0_0_20px_rgba(0,0,0,0.3)] transition-all duration-300 hover:shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:border-[#3A3A3A]">
+            <div className="bg-[#0A0A0A] rounded-xl border border-[#2A2A2A] p-6 hover:border-[#3A3A3A] transition-colors">
               <style dangerouslySetInnerHTML={{
                 __html: `
                   .swap-dark [data-testid="ockSwapAmountInput_Container"] {
-                    background: linear-gradient(135deg, #0F0F0F, #1A1A1A) !important;
+                    background: #0A0A0A !important;
                     border: 1px solid #2A2A2A !important;
-                    border-radius: 16px !important;
-                    box-shadow: 0 0 20px rgba(0,0,0,0.3) !important;
+                    border-radius: 12px !important;
                   }
                   .swap-dark [data-testid="ockSwapAmountInput_Container"]:hover {
                     border: 1px solid #3A3A3A !important;
-                    box-shadow: 0 0 25px rgba(255,255,255,0.05) !important;
                   }
                   .swap-dark [data-testid="ockSwapAmountInput_Container"] input {
                     background-color: transparent !important;
@@ -83,17 +81,15 @@ export default function SwapPage() {
                   }
                   /* Toggle button */
                   .swap-dark [data-testid="ockSwapToggleButton"] {
-                    background: linear-gradient(135deg, #3B82F6, #1D4ED8) !important;
-                    border: 1px solid #2563EB !important;
+                    background: #111111 !important;
+                    border: 1px solid #2A2A2A !important;
                     color: #ffffff !important;
                     border-radius: 12px !important;
-                    box-shadow: 0 0 20px rgba(59,130,246,0.3) !important;
                     transition: all 0.3s ease !important;
                   }
                   .swap-dark [data-testid="ockSwapToggleButton"]:hover {
-                    background: linear-gradient(135deg, #2563EB, #1E40AF) !important;
-                    box-shadow: 0 0 30px rgba(59,130,246,0.5) !important;
-                    transform: scale(1.05) !important;
+                    background: #1A1A1A !important;
+                    border: 1px solid #3A3A3A !important;
                   }
                   /* Toggle button SVG/Arrow icons */
                   .swap-dark [data-testid="ockSwapToggleButton"] svg {
@@ -112,30 +108,26 @@ export default function SwapPage() {
                   }
                   /* Swap button */
                   .swap-dark [data-testid="ockSwapButton"] {
-                    background: linear-gradient(135deg, #3B82F6, #06B6D4) !important;
+                    background: #3B82F6 !important;
                     border: 1px solid #2563EB !important;
                     color: #ffffff !important;
-                    border-radius: 16px !important;
+                    border-radius: 12px !important;
                     padding: 16px !important;
                     font-weight: 600 !important;
                     font-size: 16px !important;
-                    box-shadow: 0 0 25px rgba(59,130,246,0.3) !important;
                     transition: all 0.3s ease !important;
                   }
                   .swap-dark [data-testid="ockSwapButton"]:hover {
-                    background: linear-gradient(135deg, #2563EB, #0891B2) !important;
-                    box-shadow: 0 0 35px rgba(59,130,246,0.5) !important;
-                    transform: translateY(-2px) !important;
+                    background: #2563EB !important;
                   }
                   /* Token dropdown menus */
                   .swap-dark [role="listbox"],
                   .swap-dark [role="menu"],
                   .swap-dark div[class*="dropdown"],
                   .swap-dark div[class*="menu"] {
-                    background-color: #1A1A1A !important;
+                    background-color: #0A0A0A !important;
                     border: 1px solid #2A2A2A !important;
                     border-radius: 12px !important;
-                    box-shadow: 0 0 30px rgba(0,0,0,0.5) !important;
                   }
                   /* Token dropdown options */
                   .swap-dark [role="option"],
@@ -151,17 +143,15 @@ export default function SwapPage() {
                   }
                   /* Token selector buttons */
                   .swap-dark [data-testid="ockSwapAmountInput_TokenSelector"] {
-                    background: linear-gradient(135deg, #1A1A1A, #2A2A2A) !important;
-                    border: 1px solid #3A3A3A !important;
+                    background: #111111 !important;
+                    border: 1px solid #2A2A2A !important;
                     color: #ffffff !important;
-                    border-radius: 16px !important;
+                    border-radius: 12px !important;
                     transition: all 0.3s ease !important;
-                    box-shadow: 0 0 15px rgba(0,0,0,0.3) !important;
                   }
                   .swap-dark [data-testid="ockSwapAmountInput_TokenSelector"]:hover {
-                    background: linear-gradient(135deg, #2A2A2A, #3A3A3A) !important;
-                    border: 1px solid #4A4A4A !important;
-                    box-shadow: 0 0 20px rgba(255,255,255,0.1) !important;
+                    background: #1A1A1A !important;
+                    border: 1px solid #3A3A3A !important;
                   }
                 `
               }} />
@@ -188,14 +178,14 @@ export default function SwapPage() {
                 </div>
               ) : (
                 <div className="text-center py-12">
-                  <div className="w-20 h-20 bg-[#2A2A2A] border border-[#3A3A3A] rounded-full flex items-center justify-center mx-auto mb-6 shadow-[0_0_20px_rgba(0,0,0,0.3)]">
-                    <svg className="w-10 h-10 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="w-16 h-16 bg-[#111111] border border-[#2A2A2A] rounded-full flex items-center justify-center mx-auto mb-6">
+                    <svg className="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
                     </svg>
                   </div>
-                  <h3 className="text-2xl font-semibold text-white mb-3">Connect Your Wallet</h3>
-                  <p className="text-gray-400 mb-8 text-lg">Connect your wallet to start trading tokens</p>
-                  <div className="bg-gradient-to-b from-[#0F0F0F] to-[#1A1A1A] border border-[#3A3A3A] rounded-xl p-1 inline-block">
+                  <h3 className="text-lg font-semibold text-white mb-3">Connect Your Wallet</h3>
+                  <p className="text-gray-400 mb-6 text-sm">Connect your wallet to start trading tokens</p>
+                  <div className="bg-[#111111] border border-[#2A2A2A] rounded-lg p-1 inline-block hover:border-[#3A3A3A] transition-colors">
                     <Wallet>
                       <ConnectWallet>
                         <Avatar className="h-6 w-6" />

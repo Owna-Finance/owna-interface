@@ -30,8 +30,6 @@ export default function DashboardPage() {
     isLoading,
     error,
     loadPortfolio,
-    refreshPortfolio,
-    getPortfolioSummary,
     clearError
   } = usePortfolioStore();
 
@@ -40,10 +38,6 @@ export default function DashboardPage() {
       loadPortfolio();
     }
   }, [portfolio, loadPortfolio]);
-
-  const summary = getPortfolioSummary();
-  const healthFactor = 2.5; // Mock health factor
-  const netAPY = 0.00; // Mock net APY
 
   if (error) {
     return (

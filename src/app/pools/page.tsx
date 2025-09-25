@@ -132,15 +132,15 @@ export default function PoolsPage() {
     <DashboardLayout>
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-12">
-          <h1 className="text-4xl font-bold text-white tracking-tight">Pools</h1>
+        <div className="mb-8">
+          <h1 className="text-3xl font-semibold text-white mb-6">Pools</h1>
         </div>
 
         {/* Controls Row */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center space-x-4">
             {/* Prime Badge */}
-            <div className="flex items-center space-x-2 bg-[#1A1A1A]/40 px-4 py-2 rounded-xl border border-[#2A2A2A]/50">
+            <div className="flex items-center space-x-2 bg-[#111111] px-4 py-2 rounded-lg border border-[#2A2A2A]">
               <div className="w-4 h-4 bg-yellow-500 rounded-full flex items-center justify-center">
                 <span className="text-xs font-bold text-black">P</span>
               </div>
@@ -150,10 +150,10 @@ export default function PoolsPage() {
             {/* Favorites */}
             <button 
               onClick={() => setShowFavorites(!showFavorites)}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-xl transition-all duration-300 ${
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
                 showFavorites 
                   ? 'bg-yellow-500/20 border border-yellow-500/50 text-yellow-400'
-                  : 'bg-[#1A1A1A]/40 border border-[#2A2A2A]/50 text-gray-300 hover:bg-[#2A2A2A]/50'
+                  : 'bg-[#111111] border border-[#2A2A2A] text-gray-300 hover:border-[#3A3A3A]'
               }`}
             >
               <Star className={`w-4 h-4 ${showFavorites ? 'fill-current' : ''}`} />
@@ -161,7 +161,7 @@ export default function PoolsPage() {
             </button>
 
             {/* Categories Dropdown */}
-            <div className="flex items-center space-x-3 text-sm bg-[#1A1A1A]/40 px-4 py-2 rounded-xl border border-[#2A2A2A]/50">
+            <div className="flex items-center space-x-3 text-sm bg-[#111111] px-4 py-2 rounded-lg border border-[#2A2A2A]">
               <span className="text-gray-300 font-medium">{selectedCategory}</span>
               <ChevronDown className="w-4 h-4 text-gray-400" />
             </div>
@@ -174,10 +174,10 @@ export default function PoolsPage() {
             </button>
 
             {/* View Mode Toggles */}
-            <div className="flex items-center space-x-1 bg-[#1A1A1A]/40 p-1 rounded-lg border border-[#2A2A2A]/50">
+            <div className="flex items-center space-x-1 bg-[#111111] p-1 rounded-lg border border-[#2A2A2A]">
               <button
                 onClick={() => setViewMode('list')}
-                className={`p-2 rounded transition-all duration-200 ${
+                className={`p-2 rounded transition-colors ${
                   viewMode === 'list' 
                     ? 'bg-[#2A2A2A] text-white' 
                     : 'text-gray-400 hover:text-white'
@@ -187,7 +187,7 @@ export default function PoolsPage() {
               </button>
               <button
                 onClick={() => setViewMode('grid')}
-                className={`p-2 rounded transition-all duration-200 ${
+                className={`p-2 rounded transition-colors ${
                   viewMode === 'grid' 
                     ? 'bg-[#2A2A2A] text-white' 
                     : 'text-gray-400 hover:text-white'
@@ -208,44 +208,46 @@ export default function PoolsPage() {
                 placeholder="Search name or paste address"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 bg-[#1A1A1A]/40 border border-[#2A2A2A]/50 rounded-xl text-white placeholder-gray-400 text-sm focus:outline-none focus:border-[#3A3A3A] transition-colors w-80"
+                className="pl-10 pr-4 py-2 bg-[#111111] border border-[#2A2A2A] rounded-lg text-white placeholder-gray-400 text-sm focus:outline-none focus:border-[#3A3A3A] transition-colors w-80"
               />
             </div>
           </div>
         </div>
 
         {/* Pools Table */}
-        <div className="bg-[#1A1A1A]/70 backdrop-blur-sm rounded-2xl border border-[#2A2A2A] shadow-[0_0_20px_rgba(255,255,255,0.05)] overflow-hidden">
+        <div className="bg-[#0A0A0A] rounded-xl border border-[#2A2A2A] overflow-hidden">
           {/* Table Header */}
-          <div className="grid grid-cols-5 gap-4 p-4 bg-[#0F0F0F]/50 border-b border-[#2A2A2A]/50">
-            <div className="text-xs font-medium text-gray-400 uppercase tracking-wider">
+          <div className="grid grid-cols-5 gap-4 p-4 bg-[#111111] border-b border-[#2A2A2A]">
+            <div className="text-xs font-medium text-gray-400 uppercase">
               <div className="flex items-center space-x-2">
                 <span>Asset</span>
                 <ChevronDown className="w-3 h-3" />
               </div>
             </div>
-            <div className="text-xs font-medium text-gray-400 uppercase tracking-wider text-center">
+            <div className="text-xs font-medium text-gray-400 uppercase text-center">
               24h Volume
             </div>
-            <div className="text-xs font-medium text-gray-400 uppercase tracking-wider text-center">
+            <div className="text-xs font-medium text-gray-400 uppercase text-center">
               Total Liquidity<br />
               <span className="text-xs text-gray-500">Total TVL</span>
             </div>
-            <div className="text-xs font-medium text-gray-400 uppercase tracking-wider text-center">
-              Best LP APY <span className="text-xs">(up to)</span>
+            <div className="text-xs font-medium text-gray-400 uppercase text-center">
+              Best LP APY
             </div>
-            <div className="text-xs font-medium text-gray-400 uppercase tracking-wider text-center">
+            <div className="text-xs font-medium text-gray-400 uppercase text-center">
               Actions
             </div>
           </div>
 
           {/* Pools List */}
-          <div className="divide-y divide-[#2A2A2A]/30">
-            {filteredPools.map((pool) => (
+          <div>
+            {filteredPools.map((pool, index) => (
               <div key={pool.id}>
                 {/* Pool Row */}
                 <div 
-                  className="grid grid-cols-5 gap-4 p-4 hover:bg-[#2A2A2A]/20 transition-all duration-200 cursor-pointer"
+                  className={`grid grid-cols-5 gap-4 p-4 hover:bg-[#111111] transition-colors cursor-pointer ${
+                    index !== filteredPools.length - 1 ? 'border-b border-[#1A1A1A]' : ''
+                  }`}
                   onClick={() => togglePoolExpansion(pool.id)}
                 >
                   <div className="flex items-center space-x-3">
@@ -295,29 +297,31 @@ export default function PoolsPage() {
 
                 {/* Expanded Pools Table */}
                 {expandedPools.includes(pool.id) && (
-                  <div className="bg-[#0A0A0A]/30 border-t border-[#2A2A2A]/30">
+                  <div className="bg-[#111111] border-t border-[#2A2A2A]">
                     {/* Pool Table Header */}
-                    <div className="grid grid-cols-4 gap-4 p-3 bg-[#0A0A0A]/50 border-b border-[#2A2A2A]/30">
-                      <div className="text-xs font-medium text-gray-400 uppercase tracking-wider">
+                    <div className="grid grid-cols-4 gap-4 p-4 bg-[#0A0A0A] border-b border-[#2A2A2A]">
+                      <div className="text-xs font-medium text-gray-400 uppercase">
                         Pool
                       </div>
-                      <div className="text-xs font-medium text-gray-400 uppercase tracking-wider text-center">
+                      <div className="text-xs font-medium text-gray-400 uppercase text-center">
                         24h Volume
                       </div>
-                      <div className="text-xs font-medium text-gray-400 uppercase tracking-wider text-center">
+                      <div className="text-xs font-medium text-gray-400 uppercase text-center">
                         Liquidity<br />
                         <span className="text-xs text-gray-500">Total TVL</span>
                       </div>
-                      <div className="text-xs font-medium text-gray-400 uppercase tracking-wider text-center">
+                      <div className="text-xs font-medium text-gray-400 uppercase text-center">
                         LP APY
                       </div>
                     </div>
 
                     {/* Individual Pool Rows */}
-                    {pool.pools.map((individualPool) => (
+                    {pool.pools.map((individualPool, poolIndex) => (
                       <div 
                         key={individualPool.id}
-                        className="grid grid-cols-4 gap-4 p-3 hover:bg-[#2A2A2A]/10 transition-all duration-200"
+                        className={`grid grid-cols-4 gap-4 p-4 hover:bg-[#1A1A1A] transition-colors ${
+                          poolIndex !== pool.pools.length - 1 ? 'border-b border-[#2A2A2A]' : ''
+                        }`}
                       >
                         <div className="flex items-center space-x-3">
                           <div className="flex items-center space-x-2">
