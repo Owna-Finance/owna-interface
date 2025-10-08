@@ -87,6 +87,32 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.addEventListener('error', function(e) {
+                if (e.error && e.error.context === 'AnalyticsSDKApiError') {
+                  e.preventDefault();
+                  console.warn('Analytics SDK error suppressed:', e.error.message);
+                  return false;
+                }
+              });
+              
+              window.addEventListener('unhandledrejection', function(e) {
+                if (e.reason && (
+                  e.reason.context === 'AnalyticsSDKApiError' ||
+                  e.reason.message?.includes('Failed to fetch') && e.reason.stack?.includes('_t(')
+                )) {
+                  e.preventDefault();
+                  console.warn('Analytics fetch error suppressed:', e.reason);
+                  return false;
+                }
+              });
+            `,
+          }}
+        />
+      </head>
       <body
         className={`${kantumruyPro.variable} antialiased bg-black overscroll-none`}
         style={{ overscrollBehavior: 'none' }}

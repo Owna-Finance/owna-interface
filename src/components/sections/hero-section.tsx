@@ -90,11 +90,11 @@ export function HeroSection({
 
   const OwnaLogo = () => (
     <a href="#" className="relative z-20 flex items-center space-x-3 px-4 py-2">
-      <div className="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center backdrop-blur-sm">
+      <div className="w-8 h-8 flex items-center justify-center backdrop-blur-sm">
         <img
           src="/Images/Logo/owna-logo.png"
           alt="Owna Logo"
-          width={16}
+          width={60}
           height={16}
         />
       </div>

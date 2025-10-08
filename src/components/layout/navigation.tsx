@@ -51,9 +51,8 @@ export function Navigation({ className }: NavigationProps) {
             alt="Owna Logo"
             width={36}
             height={36}
-            className="rounded-xl bg-white p-1 shadow-[0_0_12px_rgba(59,130,246,0.3)]"
           />
-          <span className="text-2xl font-medium text-white tracking-tight">Owna</span>
+          <span className="text-xl font-medium text-white tracking-tight">Owna</span>
         </div>
       </div>
 

@@ -98,21 +98,10 @@ export const landingPageContent: LandingPageContent = {
 export const videoConfiguration = {
   sources: [
     {
-      src: "/Video/Background/owna-bg-mobile.mp4",
-      media: "(max-width: 768px)",
-      type: "video/mp4",
-    },
-    {
-      src: "/Video/Background/owna-bg-tablet.mp4",
-      media: "(max-width: 1024px)",
-      type: "video/mp4",
-    },
-    {
       src: "/Video/Background/owna-bg.mp4",
       type: "video/mp4",
     },
   ],
-  poster: "/Images/video-poster.jpg",
   playbackSettings: {
     autoplay: true,
     muted: true,
@@ -125,8 +114,8 @@ export const videoConfiguration = {
     intersectionThreshold: 0.1,
   },
   qualityOptions: {
-    mobile: "/Video/Background/owna-bg-mobile.mp4",
-    tablet: "/Video/Background/owna-bg-tablet.mp4",
+    mobile: "/Video/Background/owna-bg.mp4",
+    tablet: "/Video/Background/owna-bg.mp4",
     desktop: "/Video/Background/owna-bg.mp4",
   },
 };
