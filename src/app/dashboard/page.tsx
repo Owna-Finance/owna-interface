@@ -33,6 +33,50 @@ export default function DashboardPage() {
     clearError
   } = usePortfolioStore();
 
+  // Mock YRT holdings data
+  const yrtHoldings = [
+    {
+      propertyName: 'YRT-HRA',
+      balance: '125.50',
+      value: '$15,687.50',
+      apy: '8.2%',
+      location: 'Yogyakarta',
+      type: 'Hotel',
+      performance: '+12.5%'
+    },
+    {
+      propertyName: 'YRT-UKDW',
+      balance: '89.25',
+      value: '$11,156.25',
+      apy: '6.8%',
+      location: 'Yogyakarta',
+      type: 'University',
+      performance: '+8.7%'
+    },
+    {
+      propertyName: 'YRT-HF',
+      balance: '67.80',
+      value: '$8,475.00',
+      apy: '7.5%',
+      location: 'Yogyakarta',
+      type: 'Hotel',
+      performance: '+15.2%'
+    },
+    {
+      propertyName: 'YRT-HMM',
+      balance: '45.30',
+      value: '$5,662.50',
+      apy: '9.1%',
+      location: 'Yogyakarta',
+      type: 'Hotel',
+      performance: '+18.9%'
+    }
+  ];
+
+  const totalYRTValue = yrtHoldings.reduce((sum, holding) => 
+    sum + parseFloat(holding.value.replace('$', '').replace(',', '')), 0
+  );
+
   useEffect(() => {
     if (!portfolio) {
       loadPortfolio();
@@ -215,17 +259,17 @@ export default function DashboardPage() {
                   : 'text-gray-400 hover:text-white hover:bg-[#2A2A2A]/50'
               }`}
             >
-              Portfolio overview
+              YRT Portfolio
             </button>
             <button
-              onClick={() => setActiveTab('markets')}
+              onClick={() => setActiveTab('properties')}
               className={`px-6 py-3 rounded-xl font-medium text-sm transition-all duration-300 relative ${
-                activeTab === 'markets'
+                activeTab === 'properties'
                   ? 'text-white'
                   : 'text-gray-400 hover:text-white hover:bg-[#2A2A2A]/50'
               }`}
             >
-              Available markets
+              My Properties
             </button>
             <button
               onClick={() => setActiveTab('activity')}
@@ -242,53 +286,55 @@ export default function DashboardPage() {
 
         {activeTab === 'portfolio' && (
           <>
-            {/* Portfolio Summary Stats */}
+            {/* YRT Portfolio Summary Stats */}
             <div className="grid grid-cols-4 gap-6 mb-10">
               <div className="bg-[#0A0A0A] rounded-xl border border-[#2A2A2A] p-6 hover:border-[#3A3A3A] transition-colors">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-white mb-2">$0</div>
-                  <div className="text-sm text-gray-400">Total Portfolio</div>
+                  <div className="text-2xl font-bold text-white mb-2">${totalYRTValue.toLocaleString()}</div>
+                  <div className="text-sm text-gray-400">Total YRT Value</div>
                 </div>
               </div>
               <div className="bg-[#0A0A0A] rounded-xl border border-[#2A2A2A] p-6 hover:border-[#3A3A3A] transition-colors">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-400 mb-2">$0</div>
-                  <div className="text-sm text-gray-400">YT Positions</div>
+                  <div className="text-2xl font-bold text-blue-400 mb-2">{yrtHoldings.length}</div>
+                  <div className="text-sm text-gray-400">Properties Owned</div>
                 </div>
               </div>
               <div className="bg-[#0A0A0A] rounded-xl border border-[#2A2A2A] p-6 hover:border-[#3A3A3A] transition-colors">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-teal-400 mb-2">$0</div>
-                  <div className="text-sm text-gray-400">PT Positions</div>
+                  <div className="text-2xl font-bold text-green-400 mb-2">+13.8%</div>
+                  <div className="text-sm text-gray-400">Portfolio Growth</div>
                 </div>
               </div>
               <div className="bg-[#0A0A0A] rounded-xl border border-[#2A2A2A] p-6 hover:border-[#3A3A3A] transition-colors">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-green-400 mb-2">$0</div>
-                  <div className="text-sm text-gray-400">LP Positions</div>
+                  <div className="text-2xl font-bold text-yellow-400 mb-2">$2,847</div>
+                  <div className="text-sm text-gray-400">Monthly Yield</div>
                 </div>
               </div>
             </div>
 
             {/* Portfolio Analytics */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-12">
-              {/* Portfolio Distribution */}
+              {/* Property Type Distribution */}
               <div className="bg-[#0A0A0A] rounded-xl border border-[#2A2A2A] p-6 hover:border-[#3A3A3A] transition-colors">
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-white">Portfolio Distribution</h3>
+                  <h3 className="text-lg font-semibold text-white">Property Distribution</h3>
                   <Info className="w-5 h-5 text-gray-400 hover:text-gray-300 transition-colors cursor-help" />
                 </div>
                 
-                {/* Distribution Chart Placeholder */}
+                {/* Distribution Chart */}
                 <div className="flex items-center justify-center h-48 mb-6">
                   <div className="relative">
                     <svg className="w-32 h-32" viewBox="0 0 100 100">
                       <circle cx="50" cy="50" r="40" fill="none" stroke="#2A2A2A" strokeWidth="8"/>
                       <circle cx="50" cy="50" r="40" fill="none" stroke="#3B82F6" strokeWidth="8" 
-                        strokeDasharray="0 251" strokeLinecap="round" className="transition-all duration-1000"/>
+                        strokeDasharray="188 251" strokeLinecap="round" className="transition-all duration-1000"/>
+                      <circle cx="50" cy="50" r="40" fill="none" stroke="#10B981" strokeWidth="8" 
+                        strokeDasharray="63 251" strokeDashoffset="-188" strokeLinecap="round" className="transition-all duration-1000"/>
                     </svg>
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-2xl font-bold text-white">0%</span>
+                      <span className="text-2xl font-bold text-white">100%</span>
                     </div>
                   </div>
                 </div>
@@ -298,161 +344,119 @@ export default function DashboardPage() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       <div className="w-3 h-3 rounded-full bg-blue-400"></div>
-                      <span className="text-sm text-gray-300">YT Positions</span>
+                      <span className="text-sm text-gray-300">Hotels</span>
                     </div>
-                    <span className="text-sm font-medium text-white">0%</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 rounded-full bg-teal-400"></div>
-                      <span className="text-sm text-gray-300">PT Positions</span>
-                    </div>
-                    <span className="text-sm font-medium text-white">0%</span>
+                    <span className="text-sm font-medium text-white">75%</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       <div className="w-3 h-3 rounded-full bg-green-400"></div>
-                      <span className="text-sm text-gray-300">LP Positions</span>
+                      <span className="text-sm text-gray-300">Educational</span>
                     </div>
-                    <span className="text-sm font-medium text-white">0%</span>
+                    <span className="text-sm font-medium text-white">25%</span>
                   </div>
                 </div>
               </div>
 
-              {/* Net APY & Rewards */}
+              {/* Yield & Performance */}
               <div className="bg-[#0A0A0A] rounded-xl border border-[#2A2A2A] p-6 hover:border-[#3A3A3A] transition-colors">
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-white">Net APY & Rewards</h3>
+                  <h3 className="text-lg font-semibold text-white">Yield & Performance</h3>
                   <Info className="w-5 h-5 text-gray-400 hover:text-gray-300 transition-colors cursor-help" />
                 </div>
 
-                {/* Net APY Display */}
+                {/* Average APY Display */}
                 <div className="text-center mb-8">
-                  <div className="text-4xl font-bold text-white mb-2">0.00%</div>
-                  <div className="text-sm text-gray-400">Net APY</div>
+                  <div className="text-4xl font-bold text-white mb-2">7.9%</div>
+                  <div className="text-sm text-gray-400">Average APY</div>
                 </div>
 
-                {/* Rewards Breakdown */}
+                {/* Performance Breakdown */}
                 <div className="space-y-4">
                   <div className="flex items-center justify-between p-3 bg-[#111111] rounded-lg">
                     <div className="flex items-center space-x-2">
-                      <div className="w-2 h-2 rounded-full bg-yellow-400"></div>
-                      <span className="text-sm text-gray-300">Owna Points</span>
-                    </div>
-                    <span className="text-sm font-medium text-yellow-400">0</span>
-                  </div>
-                  <div className="flex items-center justify-between p-3 bg-[#111111] rounded-lg">
-                    <div className="flex items-center space-x-2">
-                      <div className="w-2 h-2 rounded-full bg-blue-400"></div>
-                      <span className="text-sm text-gray-300">YT Rewards</span>
-                    </div>
-                    <span className="text-sm font-medium text-blue-400">$0</span>
-                  </div>
-                  <div className="flex items-center justify-between p-3 bg-[#111111] rounded-lg">
-                    <div className="flex items-center space-x-2">
                       <div className="w-2 h-2 rounded-full bg-green-400"></div>
-                      <span className="text-sm text-gray-300">LP Fees</span>
+                      <span className="text-sm text-gray-300">Total Gains</span>
                     </div>
-                    <span className="text-sm font-medium text-green-400">$0</span>
+                    <span className="text-sm font-medium text-green-400">+$5,624</span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-[#111111] rounded-lg">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-2 h-2 rounded-full bg-yellow-400"></div>
+                      <span className="text-sm text-gray-300">Monthly Yield</span>
+                    </div>
+                    <span className="text-sm font-medium text-yellow-400">$2,847</span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-[#111111] rounded-lg">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-2 h-2 rounded-full bg-purple-400"></div>
+                      <span className="text-sm text-gray-300">Property Appreciation</span>
+                    </div>
+                    <span className="text-sm font-medium text-purple-400">+8.5%</span>
                   </div>
                 </div>
               </div>
             </div>
 
-
-            {/* PT/YT/LP Positions Tables */}
-            <div className="space-y-6">
-              {/* PT Positions */}
-              <div className="bg-[#0A0A0A] rounded-xl border border-[#2A2A2A] overflow-hidden hover:border-[#3A3A3A] transition-colors">
-                <div className="p-6 border-b border-[#2A2A2A]">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-3 h-3 rounded-full bg-teal-400"></div>
-                      <h3 className="text-lg font-semibold text-white">PT Positions</h3>
-                      <div className="px-2 py-1 bg-teal-400/10 rounded text-xs text-teal-400 font-medium">
-                        Fixed Yield
-                      </div>
+            {/* YRT Holdings Table */}
+            <div className="bg-[#0A0A0A] rounded-xl border border-[#2A2A2A] overflow-hidden">
+              <div className="p-6 border-b border-[#2A2A2A]">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <h3 className="text-lg font-semibold text-white">YRT Holdings</h3>
+                    <div className="px-3 py-1 bg-white/5 border border-white/10 rounded-md text-xs text-gray-300 font-medium">
+                      Real Estate Tokens
                     </div>
-                    <div className="text-sm text-gray-400">Total Value: $0</div>
                   </div>
-                </div>
-                <div className="p-6">
-                  <div className="grid grid-cols-5 gap-4 mb-4 text-xs font-medium text-gray-400 uppercase">
-                    <div>Asset</div>
-                    <div className="text-right">Balance</div>
-                    <div className="text-right">Value</div>
-                    <div className="text-right">Fixed APY</div>
-                    <div className="text-right">Maturity</div>
-                  </div>
-                  <div className="text-center py-8 text-gray-500 text-sm">
-                    No PT positions found
-                  </div>
+                  <div className="text-sm text-gray-400">Total Value: ${totalYRTValue.toLocaleString()}</div>
                 </div>
               </div>
-
-              {/* YT Positions */}
-              <div className="bg-[#0A0A0A] rounded-xl border border-[#2A2A2A] overflow-hidden hover:border-[#3A3A3A] transition-colors">
-                <div className="p-6 border-b border-[#2A2A2A]">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-3 h-3 rounded-full bg-blue-400"></div>
-                      <h3 className="text-lg font-semibold text-white">YT Positions</h3>
-                      <div className="px-2 py-1 bg-blue-400/10 rounded text-xs text-blue-400 font-medium">
-                        Variable Yield
+              <div className="p-6">
+                <div className="grid grid-cols-7 gap-4 mb-6 text-xs font-medium text-gray-400 uppercase tracking-wider">
+                  <div>Property</div>
+                  <div className="text-right">Balance</div>
+                  <div className="text-right">Value</div>
+                  <div className="text-right">APY</div>
+                  <div className="text-right">Type</div>
+                  <div className="text-right">Location</div>
+                  <div className="text-right">Performance</div>
+                </div>
+                <div className="space-y-1">
+                  {yrtHoldings.map((holding, index) => (
+                    <div key={index} className="grid grid-cols-7 gap-4 p-4 hover:bg-[#111111]/50 transition-colors rounded-lg border-b border-white/5 last:border-b-0">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 rounded-full overflow-hidden bg-white flex items-center justify-center p-1">
+                          <Image
+                            src="/Images/Logo/logo_YRT.jpg"
+                            alt="YRT Logo"
+                            width={24}
+                            height={24}
+                            className="object-contain w-full h-full rounded-full"
+                          />
+                        </div>
+                        <div>
+                          <div className="text-sm font-medium text-white">{holding.propertyName}</div>
+                          <div className="text-xs text-gray-500">Yogyakarta Real Estate</div>
+                        </div>
                       </div>
+                      <div className="text-right text-white font-medium">{holding.balance}</div>
+                      <div className="text-right text-white font-medium">{holding.value}</div>
+                      <div className="text-right text-green-400 font-medium">{holding.apy}</div>
+                      <div className="text-right text-gray-400">{holding.type}</div>
+                      <div className="text-right text-gray-400">{holding.location}</div>
+                      <div className="text-right text-green-400 font-medium">{holding.performance}</div>
                     </div>
-                    <div className="text-sm text-gray-400">Total Value: $0</div>
-                  </div>
-                </div>
-                <div className="p-6">
-                  <div className="grid grid-cols-5 gap-4 mb-4 text-xs font-medium text-gray-400 uppercase">
-                    <div>Asset</div>
-                    <div className="text-right">Balance</div>
-                    <div className="text-right">Value</div>
-                    <div className="text-right">Current APY</div>
-                    <div className="text-right">Leverage</div>
-                  </div>
-                  <div className="text-center py-8 text-gray-500 text-sm">
-                    No YT positions found
-                  </div>
-                </div>
-              </div>
-
-              {/* LP Positions */}
-              <div className="bg-[#0A0A0A] rounded-xl border border-[#2A2A2A] overflow-hidden hover:border-[#3A3A3A] transition-colors">
-                <div className="p-6 border-b border-[#2A2A2A]">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-3 h-3 rounded-full bg-green-400"></div>
-                      <h3 className="text-lg font-semibold text-white">LP Positions</h3>
-                      <div className="px-2 py-1 bg-green-400/10 rounded text-xs text-green-400 font-medium">
-                        Liquidity Providing
-                      </div>
-                    </div>
-                    <div className="text-sm text-gray-400">Total Value: $0</div>
-                  </div>
-                </div>
-                <div className="p-6">
-                  <div className="grid grid-cols-5 gap-4 mb-4 text-xs font-medium text-gray-400 uppercase">
-                    <div>Pool</div>
-                    <div className="text-right">LP Balance</div>
-                    <div className="text-right">Value</div>
-                    <div className="text-right">APY</div>
-                    <div className="text-right">Fees Earned</div>
-                  </div>
-                  <div className="text-center py-8 text-gray-500 text-sm">
-                    No LP positions found
-                  </div>
+                  ))}
                 </div>
               </div>
             </div>
           </>
         )}
 
-        {activeTab === 'markets' && (
+        {activeTab === 'properties' && (
           <div className="text-center py-24">
-            <h3 className="text-2xl font-semibold text-white mb-4">Available Markets</h3>
-            <p className="text-gray-400">Market data will be displayed here</p>
+            <h3 className="text-2xl font-semibold text-white mb-4">My Properties</h3>
+            <p className="text-gray-400">Detailed property management will be displayed here</p>
           </div>
         )}
 
@@ -466,7 +470,7 @@ export default function DashboardPage() {
         {/* Loading State */}
         {isLoading && !portfolio && (
           <div className="flex items-center justify-center min-h-[400px]">
-            <LoadingSpinner size="lg" text="Loading portfolio..." />
+            <LoadingSpinner size="lg" text="Loading YRT portfolio..." />
           </div>
         )}
       </div>

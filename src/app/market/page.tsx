@@ -21,7 +21,7 @@ export default function MarketPage() {
       status: 'lock'
     },
     {
-      tokenId: 'YRT-HOTEL ROYAL AMBARUKMO',
+      tokenId: 'YRT-HRA',
       discount: '26.60%',
       lockedAERO: '2,635',
       price: '1,934.00',
@@ -30,7 +30,7 @@ export default function MarketPage() {
       status: 'lock'
     },
     {
-      tokenId: 'YRT-HOTEL FORTUNA',
+      tokenId: 'YRT-HF',
       discount: '26.44% → 28.00%',
       lockedAERO: '7,320',
       price: '5,384.89',
@@ -39,7 +39,7 @@ export default function MarketPage() {
       status: 'trending_up'
     },
     {
-      tokenId: 'YRT-HOTEL MERAPI MERBABU',
+      tokenId: 'YRT-HMM',
       discount: '26.44% → 28.00%',
       lockedAERO: '6,100',
       price: '4,487.45',
@@ -48,7 +48,7 @@ export default function MarketPage() {
       status: 'trending_up'
     },
     {
-      tokenId: 'YRT-HOTEL GARUDA',
+      tokenId: 'YRT-HG',
       discount: '26.38% → 28.00%',
       lockedAERO: '5,900',
       price: '4,343.40',
@@ -57,7 +57,7 @@ export default function MarketPage() {
       status: 'trending_up'
     },
     {
-      tokenId: 'YRT-HOTEL SANTIKA',
+      tokenId: 'YRT-HS',
       discount: '26.36%',
       lockedAERO: '47,188',
       price: '34,750.00',
@@ -66,7 +66,7 @@ export default function MarketPage() {
       status: 'lock'
     },
     {
-      tokenId: 'YRT-HOTEL GRAND INNA',
+      tokenId: 'YRT-HGI',
       discount: '26.32% → 28.00%',
       lockedAERO: '4,880',
       price: '3,595.42',
@@ -75,7 +75,7 @@ export default function MarketPage() {
       status: 'trending_up'
     },
     {
-      tokenId: 'YRT-HOTEL MALIOBORO',
+      tokenId: 'YRT-HM',
       discount: '26.32%',
       lockedAERO: '8,578',
       price: '6,320.00',
@@ -84,7 +84,7 @@ export default function MarketPage() {
       status: 'lock'
     },
     {
-      tokenId: 'YRT-HOTEL PHOENIX',
+      tokenId: 'YRT-HP',
       discount: '26.01%',
       lockedAERO: '2,980',
       price: '2,205.00',
@@ -93,7 +93,7 @@ export default function MarketPage() {
       status: 'lock'
     },
     {
-      tokenId: 'YRT-HOTEL TENTREM',
+      tokenId: 'YRT-HT',
       discount: '26.01%',
       lockedAERO: '26,548',
       price: '19,642.61',
@@ -102,7 +102,7 @@ export default function MarketPage() {
       status: 'lock'
     },
     {
-      tokenId: 'YRT-HOTEL INDIGO',
+      tokenId: 'YRT-HI',
       discount: '26.00%',
       lockedAERO: '4,629',
       price: '3,425.00',
@@ -264,12 +264,6 @@ export default function MarketPage() {
     }
   ];
 
-  const StatusIcon = ({ status, discount }: { status: string; discount: string }) => {
-    if (status === 'trending_up' || discount.includes('→')) {
-      return <TrendingUp className="w-3 h-3 text-green-400" />;
-    }
-    return <Lock className="w-3 h-3 text-gray-400" />;
-  };
 
   return (
     <DashboardLayout>
@@ -282,7 +276,7 @@ export default function MarketPage() {
               alt="YRT Logo"
               width={48}
               height={48}
-              className="object-cover"
+              className="object-cover rounded-full"
             />
           </div>
           <div>
@@ -389,7 +383,15 @@ export default function MarketPage() {
                     {listingsData.map((item) => (
                       <div key={item.tokenId} className="grid grid-cols-6 gap-4 px-4 py-3 text-sm hover:bg-[#111111] transition-colors">
                         <div className="flex items-center space-x-2">
-                          <StatusIcon status={item.status} discount={item.discount} />
+                          <div className="w-6 h-6 rounded-full overflow-hidden bg-white flex items-center justify-center p-0.5">
+                            <Image
+                              src="/Images/Logo/logo_YRT.jpg"
+                              alt="YRT Logo"
+                              width={20}
+                              height={20}
+                              className="object-contain w-full h-full"
+                            />
+                          </div>
                           <span className="text-white">{item.tokenId}</span>
                         </div>
                         <div className="text-center">
@@ -489,7 +491,18 @@ export default function MarketPage() {
                 {salesData.map((sale, index) => (
                   <div key={`${sale.tokenId}-${index}`} className="grid grid-cols-5 gap-2 px-4 py-3 text-xs hover:bg-[#111111] transition-colors">
                     <div className="text-gray-400">{sale.time}</div>
-                    <div className="text-white">{sale.tokenId}</div>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-4 h-4 rounded-full overflow-hidden bg-white flex items-center justify-center p-0.5">
+                        <Image
+                          src="/Images/Logo/logo_YRT.jpg"
+                          alt="YRT Logo"
+                          width={16}
+                          height={16}
+                          className="object-contain w-full h-full"
+                        />
+                      </div>
+                      <span className="text-white">{sale.tokenId}</span>
+                    </div>
                     <div className="text-white">{sale.discount}</div>
                     <div className="text-white">{sale.lockedAERO}</div>
                     <div className="flex items-center space-x-1">
