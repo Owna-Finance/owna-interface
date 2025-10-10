@@ -91,24 +91,41 @@ export default function RootLayout({
         <script
           dangerouslySetInnerHTML={{
             __html: `
-              window.addEventListener('error', function(e) {
-                if (e.error && e.error.context === 'AnalyticsSDKApiError') {
-                  e.preventDefault();
-                  console.warn('Analytics SDK error suppressed:', e.error.message);
-                  return false;
+              (function () {
+                const suppressPatterns = [/AnalyticsSDKApiError/, /Failed to fetch/];
+
+                window.addEventListener('error', function (event) {
+                  const message = event?.error?.message || '';
+                  if (suppressPatterns.some((pattern) => pattern.test(message))) {
+                    event.preventDefault();
+                    console.warn('Suppressed window error:', event.error);
+                    return false;
+                  }
+                  return undefined;
+                });
+
+                window.addEventListener('unhandledrejection', function (event) {
+                  const reasonText = String(event?.reason ?? '');
+                  if (suppressPatterns.some((pattern) => pattern.test(reasonText))) {
+                    event.preventDefault();
+                    console.warn('Suppressed unhandled rejection:', event.reason);
+                    return false;
+                  }
+                  return undefined;
+                });
+
+                if ('${process.env.NODE_ENV}' !== 'production' && typeof window.fetch === 'function') {
+                  const originalFetch = window.fetch;
+                  window.fetch = async function (...args) {
+                    try {
+                      return await originalFetch.apply(this, args);
+                    } catch (error) {
+                      console.warn('[fetch-error]', args[0], error);
+                      throw error;
+                    }
+                  };
                 }
-              });
-              
-              window.addEventListener('unhandledrejection', function(e) {
-                if (e.reason && (
-                  e.reason.context === 'AnalyticsSDKApiError' ||
-                  e.reason.message?.includes('Failed to fetch') && e.reason.stack?.includes('_t(')
-                )) {
-                  e.preventDefault();
-                  console.warn('Analytics fetch error suppressed:', e.reason);
-                  return false;
-                }
-              });
+              })();
             `,
           }}
         />

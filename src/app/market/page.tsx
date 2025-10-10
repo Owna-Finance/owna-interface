@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/dashboard-layout';
 import { Button } from '@/components/ui/button';
-import { Info, ExternalLink, ArrowUpDown, Lock, TrendingUp, Circle, BarChart3, Plus } from 'lucide-react';
+import { Info, ExternalLink, ArrowUpDown, Circle, Plus } from 'lucide-react';
 import Image from 'next/image';
 
 export default function MarketPage() {
@@ -507,11 +507,6 @@ export default function MarketPage() {
                     <div className="text-white">{sale.lockedAERO}</div>
                     <div className="flex items-center space-x-1">
                       <span className="text-white">{sale.price}</span>
-                      {sale.status === 'up' ? (
-                        <Circle className="w-3 h-3 text-blue-400 fill-current" />
-                      ) : (
-                        <TrendingUp className="w-3 h-3 text-red-400 rotate-180" />
-                      )}
                     </div>
                   </div>
                 ))}

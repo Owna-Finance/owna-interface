@@ -1,0 +1,77 @@
+import { useState, useCallback } from 'react';
+import { CONTRACTS } from '@/constants/contracts/contracts';
+
+export interface YRTFormData {
+  name: string;
+  symbol: string;
+  propertyName: string;
+  initialSupply: string;
+  tokenPrice: string;
+  underlyingToken: string;
+}
+
+export interface YRTSampleData {
+  name: string;
+  symbol: string;
+  propertyName: string;
+  initialSupply: string;
+  tokenPrice: string;
+}
+
+const initialFormData: YRTFormData = {
+  name: '',
+  symbol: '',
+  propertyName: '',
+  initialSupply: '',
+  tokenPrice: '',
+  underlyingToken: CONTRACTS.USDC, // Default to USDC
+};
+
+// Sample data based on unit tests
+const sampleData: YRTSampleData = {
+  name: 'YRT Sudirman',
+  symbol: 'YRT-SDR',
+  propertyName: 'Sudirman Residence',
+  initialSupply: '0',
+  tokenPrice: '1.0',
+};
+
+export function useYRTForm() {
+  const [formData, setFormData] = useState<YRTFormData>(initialFormData);
+
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  }, []);
+
+  const fillSampleData = useCallback(() => {
+    setFormData(prev => ({
+      ...prev,
+      ...sampleData
+    }));
+  }, []);
+
+  const resetForm = useCallback(() => {
+    setFormData(initialFormData);
+  }, []);
+
+  const isFormValid = useCallback(() => {
+    return formData.name.trim() !== '' &&
+           formData.symbol.trim() !== '' &&
+           formData.propertyName.trim() !== '' &&
+           formData.tokenPrice.trim() !== '' &&
+           parseFloat(formData.tokenPrice) > 0;
+  }, [formData]);
+
+  return {
+    formData,
+    handleInputChange,
+    fillSampleData,
+    resetForm,
+    isFormValid,
+    sampleData,
+  };
+}
