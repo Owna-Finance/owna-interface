@@ -5,7 +5,7 @@ import { DashboardLayout } from '@/components/layout/dashboard-layout';
 import { Button } from '@/components/ui/button';
 import { Info, ArrowUpDown, Circle, Plus, Loader2 } from 'lucide-react';
 import Image from 'next/image';
-import { useSecondaryMarket, Order } from '@/hooks';
+import { useSecondaryMarket, Order, useBuyTokenMarket } from '@/hooks';
 import { CreateOrderModal } from '@/components/secondary-market/CreateOrderModal';
 import { formatUnits } from 'viem';
 
@@ -19,6 +19,31 @@ export default function MarketPage() {
   const [totalOrders, setTotalOrders] = useState(0);
   
   const { getOrders, isLoading, error } = useSecondaryMarket();
+
+  // Refresh function for orders
+  const refreshOrders = useCallback(async () => {
+    try {
+      const ordersResponse = await getOrders({ page: currentPage, limit: 10 });
+      setOrders(ordersResponse.data);
+      setTotalPages(ordersResponse.meta.totalPages);
+      setTotalOrders(ordersResponse.meta.total);
+    } catch (error) {
+      console.error('Failed to refresh orders:', error);
+      // Set empty state if refresh fails
+      setOrders([]);
+      setTotalPages(1);
+      setTotalOrders(0);
+    }
+  }, [currentPage, getOrders]);
+
+  const { 
+    handleBuyOrder, 
+    approvalStep, 
+    currentOrder, 
+    account, 
+    isExecuting, 
+    isConfirming 
+  } = useBuyTokenMarket(refreshOrders);
 
   // Load orders from API using GET /orders endpoint
   useEffect(() => {
@@ -56,26 +81,6 @@ export default function MarketPage() {
     setShowCreateOrderModal(true);
   };
 
-  const refreshOrders = useCallback(async () => {
-    try {
-      const ordersResponse = await getOrders({ page: currentPage, limit: 10 });
-      setOrders(ordersResponse.data);
-      setTotalPages(ordersResponse.meta.totalPages);
-      setTotalOrders(ordersResponse.meta.total);
-    } catch (error) {
-      console.error('Failed to refresh orders:', error);
-      // Set empty state if refresh fails
-      setOrders([]);
-      setTotalPages(1);
-      setTotalOrders(0);
-    }
-  }, [currentPage, getOrders]);
-
-  const handleOrderCreated = () => {
-    // Refresh orders when a new order is created
-    refreshOrders();
-    setShowCreateOrderModal(false);
-  };
 
   const formatTokenAmount = (amount: string, decimals: number = 18) => {
     try {
@@ -200,7 +205,7 @@ export default function MarketPage() {
               {activeTab === 'listings' ? (
                 <>
                   {/* Listings Table Header */}
-                  <div className="grid grid-cols-4 gap-4 px-4 py-3 bg-[#111111] text-xs font-medium text-gray-400 uppercase">
+                  <div className="grid grid-cols-5 gap-4 px-4 py-3 bg-[#111111] text-xs font-medium text-gray-400 uppercase">
                     <div className="flex items-center space-x-1">
                       <span>YRT Name</span>
                       <ArrowUpDown className="w-3 h-3" />
@@ -208,6 +213,7 @@ export default function MarketPage() {
                     <div className="text-center">Maker</div>
                     <div className="text-center">Amount YRT Token</div>
                     <div className="text-center">Amount USDC</div>
+                    <div className="text-center">Action</div>
                   </div>
 
                   {/* Listings Table Rows */}
@@ -231,7 +237,7 @@ export default function MarketPage() {
                         const usdcAmount = formatTokenAmount(order.takerAmount, order.takerTokenDecimals);
                         
                         return (
-                          <div key={order.id} className="grid grid-cols-4 gap-4 px-4 py-3 text-sm hover:bg-[#111111] transition-colors">
+                          <div key={order.id} className="grid grid-cols-5 gap-4 px-4 py-3 text-sm hover:bg-[#111111] transition-colors">
                             <div className="flex items-center space-x-2">
                               <div className="w-6 h-6 rounded-full overflow-hidden bg-white flex items-center justify-center p-0.5">
                                 <Image
@@ -249,6 +255,32 @@ export default function MarketPage() {
                             </div>
                             <div className="text-center text-white">{yrtAmount}</div>
                             <div className="text-center text-white">{usdcAmount}</div>
+                            <div className="text-center">
+                              <Button
+                                onClick={() => handleBuyOrder(order)}
+                                disabled={
+                                  isExecuting || 
+                                  isConfirming || 
+                                  !order.signature || 
+                                  order.status !== 'ACTIVE' || 
+                                  approvalStep !== 'idle' ||
+                                  !account
+                                }
+                                className="bg-teal-500 hover:bg-teal-600 text-black font-medium px-4 py-1 rounded text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                {((isExecuting || isConfirming) && currentOrder?.id === order.id) || (approvalStep === 'fetching-order' && currentOrder?.id === order.id) ? (
+                                  <>
+                                    <Loader2 className="w-3 h-3 animate-spin mr-1" />
+                                    {approvalStep === 'fetching-order' && 'Fetching Order'}
+                                    {approvalStep === 'approving-yrt' && 'Approving YRT'}
+                                    {approvalStep === 'approving-usdc' && 'Approving USDC'}
+                                    {approvalStep === 'executing' && 'Executing'}
+                                  </>
+                                ) : (
+                                  'Buy'
+                                )}
+                              </Button>
+                            </div>
                           </div>
                         );
                       })
