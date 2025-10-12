@@ -9,7 +9,6 @@ import {
   LayoutDashboard, 
   ArrowRightLeft, 
   Layers, 
-  Droplet,
   Plus,
   Droplets
 } from 'lucide-react';
@@ -35,19 +34,14 @@ const navigationItems = [
     icon: Droplets
   },
   {
-    name: 'Market',
-    href: '/market',
-    icon: Layers
-  },
-  {
-    name: 'Pools',
-    href: '/pools',
-    icon: Droplet
-  },
-  {
     name: 'Swap',
     href: '/swap',
     icon: ArrowRightLeft
+  },
+  {
+    name: 'Market',
+    href: '/market',
+    icon: Layers
   }
 ];
 
