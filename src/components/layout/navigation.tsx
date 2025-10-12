@@ -10,7 +10,8 @@ import {
   ArrowRightLeft, 
   Layers, 
   Droplet,
-  Plus
+  Plus,
+  Droplets
 } from 'lucide-react';
 
 interface NavigationProps {
@@ -27,6 +28,11 @@ const navigationItems = [
     name: 'Create YRT',
     href: '/create-yrt',
     icon: Plus
+  },
+  {
+    name: 'Add Liquidity',
+    href: '/add-liquidity',
+    icon: Droplets
   },
   {
     name: 'Market',
