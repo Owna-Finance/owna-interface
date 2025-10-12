@@ -316,7 +316,9 @@ export default function AddLiquidityPage() {
                     className="w-full px-4 py-3 bg-[#111111] border border-[#2A2A2A] rounded-lg text-white placeholder-gray-500 focus:border-green-500 focus:outline-none"
                     required
                   />
-                  <p className="text-xs text-gray-500 mt-1">Amount of Token A (YRT) to add to pool</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {needsTokenAApproval ? '⚠️ Will require YRT approval' : '✅ Sufficient YRT allowance'}
+                  </p>
                 </div>
                 
                 <div>
@@ -488,24 +490,45 @@ export default function AddLiquidityPage() {
             {/* Transaction Status */}
             {(approvalHash || liquidityHash || currentStep !== 'idle') && (
               <div className="p-4 bg-[#111111] border border-[#2A2A2A] rounded-lg space-y-3">
+                {/* Token A Approval Status */}
+                {(approvalHash || currentStep === 'approving-token-a' || currentStep === 'token-a-approved' || (currentStep !== 'idle' && needsTokenAApproval)) && (
+                  <div>
+                    <div className="flex items-center space-x-2 mb-2">
+                      <span className="text-sm font-medium text-gray-300">YRT Approval:</span>
+                      {currentStep === 'approving-token-a' && isTransactionConfirming && (
+                        <span className="text-xs text-yellow-400">⏳ Confirming...</span>
+                      )}
+                      {(currentStep === 'token-a-approved' || currentStep === 'approving-token-b' || currentStep === 'tokens-approved' || currentStep === 'adding-liquidity' || currentStep === 'completed') && needsTokenAApproval && (
+                        <span className="text-xs text-green-400">✅ Approved</span>
+                      )}
+                      {!needsTokenAApproval && (
+                        <span className="text-xs text-gray-400">Not required</span>
+                      )}
+                    </div>
+                    {approvalHash && currentStep !== 'approving-token-b' && (
+                      <p className="text-xs font-mono text-blue-400 break-all">YRT: {approvalHash}</p>
+                    )}
+                  </div>
+                )}
+
                 {/* Token B Approval Status */}
-                {(approvalHash || currentStep === 'approving' || currentStep === 'approved' || (currentStep !== 'idle' && needsTokenBApproval)) && (
+                {(approvalHash || currentStep === 'approving-token-b' || currentStep === 'tokens-approved' || (currentStep !== 'idle' && needsTokenBApproval)) && (
                   <div>
                     <div className="flex items-center space-x-2 mb-2">
                       <span className="text-sm font-medium text-gray-300">
                         {formData.tokenB === CONTRACTS.USDC ? 'USDC' : 'IDRX'} Approval:
                       </span>
-                      {currentStep === 'approving' && isTransactionConfirming && (
+                      {currentStep === 'approving-token-b' && isTransactionConfirming && (
                         <span className="text-xs text-yellow-400">⏳ Confirming...</span>
                       )}
-                      {(currentStep === 'approved' || currentStep === 'adding-liquidity' || currentStep === 'completed') && needsTokenBApproval && (
+                      {(currentStep === 'tokens-approved' || currentStep === 'adding-liquidity' || currentStep === 'completed') && needsTokenBApproval && (
                         <span className="text-xs text-green-400">✅ Approved</span>
                       )}
                       {!needsTokenBApproval && (
                         <span className="text-xs text-gray-400">Not required</span>
                       )}
                     </div>
-                    {approvalHash && (
+                    {approvalHash && currentStep === 'approving-token-b' && (
                       <p className="text-xs font-mono text-blue-400 break-all">
                         {formData.tokenB === CONTRACTS.USDC ? 'USDC' : 'IDRX'}: {approvalHash}
                       </p>
@@ -532,9 +555,11 @@ export default function AddLiquidityPage() {
                 )}
 
                 {/* Current Step Info */}
-                {currentStep === 'idle' && needsTokenBApproval && (
+                {currentStep === 'idle' && (needsTokenAApproval || needsTokenBApproval) && (
                   <p className="text-sm text-yellow-400">
-                    {formData.tokenB === CONTRACTS.USDC ? 'USDC' : 'IDRX'} approval required before adding liquidity
+                    {needsTokenAApproval && needsTokenBApproval ? 'YRT and token approvals required before adding liquidity' :
+                     needsTokenAApproval ? 'YRT approval required before adding liquidity' :
+                     `${formData.tokenB === CONTRACTS.USDC ? 'USDC' : 'IDRX'} approval required before adding liquidity`}
                   </p>
                 )}
               </div>
@@ -590,7 +615,7 @@ export default function AddLiquidityPage() {
           <div className="space-y-3 text-sm text-gray-400">
             <div className="flex items-start space-x-3">
               <span className="flex-shrink-0 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-semibold">1</span>
-              <p>Approve Token B (USDC/IDRX) for the required amount</p>
+              <p>Approve YRT and USDC/IDRX tokens for the required amounts</p>
             </div>
             <div className="flex items-start space-x-3">
               <span className="flex-shrink-0 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-semibold">2</span>
