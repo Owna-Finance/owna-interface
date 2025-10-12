@@ -136,6 +136,12 @@ export const YRT_ABI = [
         type: "address",
       },
       {
+        indexed: true,
+        internalType: "address",
+        name: "seriesAdmin",
+        type: "address",
+      },
+      {
         indexed: false,
         internalType: "string",
         name: "propertyName",
@@ -389,7 +395,7 @@ export const YRT_ABI = [
     ],
     name: "claimYieldForPeriod",
     outputs: [],
-    stateMutability: "nonpayable",
+    stateMutability: "view",
     type: "function",
   },
   {
@@ -400,6 +406,11 @@ export const YRT_ABI = [
       { internalType: "uint256", name: "_initialSupply", type: "uint256" },
       { internalType: "address", name: "_underlyingToken", type: "address" },
       { internalType: "uint256", name: "_tokenPrice", type: "uint256" },
+      {
+        internalType: "uint256",
+        name: "_fundraisingDuration",
+        type: "uint256",
+      },
     ],
     name: "createSeries",
     outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
@@ -464,6 +475,13 @@ export const YRT_ABI = [
     type: "function",
   },
   {
+    inputs: [{ internalType: "uint256", name: "_seriesId", type: "uint256" }],
+    name: "getSeriesAdmin",
+    outputs: [{ internalType: "address", name: "", type: "address" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
     inputs: [
       { internalType: "bytes32", name: "role", type: "bytes32" },
       { internalType: "address", name: "account", type: "address" },
@@ -503,6 +521,17 @@ export const YRT_ABI = [
     name: "hasUserClaimedYieldForPeriod",
     outputs: [{ internalType: "bool", name: "", type: "bool" }],
     stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "uint256", name: "_seriesId", type: "uint256" },
+      { internalType: "address", name: "_to", type: "address" },
+      { internalType: "uint256", name: "_amount", type: "uint256" },
+    ],
+    name: "mintTokens",
+    outputs: [],
+    stateMutability: "nonpayable",
     type: "function",
   },
   {
@@ -554,6 +583,7 @@ export const YRT_ABI = [
     outputs: [
       { internalType: "address", name: "tokenAddress", type: "address" },
       { internalType: "address", name: "underlyingToken", type: "address" },
+      { internalType: "address", name: "seriesAdmin", type: "address" },
       { internalType: "string", name: "propertyName", type: "string" },
       { internalType: "uint96", name: "createdAt", type: "uint96" },
       { internalType: "uint96", name: "initialSupply", type: "uint96" },
@@ -594,7 +624,7 @@ export const YRT_ABI = [
   {
     inputs: [
       { internalType: "uint256", name: "_seriesId", type: "uint256" },
-      { internalType: "uint256", name: "_maturityDate", type: "uint256" },
+      { internalType: "uint256", name: "_durationInSeconds", type: "uint256" },
     ],
     name: "startNewPeriod",
     outputs: [{ internalType: "uint256", name: "periodId", type: "uint256" }],
@@ -620,6 +650,16 @@ export const YRT_ABI = [
     name: "totalTokensSold",
     outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
     stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "uint256", name: "_seriesId", type: "uint256" },
+      { internalType: "address", name: "_newAdmin", type: "address" },
+    ],
+    name: "transferSeriesAdmin",
+    outputs: [],
+    stateMutability: "nonpayable",
     type: "function",
   },
   {

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Kantumruy_Pro } from "next/font/google";
-import { OnchainProviders } from "@/providers/onchainkit-provider";
+import { OnchainProviders } from "@/providers/rainbowkit-provider";
 import "./globals.css";
 
 const kantumruyPro = Kantumruy_Pro({

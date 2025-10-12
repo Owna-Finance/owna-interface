@@ -10,6 +10,7 @@ export interface CreateYRTParams {
   initialSupply: string;
   tokenPrice: string;
   underlyingToken: string;
+  fundraisingDuration: number;
 }
 
 export function useCreateYRT() {
@@ -36,6 +37,7 @@ export function useCreateYRT() {
           initialSupplyWei,
           params.underlyingToken as `0x${string}`,
           tokenPriceWei,
+          params.fundraisingDuration,
         ],
       });
     } catch (error) {

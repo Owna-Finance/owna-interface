@@ -5,19 +5,25 @@ import { DashboardLayout } from '@/components/layout/dashboard-layout';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { usePortfolioStore } from '@/stores/portfolio-store';
 import { formatCurrency } from '@/lib/utils';
-import { RefreshCw, Info, LogOut, Copy, ExternalLink } from 'lucide-react';
+import { RefreshCw, Info, LogOut, Copy, ExternalLink, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount, useDisconnect, useBalance } from 'wagmi';
+import { useDistributeToAllHolders } from '@/hooks';
 import Image from 'next/image';
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState('portfolio');
   const [hideZeroBalances, setHideZeroBalances] = useState(false);
   const [showWalletDropdown, setShowWalletDropdown] = useState(false);
+  const [distributeFormData, setDistributeFormData] = useState({
+    seriesId: '',
+    periodId: ''
+  });
   
   const { address, isConnected } = useAccount();
   const { disconnect } = useDisconnect();
+  const { distributeToAllHolders, hash: distributeHash, isLoading: isDistributeLoading, isSuccess: isDistributeSuccess, error: distributeError } = useDistributeToAllHolders();
   
   // Get ETH balance on Base Sepolia
   const { data: balance, isLoading: balanceLoading } = useBalance({
@@ -82,6 +88,34 @@ export default function DashboardPage() {
       loadPortfolio();
     }
   }, [portfolio, loadPortfolio]);
+
+  const handleDistributeSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!address) {
+      alert('Please connect your wallet');
+      return;
+    }
+
+    if (!distributeFormData.seriesId || !distributeFormData.periodId) {
+      alert('Please fill in all required fields');
+      return;
+    }
+
+    try {
+      await distributeToAllHolders(distributeFormData);
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Failed to distribute to all holders');
+    }
+  };
+
+  const handleDistributeInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setDistributeFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
 
   if (error) {
     return (
@@ -262,14 +296,14 @@ export default function DashboardPage() {
               YRT Portfolio
             </button>
             <button
-              onClick={() => setActiveTab('properties')}
+              onClick={() => setActiveTab('distribute')}
               className={`px-6 py-3 rounded-xl font-medium text-sm transition-all duration-300 relative ${
-                activeTab === 'properties'
+                activeTab === 'distribute'
                   ? 'text-white'
                   : 'text-gray-400 hover:text-white hover:bg-[#2A2A2A]/50'
               }`}
             >
-              My Properties
+              Distribute Yield
             </button>
             <button
               onClick={() => setActiveTab('activity')}
@@ -283,6 +317,7 @@ export default function DashboardPage() {
             </button>
           </div>
         </div>
+
 
         {activeTab === 'portfolio' && (
           <>
@@ -453,10 +488,107 @@ export default function DashboardPage() {
           </>
         )}
 
-        {activeTab === 'properties' && (
-          <div className="text-center py-24">
-            <h3 className="text-2xl font-semibold text-white mb-4">My Properties</h3>
-            <p className="text-gray-400">Detailed property management will be displayed here</p>
+        {activeTab === 'distribute' && (
+          <div className="space-y-6">
+            {/* Distribute to All Holders Section */}
+            <div className="bg-[#0A0A0A] rounded-xl border border-[#2A2A2A] p-8">
+              <div className="flex items-center space-x-2 mb-6">
+                <Send className="w-5 h-5 text-purple-500" />
+                <h3 className="text-lg font-semibold text-white">Distribute to All Holders</h3>
+              </div>
+              
+              <form onSubmit={handleDistributeSubmit} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Series ID
+                    </label>
+                    <input
+                      type="text"
+                      name="seriesId"
+                      value={distributeFormData.seriesId}
+                      onChange={handleDistributeInputChange}
+                      placeholder="e.g., 1"
+                      className="w-full px-4 py-3 bg-[#111111] border border-[#2A2A2A] rounded-lg text-white placeholder-gray-500 focus:border-purple-500 focus:outline-none"
+                      required
+                    />
+                    <p className="text-xs text-gray-500 mt-1">YRT series ID to distribute for</p>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Period ID
+                    </label>
+                    <input
+                      type="text"
+                      name="periodId"
+                      value={distributeFormData.periodId}
+                      onChange={handleDistributeInputChange}
+                      placeholder="e.g., 1"
+                      className="w-full px-4 py-3 bg-[#111111] border border-[#2A2A2A] rounded-lg text-white placeholder-gray-500 focus:border-purple-500 focus:outline-none"
+                      required
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Period ID to distribute yield for</p>
+                  </div>
+                </div>
+
+                {/* Distribution Transaction Status */}
+                {(distributeHash || distributeError) && (
+                  <div className="p-4 bg-[#111111] border border-[#2A2A2A] rounded-lg">
+                    {distributeHash && (
+                      <>
+                        <p className="text-sm text-gray-400 mb-2">Distribution Transaction Hash:</p>
+                        <p className="text-xs font-mono text-purple-400 break-all">{distributeHash}</p>
+                      </>
+                    )}
+                    {isDistributeLoading && (
+                      <p className="text-sm text-yellow-400 mt-2">⏳ Distributing to all holders...</p>
+                    )}
+                    {isDistributeSuccess && (
+                      <p className="text-sm text-green-400 mt-2">✅ Distribution completed successfully!</p>
+                    )}
+                    {distributeError && (
+                      <p className="text-sm text-red-400 mt-2">❌ Error: {distributeError.message}</p>
+                    )}
+                  </div>
+                )}
+
+                <div className="flex justify-end">
+                  <Button
+                    type="submit"
+                    disabled={isDistributeLoading || !address}
+                    className="bg-purple-500 hover:bg-purple-600 text-white font-medium px-6 py-2 rounded-lg flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isDistributeLoading ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-gray-400 border-t-white rounded-full animate-spin"></div>
+                        <span>Distributing...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4" />
+                        <span>Distribute to All Holders</span>
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </div>
+
+            {/* Future Distribution Functions */}
+            <div className="bg-[#0A0A0A] rounded-xl border border-[#2A2A2A] p-8">
+              <h3 className="text-lg font-semibold text-white mb-4">Additional Distribution Functions</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="p-4 bg-[#111111] rounded-lg border border-[#2A2A2A]">
+                  <h4 className="text-white font-medium mb-2">Distribute to Specific Holders</h4>
+                  <p className="text-gray-400 text-sm">Coming soon - distribute yield to selected token holders</p>
+                </div>
+                <div className="p-4 bg-[#111111] rounded-lg border border-[#2A2A2A]">
+                  <h4 className="text-white font-medium mb-2">Batch Distribution</h4>
+                  <p className="text-gray-400 text-sm">Coming soon - process distributions in batches</p>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 

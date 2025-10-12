@@ -8,6 +8,7 @@ export interface YRTFormData {
   initialSupply: string;
   tokenPrice: string;
   underlyingToken: string;
+  fundraisingDuration: number;
 }
 
 export interface YRTSampleData {
@@ -16,6 +17,7 @@ export interface YRTSampleData {
   propertyName: string;
   initialSupply: string;
   tokenPrice: string;
+  fundraisingDuration: number;
 }
 
 const initialFormData: YRTFormData = {
@@ -25,15 +27,17 @@ const initialFormData: YRTFormData = {
   initialSupply: '',
   tokenPrice: '',
   underlyingToken: CONTRACTS.USDC, // Default to USDC
+  fundraisingDuration: 180, // Default 3 minutes for demo
 };
 
 // Sample data based on unit tests
 const sampleData: YRTSampleData = {
-  name: 'YRT Sudirman',
+  name: 'YRT Sudirman Residence',
   symbol: 'YRT-SDR',
-  propertyName: 'Sudirman Residence',
-  initialSupply: '0',
+  propertyName: 'Sudirman Residence Jakarta',
+  initialSupply: '1000',
   tokenPrice: '1.0',
+  fundraisingDuration: 180,
 };
 
 export function useYRTForm() {
@@ -43,7 +47,7 @@ export function useYRTForm() {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: name === 'fundraisingDuration' ? Number(value) : value
     }));
   }, []);
 

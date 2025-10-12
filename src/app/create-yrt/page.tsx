@@ -5,12 +5,29 @@ import { Button } from '@/components/ui/button';
 import { useAccount } from 'wagmi';
 import { CONTRACTS } from '@/constants/contracts/contracts';
 import { Plus, Building, DollarSign, Calendar } from 'lucide-react';
-import { useCreateYRT, useYRTForm } from '@/hooks';
+import { useCreateYRT, useYRTForm, useStartNewPeriod, useDepositYield } from '@/hooks';
+import { useState } from 'react';
 
 export default function CreateYRTPage() {
   const { address } = useAccount();
   const { formData, handleInputChange, fillSampleData, isFormValid } = useYRTForm();
   const { createYRTSeries, hash, isLoading, isSuccess, error } = useCreateYRT();
+  const { startNewPeriod, hash: periodHash, isLoading: isPeriodLoading, isSuccess: isPeriodSuccess, error: periodError } = useStartNewPeriod();
+  const { depositYield, approveToken, useTokenAllowance, checkNeedsApproval, hash: yieldHash, isLoading: isYieldLoading, isSuccess: isYieldSuccess, error: yieldError } = useDepositYield();
+  
+  const [periodFormData, setPeriodFormData] = useState({
+    seriesId: '',
+    durationInSeconds: 300 // 5 minutes default
+  });
+
+  const [yieldFormData, setYieldFormData] = useState({
+    seriesId: '',
+    periodId: '',
+    amount: '',
+    tokenAddress: CONTRACTS.USDC as `0x${string}`
+  });
+
+  const [approvalStep, setApprovalStep] = useState<'check' | 'approve' | 'deposit'>('check');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,6 +46,103 @@ export default function CreateYRTPage() {
       await createYRTSeries(formData);
     } catch (error) {
       alert(error instanceof Error ? error.message : 'Failed to create YRT series');
+    }
+  };
+
+  const handlePeriodSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!address) {
+      alert('Please connect your wallet');
+      return;
+    }
+
+    if (!periodFormData.seriesId || !periodFormData.durationInSeconds) {
+      alert('Please fill in all required fields');
+      return;
+    }
+
+    try {
+      await startNewPeriod(periodFormData);
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Failed to start new period');
+    }
+  };
+
+  const handlePeriodInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setPeriodFormData(prev => ({
+      ...prev,
+      [name]: name === 'durationInSeconds' ? Number(value) : value
+    }));
+  };
+
+  // Get allowance for the selected token
+  const { data: allowance, refetch: refetchAllowance } = useTokenAllowance({
+    tokenAddress: yieldFormData.tokenAddress,
+    amount: yieldFormData.amount,
+    userAddress: address as `0x${string}`
+  });
+
+  const needsApproval = yieldFormData.amount ? checkNeedsApproval(allowance as bigint | undefined, yieldFormData.amount) : false;
+
+  const handleApprove = async () => {
+    if (!address || !yieldFormData.amount) return;
+    
+    try {
+      setApprovalStep('approve');
+      await approveToken({
+        tokenAddress: yieldFormData.tokenAddress,
+        amount: yieldFormData.amount,
+        userAddress: address as `0x${string}`
+      });
+      await refetchAllowance();
+      setApprovalStep('deposit');
+    } catch (error) {
+      setApprovalStep('check');
+      alert(error instanceof Error ? error.message : 'Failed to approve token');
+    }
+  };
+
+  const handleYieldSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!address) {
+      alert('Please connect your wallet');
+      return;
+    }
+
+    if (!yieldFormData.seriesId || !yieldFormData.periodId || !yieldFormData.amount) {
+      alert('Please fill in all required fields');
+      return;
+    }
+
+    // Check if approval is needed
+    if (needsApproval && approvalStep !== 'deposit') {
+      await handleApprove();
+      return;
+    }
+
+    try {
+      setApprovalStep('deposit');
+      await depositYield(yieldFormData);
+      setApprovalStep('check');
+    } catch (error) {
+      setApprovalStep('check');
+      alert(error instanceof Error ? error.message : 'Failed to deposit yield');
+    }
+  };
+
+  const handleYieldInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setYieldFormData(prev => ({
+      ...prev,
+      [name]: name === 'tokenAddress' ? value as `0x${string}` : value
+    }));
+    
+    // Reset approval step when form changes
+    if (name === 'amount' || name === 'tokenAddress') {
+      setApprovalStep('check');
     }
   };
 
@@ -156,21 +270,41 @@ export default function CreateYRTPage() {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Underlying Token
-                </label>
-                <select
-                  name="underlyingToken"
-                  value={formData.underlyingToken}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 bg-[#111111] border border-[#2A2A2A] rounded-lg text-white focus:border-teal-500 focus:outline-none"
-                  required
-                >
-                  <option value={CONTRACTS.USDC}>USDC</option>
-                  <option value={CONTRACTS.IDRX}>IDRX</option>
-                </select>
-                <p className="text-xs text-gray-500 mt-1">Token used for purchases and yield distributions</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Underlying Token
+                  </label>
+                  <select
+                    name="underlyingToken"
+                    value={formData.underlyingToken}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 bg-[#111111] border border-[#2A2A2A] rounded-lg text-white focus:border-teal-500 focus:outline-none"
+                    required
+                  >
+                    <option value={CONTRACTS.USDC}>USDC</option>
+                    <option value={CONTRACTS.IDRX}>IDRX</option>
+                  </select>
+                  <p className="text-xs text-gray-500 mt-1">Token used for purchases and yield distributions</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Fundraising Duration (seconds)
+                  </label>
+                  <input
+                    type="number"
+                    name="fundraisingDuration"
+                    value={formData.fundraisingDuration || ''}
+                    onChange={handleInputChange}
+                    placeholder="180"
+                    step="1"
+                    min="1"
+                    className="w-full px-4 py-3 bg-[#111111] border border-[#2A2A2A] rounded-lg text-white placeholder-gray-500 focus:border-teal-500 focus:outline-none"
+                    required
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Duration for token sale period (180s = 3 minutes demo)</p>
+                </div>
               </div>
             </div>
 
@@ -221,6 +355,232 @@ export default function CreateYRTPage() {
                 Please connect your wallet to create a YRT series
               </p>
             )}
+          </form>
+        </div>
+
+        {/* Start New Period Form */}
+        <div className="mt-8 bg-[#0A0A0A] rounded-xl border border-[#2A2A2A] p-8">
+          <div className="flex items-center space-x-2 mb-6">
+            <Calendar className="w-5 h-5 text-blue-500" />
+            <h3 className="text-lg font-semibold text-white">Start New Period</h3>
+          </div>
+          
+          <form onSubmit={handlePeriodSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Series ID
+                </label>
+                <input
+                  type="text"
+                  name="seriesId"
+                  value={periodFormData.seriesId}
+                  onChange={handlePeriodInputChange}
+                  placeholder="e.g., 1"
+                  className="w-full px-4 py-3 bg-[#111111] border border-[#2A2A2A] rounded-lg text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none"
+                  required
+                />
+                <p className="text-xs text-gray-500 mt-1">ID of the YRT series to start period for</p>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Duration (seconds)
+                </label>
+                <input
+                  type="number"
+                  name="durationInSeconds"
+                  value={periodFormData.durationInSeconds || ''}
+                  onChange={handlePeriodInputChange}
+                  placeholder="300"
+                  step="1"
+                  min="1"
+                  className="w-full px-4 py-3 bg-[#111111] border border-[#2A2A2A] rounded-lg text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none"
+                  required
+                />
+                <p className="text-xs text-gray-500 mt-1">Period duration (300s = 5 minutes demo)</p>
+              </div>
+            </div>
+
+            {/* Period Transaction Status */}
+            {(periodHash || periodError) && (
+              <div className="p-4 bg-[#111111] border border-[#2A2A2A] rounded-lg">
+                {periodHash && (
+                  <>
+                    <p className="text-sm text-gray-400 mb-2">Period Transaction Hash:</p>
+                    <p className="text-xs font-mono text-blue-400 break-all">{periodHash}</p>
+                  </>
+                )}
+                {isPeriodLoading && (
+                  <p className="text-sm text-yellow-400 mt-2">⏳ Starting new period...</p>
+                )}
+                {isPeriodSuccess && (
+                  <p className="text-sm text-green-400 mt-2">✅ New period started successfully!</p>
+                )}
+                {periodError && (
+                  <p className="text-sm text-red-400 mt-2">❌ Error: {periodError.message}</p>
+                )}
+              </div>
+            )}
+
+            <div className="flex justify-end">
+              <Button
+                type="submit"
+                disabled={isPeriodLoading || !address}
+                className="bg-blue-500 hover:bg-blue-600 text-white font-medium px-6 py-2 rounded-lg flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isPeriodLoading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-gray-400 border-t-white rounded-full animate-spin"></div>
+                    <span>Starting...</span>
+                  </>
+                ) : (
+                  <>
+                    <Calendar className="w-4 h-4" />
+                    <span>Start New Period</span>
+                  </>
+                )}
+              </Button>
+            </div>
+          </form>
+        </div>
+
+        {/* Deposit Yield Form */}
+        <div className="mt-8 bg-[#0A0A0A] rounded-xl border border-[#2A2A2A] p-8">
+          <div className="flex items-center space-x-2 mb-6">
+            <DollarSign className="w-5 h-5 text-green-500" />
+            <h3 className="text-lg font-semibold text-white">Deposit Yield</h3>
+          </div>
+          
+          <form onSubmit={handleYieldSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Series ID
+                </label>
+                <input
+                  type="text"
+                  name="seriesId"
+                  value={yieldFormData.seriesId}
+                  onChange={handleYieldInputChange}
+                  placeholder="e.g., 1"
+                  className="w-full px-4 py-3 bg-[#111111] border border-[#2A2A2A] rounded-lg text-white placeholder-gray-500 focus:border-green-500 focus:outline-none"
+                  required
+                />
+                <p className="text-xs text-gray-500 mt-1">YRT series ID</p>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Period ID
+                </label>
+                <input
+                  type="text"
+                  name="periodId"
+                  value={yieldFormData.periodId}
+                  onChange={handleYieldInputChange}
+                  placeholder="e.g., 1"
+                  className="w-full px-4 py-3 bg-[#111111] border border-[#2A2A2A] rounded-lg text-white placeholder-gray-500 focus:border-green-500 focus:outline-none"
+                  required
+                />
+                <p className="text-xs text-gray-500 mt-1">Period ID to deposit yield for</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Token
+                </label>
+                <select
+                  name="tokenAddress"
+                  value={yieldFormData.tokenAddress}
+                  onChange={handleYieldInputChange}
+                  className="w-full px-4 py-3 bg-[#111111] border border-[#2A2A2A] rounded-lg text-white focus:border-green-500 focus:outline-none"
+                  required
+                >
+                  <option value={CONTRACTS.USDC}>USDC</option>
+                  <option value={CONTRACTS.IDRX}>IDRX</option>
+                </select>
+                <p className="text-xs text-gray-500 mt-1">Token to deposit as yield</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Amount
+                </label>
+                <input
+                  type="number"
+                  name="amount"
+                  value={yieldFormData.amount}
+                  onChange={handleYieldInputChange}
+                  placeholder="e.g., 100"
+                  step="0.000001"
+                  min="0"
+                  className="w-full px-4 py-3 bg-[#111111] border border-[#2A2A2A] rounded-lg text-white placeholder-gray-500 focus:border-green-500 focus:outline-none"
+                  required
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  {needsApproval ? '⚠️ Approval required' : '✅ Sufficient allowance'}
+                </p>
+              </div>
+            </div>
+
+            {/* Yield Transaction Status */}
+            {(yieldHash || yieldError) && (
+              <div className="p-4 bg-[#111111] border border-[#2A2A2A] rounded-lg">
+                {yieldHash && (
+                  <>
+                    <p className="text-sm text-gray-400 mb-2">Yield Transaction Hash:</p>
+                    <p className="text-xs font-mono text-green-400 break-all">{yieldHash}</p>
+                  </>
+                )}
+                {isYieldLoading && (
+                  <p className="text-sm text-yellow-400 mt-2">⏳ Depositing yield...</p>
+                )}
+                {isYieldSuccess && (
+                  <p className="text-sm text-green-400 mt-2">✅ Yield deposited successfully!</p>
+                )}
+                {yieldError && (
+                  <p className="text-sm text-red-400 mt-2">❌ Error: {yieldError.message}</p>
+                )}
+              </div>
+            )}
+
+            <div className="flex justify-end">
+              <Button
+                type="submit"
+                disabled={isYieldLoading || !address || (!yieldFormData.amount)}
+                className={`font-medium px-6 py-2 rounded-lg flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed ${
+                  needsApproval && approvalStep !== 'deposit' 
+                    ? 'bg-yellow-500 hover:bg-yellow-600 text-black' 
+                    : 'bg-green-500 hover:bg-green-600 text-white'
+                }`}
+              >
+                {isYieldLoading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-gray-400 border-t-white rounded-full animate-spin"></div>
+                    <span>
+                      {approvalStep === 'approve' ? 'Approving...' : 'Depositing...'}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    {needsApproval && approvalStep !== 'deposit' ? (
+                      <>
+                        <DollarSign className="w-4 h-4" />
+                        <span>Approve Token</span>
+                      </>
+                    ) : (
+                      <>
+                        <DollarSign className="w-4 h-4" />
+                        <span>Deposit Yield</span>
+                      </>
+                    )}
+                  </>
+                )}
+              </Button>
+            </div>
           </form>
         </div>
 

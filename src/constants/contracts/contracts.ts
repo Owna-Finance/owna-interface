@@ -1,12 +1,6 @@
-// Contract addresses and constants for Base Sepolia
 export const CONTRACTS = {
-  FACTORY: '0xeC6825D0F88aa65CE51754326118B7Fec6D45472',
-  DISTRIBUTOR: '0x92723d40a080e64cB9FBC8b7Dc7782d40bce127c',
-  USDC: '0xDfAb90CecCe3BB314083705dE35f043839451273',
-  IDRX: '0xc0319Ee47a2747F088C66d949886e90299fA52F7',
+  FACTORY: process.env.NEXT_PUBLIC_YRT_FACTORY_ADDRESS as `0x${string}`,
+  DISTRIBUTOR: process.env.NEXT_PUBLIC_DISTRIBUTOR_ADDRESS as `0x${string}`,
+  USDC: process.env.NEXT_PUBLIC_USDC_ADDRESS as `0x${string}`,
+  IDRX: process.env.NEXT_PUBLIC_IDRX_ADDRESS as `0x${string}`,
 } as const
-
-export const CHAIN_ID = 84532 // Base Sepolia
-
-// Chainlink Upkeep ID for auto-distribution
-export const CHAINLINK_UPKEEP_ID = '67219252791811543852314893402028987504667564972594680266488356265216346191265'

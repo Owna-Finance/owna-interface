@@ -1,6 +1,6 @@
 import { http, createConfig, cookieStorage, createStorage } from 'wagmi';
 import { base, baseSepolia, mainnet } from 'viem/chains';
-import { coinbaseWallet, metaMask, walletConnect } from 'wagmi/connectors';
+import { metaMask, walletConnect } from 'wagmi/connectors';
 
 // Get projectId from https://cloud.reown.com
 export const projectId = process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || 'demo-project-id';
@@ -8,10 +8,6 @@ export const projectId = process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || 'd
 export const config = createConfig({
   chains: [base, baseSepolia, mainnet],
   connectors: [
-    coinbaseWallet({
-      appName: 'Owna Finance',
-      preference: 'smartWalletOnly',
-    }),
     metaMask(),
     walletConnect({
       projectId,

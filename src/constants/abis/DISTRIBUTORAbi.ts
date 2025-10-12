@@ -1,0 +1,297 @@
+export const DISTRIBUTOR_ABI = [
+  {
+    inputs: [{ internalType: "address", name: "_factory", type: "address" }],
+    stateMutability: "nonpayable",
+    type: "constructor",
+  },
+  { inputs: [], name: "AccessControlBadConfirmation", type: "error" },
+  {
+    inputs: [
+      { internalType: "address", name: "account", type: "address" },
+      { internalType: "bytes32", name: "neededRole", type: "bytes32" },
+    ],
+    name: "AccessControlUnauthorizedAccount",
+    type: "error",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "uint256",
+        name: "seriesId",
+        type: "uint256",
+      },
+      {
+        indexed: true,
+        internalType: "uint256",
+        name: "periodId",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "holdersProcessed",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "timestamp",
+        type: "uint256",
+      },
+    ],
+    name: "DistributionExecuted",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "uint256",
+        name: "seriesId",
+        type: "uint256",
+      },
+      {
+        indexed: true,
+        internalType: "uint256",
+        name: "periodId",
+        type: "uint256",
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "holder",
+        type: "address",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
+      },
+    ],
+    name: "HolderDistributed",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, internalType: "bytes32", name: "role", type: "bytes32" },
+      {
+        indexed: true,
+        internalType: "bytes32",
+        name: "previousAdminRole",
+        type: "bytes32",
+      },
+      {
+        indexed: true,
+        internalType: "bytes32",
+        name: "newAdminRole",
+        type: "bytes32",
+      },
+    ],
+    name: "RoleAdminChanged",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, internalType: "bytes32", name: "role", type: "bytes32" },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "account",
+        type: "address",
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "sender",
+        type: "address",
+      },
+    ],
+    name: "RoleGranted",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, internalType: "bytes32", name: "role", type: "bytes32" },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "account",
+        type: "address",
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "sender",
+        type: "address",
+      },
+    ],
+    name: "RoleRevoked",
+    type: "event",
+  },
+  {
+    inputs: [],
+    name: "DEFAULT_ADMIN_ROLE",
+    outputs: [{ internalType: "bytes32", name: "", type: "bytes32" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "MANAGER_ROLE",
+    outputs: [{ internalType: "bytes32", name: "", type: "bytes32" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "uint256", name: "_seriesId", type: "uint256" },
+      { internalType: "uint256", name: "_periodId", type: "uint256" },
+      { internalType: "address[]", name: "_holders", type: "address[]" },
+      { internalType: "uint256", name: "_batchSize", type: "uint256" },
+    ],
+    name: "batchDistribute",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "bytes", name: "", type: "bytes" }],
+    name: "checkUpkeep",
+    outputs: [
+      { internalType: "bool", name: "upkeepNeeded", type: "bool" },
+      { internalType: "bytes", name: "performData", type: "bytes" },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "uint256", name: "_seriesId", type: "uint256" },
+      { internalType: "uint256", name: "_periodId", type: "uint256" },
+    ],
+    name: "distributeToAllHolders",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "uint256", name: "_seriesId", type: "uint256" },
+      { internalType: "uint256", name: "_periodId", type: "uint256" },
+      { internalType: "address[]", name: "_holders", type: "address[]" },
+    ],
+    name: "distributeToHolders",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "uint256", name: "_seriesId", type: "uint256" },
+      { internalType: "uint256", name: "_periodId", type: "uint256" },
+      { internalType: "address", name: "_holder", type: "address" },
+    ],
+    name: "distributeToSingleHolder",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "factory",
+    outputs: [
+      { internalType: "contract YRTFactory", name: "", type: "address" },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "uint256", name: "_seriesId", type: "uint256" },
+      { internalType: "uint256", name: "_periodId", type: "uint256" },
+      { internalType: "address[]", name: "_holders", type: "address[]" },
+    ],
+    name: "getDistributionStatus",
+    outputs: [{ internalType: "bool[]", name: "claimed", type: "bool[]" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "getPendingDistributions",
+    outputs: [
+      { internalType: "uint256[]", name: "seriesIds", type: "uint256[]" },
+      { internalType: "uint256[]", name: "periodIds", type: "uint256[]" },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "bytes32", name: "role", type: "bytes32" }],
+    name: "getRoleAdmin",
+    outputs: [{ internalType: "bytes32", name: "", type: "bytes32" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "bytes32", name: "role", type: "bytes32" },
+      { internalType: "address", name: "account", type: "address" },
+    ],
+    name: "grantRole",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "bytes32", name: "role", type: "bytes32" },
+      { internalType: "address", name: "account", type: "address" },
+    ],
+    name: "hasRole",
+    outputs: [{ internalType: "bool", name: "", type: "bool" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "bytes", name: "performData", type: "bytes" }],
+    name: "performUpkeep",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "bytes32", name: "role", type: "bytes32" },
+      { internalType: "address", name: "callerConfirmation", type: "address" },
+    ],
+    name: "renounceRole",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "bytes32", name: "role", type: "bytes32" },
+      { internalType: "address", name: "account", type: "address" },
+    ],
+    name: "revokeRole",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "bytes4", name: "interfaceId", type: "bytes4" }],
+    name: "supportsInterface",
+    outputs: [{ internalType: "bool", name: "", type: "bool" }],
+    stateMutability: "view",
+    type: "function",
+  },
+];
