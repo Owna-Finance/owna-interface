@@ -13,7 +13,7 @@ export default function AddLiquidityPage() {
   const { addLiquidity, approveToken, useTokenAllowance, checkNeedsApproval, hash, isPending, isSuccess, error } = useAddLiquidity();
   
   const [formData, setFormData] = useState({
-    tokenA: CONTRACTS.USDC as `0x${string}`,
+    tokenA: '' as `0x${string}`,
     tokenB: CONTRACTS.USDC as `0x${string}`,
     amountADesired: '',
     amountBDesired: '',
