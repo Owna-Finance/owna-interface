@@ -1,70 +1,151 @@
 import Image from 'next/image';
+import { useAccount, useReadContract } from 'wagmi';
+import { erc20Abi } from 'viem';
+import { CONTRACTS } from '@/constants/contracts/contracts';
+import { formatUnits } from 'viem';
 
-interface YRTHolding {
-  propertyName: string;
+interface TokenHolding {
+  symbol: string;
+  name: string;
   balance: string;
   value: string;
-  apy: string;
-  location: string;
-  type: string;
-  performance: string;
+  address: string;
+  logoPath: string;
 }
 
-interface YRTHoldingsTableProps {
-  yrtHoldings: YRTHolding[];
-  totalYRTValue: number;
+interface TokenHoldingsTableProps {
+  title: string;
+  subtitle: string;
 }
 
-export function YRTHoldingsTable({ yrtHoldings, totalYRTValue }: YRTHoldingsTableProps) {
+export function YRTHoldingsTable({ title, subtitle }: TokenHoldingsTableProps) {
+  const { address } = useAccount();
+
+  // Read YRT-SUDIRMAN balance
+  const { data: yrtBalance } = useReadContract({
+    address: '0x4e0f63A8a31156DE5d232F47AD7aAFd2C9014991' as `0x${string}`,
+    abi: erc20Abi,
+    functionName: 'balanceOf',
+    args: address ? [address] : undefined,
+    query: { enabled: !!address }
+  });
+
+  // Read YRT-SUDIRMAN name
+  const { data: yrtName } = useReadContract({
+    address: '0x4e0f63A8a31156DE5d232F47AD7aAFd2C9014991' as `0x${string}`,
+    abi: erc20Abi,
+    functionName: 'name',
+  });
+
+  // Read USDC balance
+  const { data: usdcBalance } = useReadContract({
+    address: CONTRACTS.USDC,
+    abi: erc20Abi,
+    functionName: 'balanceOf',
+    args: address ? [address] : undefined,
+    query: { enabled: !!address }
+  });
+
+  // Read IDRX balance
+  const { data: idrxBalance } = useReadContract({
+    address: CONTRACTS.IDRX,
+    abi: erc20Abi,
+    functionName: 'balanceOf',
+    args: address ? [address] : undefined,
+    query: { enabled: !!address }
+  });
+
+  const formatTokenAmount = (balance: bigint | undefined, decimals: number = 18) => {
+    if (!balance) return '0';
+    const formatted = formatUnits(balance, decimals);
+    const num = parseFloat(formatted);
+    const finalNum = num % 1 === 0 ? num : parseFloat(num.toFixed(6).replace(/\.?0+$/, ''));
+    return finalNum.toLocaleString('en-US', { maximumFractionDigits: 6 });
+  };
+
+  const tokenHoldings: TokenHolding[] = [
+    {
+      symbol: 'YRT-SUDIRMAN',
+      name: yrtName || 'YRT-SUDIRMAN',
+      balance: formatTokenAmount(yrtBalance),
+      value: '$0.00', // Mock value for now
+      address: '0x4e0f63A8a31156DE5d232F47AD7aAFd2C9014991',
+      logoPath: '/Images/Logo/logo_YRT.jpg'
+    },
+    {
+      symbol: 'USDC',
+      name: 'USD Coin',
+      balance: formatTokenAmount(usdcBalance, 18),
+      value: '$0.00', // Mock value for now
+      address: CONTRACTS.USDC,
+      logoPath: '/Images/Logo/usdc-logo.png'
+    },
+    {
+      symbol: 'IDRX',
+      name: 'Indonesian Rupiah Token',
+      balance: formatTokenAmount(idrxBalance, 18),
+      value: '$0.00', // Mock value for now
+      address: CONTRACTS.IDRX,
+      logoPath: '/Images/Logo/idrx-logo.svg'
+    }
+  ].filter(holding => parseFloat(holding.balance) > 0);
+
+  const totalValue = tokenHoldings.reduce((sum, holding) => 
+    sum + parseFloat(holding.value.replace('$', '').replace(',', '')), 0
+  );
   return (
     <div className="bg-[#0A0A0A] rounded-xl border border-[#2A2A2A] overflow-hidden">
       <div className="p-6 border-b border-[#2A2A2A]">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <h3 className="text-lg font-semibold text-white">YRT Holdings</h3>
+            <h3 className="text-lg font-semibold text-white">{title}</h3>
             <div className="px-3 py-1 bg-white/5 border border-white/10 rounded-md text-xs text-gray-300 font-medium">
-              Real Estate Tokens
+              {subtitle}
             </div>
           </div>
-          <div className="text-sm text-gray-400">Total Value: ${totalYRTValue.toLocaleString()}</div>
+          <div className="text-sm text-gray-400">Total Value: ${totalValue.toLocaleString()}</div>
         </div>
       </div>
       <div className="p-6">
-        <div className="grid grid-cols-7 gap-4 mb-6 text-xs font-medium text-gray-400 uppercase tracking-wider">
-          <div>Property</div>
+        <div className="grid grid-cols-4 gap-4 mb-6 text-xs font-medium text-gray-400 uppercase tracking-wider">
+          <div>Token</div>
           <div className="text-right">Balance</div>
           <div className="text-right">Value</div>
-          <div className="text-right">APY</div>
-          <div className="text-right">Type</div>
-          <div className="text-right">Location</div>
-          <div className="text-right">Performance</div>
+          <div className="text-right">Address</div>
         </div>
         <div className="space-y-1">
-          {yrtHoldings.map((holding, index) => (
-            <div key={index} className="grid grid-cols-7 gap-4 p-4 hover:bg-[#111111]/50 transition-colors rounded-lg border-b border-white/5 last:border-b-0">
+          {tokenHoldings.map((holding, index) => (
+            <div key={index} className="grid grid-cols-4 gap-4 p-4 hover:bg-[#111111]/50 transition-colors rounded-lg border-b border-white/5 last:border-b-0">
               <div className="flex items-center space-x-3">
                 <div className="w-8 h-8 rounded-full overflow-hidden bg-white flex items-center justify-center p-1">
                   <Image
-                    src="/Images/Logo/logo_YRT.jpg"
-                    alt="YRT Logo"
+                    src={holding.logoPath}
+                    alt={`${holding.symbol} Logo`}
                     width={24}
                     height={24}
                     className="object-contain w-full h-full rounded-full"
                   />
                 </div>
                 <div>
-                  <div className="text-sm font-medium text-white">{holding.propertyName}</div>
-                  <div className="text-xs text-gray-500">Yogyakarta Real Estate</div>
+                  <div className="text-sm font-medium text-white">{holding.symbol}</div>
+                  <div className="text-xs text-gray-500">{holding.name}</div>
                 </div>
               </div>
               <div className="text-right text-white font-medium">{holding.balance}</div>
               <div className="text-right text-white font-medium">{holding.value}</div>
-              <div className="text-right text-green-400 font-medium">{holding.apy}</div>
-              <div className="text-right text-gray-400">{holding.type}</div>
-              <div className="text-right text-gray-400">{holding.location}</div>
-              <div className="text-right text-green-400 font-medium">{holding.performance}</div>
+              <div className="text-right text-gray-400 text-xs font-mono">
+                {holding.address.slice(0, 6)}...{holding.address.slice(-4)}
+              </div>
             </div>
           ))}
+          {tokenHoldings.length === 0 && (
+            <div className="text-center py-8">
+              <p className="text-gray-400">No token holdings found</p>
+              <p className="text-gray-500 text-sm mt-1">
+                Connect your wallet to view your token balances
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>

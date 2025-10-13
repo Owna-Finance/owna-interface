@@ -36,49 +36,6 @@ export default function DashboardPage() {
     clearError
   } = usePortfolioStore();
 
-  // Mock YRT holdings data
-  const yrtHoldings = [
-    {
-      propertyName: 'YRT-HRA',
-      balance: '125.50',
-      value: '$15,687.50',
-      apy: '8.2%',
-      location: 'Yogyakarta',
-      type: 'Hotel',
-      performance: '+12.5%'
-    },
-    {
-      propertyName: 'YRT-UKDW',
-      balance: '89.25',
-      value: '$11,156.25',
-      apy: '6.8%',
-      location: 'Yogyakarta',
-      type: 'University',
-      performance: '+8.7%'
-    },
-    {
-      propertyName: 'YRT-HF',
-      balance: '67.80',
-      value: '$8,475.00',
-      apy: '7.5%',
-      location: 'Yogyakarta',
-      type: 'Hotel',
-      performance: '+15.2%'
-    },
-    {
-      propertyName: 'YRT-HMM',
-      balance: '45.30',
-      value: '$5,662.50',
-      apy: '9.1%',
-      location: 'Yogyakarta',
-      type: 'Hotel',
-      performance: '+18.9%'
-    }
-  ];
-
-  const totalYRTValue = yrtHoldings.reduce((sum, holding) => 
-    sum + parseFloat(holding.value.replace('$', '').replace(',', '')), 0
-  );
 
   useEffect(() => {
     if (!portfolio) {
@@ -142,9 +99,9 @@ export default function DashboardPage() {
 
           {activeTab === 'portfolio' && (
             <>
-              <PortfolioSummary yrtHoldings={yrtHoldings} totalYRTValue={totalYRTValue} />
+              <PortfolioSummary />
               <PortfolioAnalytics />
-              <YRTHoldingsTable yrtHoldings={yrtHoldings} totalYRTValue={totalYRTValue} />
+              <YRTHoldingsTable title="Token Holdings" subtitle="YRT, USDC, IDRX Tokens" />
             </>
           )}
 
