@@ -30,9 +30,11 @@ export function ListingsTable({
   const formatTokenAmount = (amount: string, decimals: number = 18) => {
     try {
       const formatted = formatUnits(BigInt(amount), decimals);
-      return parseFloat(formatted).toFixed(6);
+      const num = parseFloat(formatted);
+      // Remove unnecessary decimal places
+      return num % 1 === 0 ? num.toString() : num.toFixed(6).replace(/\.?0+$/, '');
     } catch {
-      return "0.000000";
+      return "0";
     }
   };
 
@@ -49,7 +51,7 @@ export function ListingsTable({
   const getYRTName = (address: string) => {
     if (
       address.toLowerCase() ===
-      "0x8DE41E5c1CB99a8658401058a0c685caFE06a886".toLowerCase()
+      "0x4e0f63A8a31156DE5d232F47AD7aAFd2C9014991".toLowerCase()
     ) {
       return "YRT-SUDIRMAN";
     }
@@ -122,7 +124,18 @@ export function ListingsTable({
                   </span>
                 </div>
                 <div className="text-center text-white">{yrtAmount}</div>
-                <div className="text-center text-white">{usdcAmount}</div>
+                <div className="text-center text-white flex items-center justify-center space-x-2">
+                  <span>{usdcAmount}</span>
+                  <div className="w-4 h-4 rounded-full overflow-hidden bg-white flex items-center justify-center">
+                    <Image
+                      src="/Images/Logo/usdc-logo.png"
+                      alt="USDC Logo"
+                      width={16}
+                      height={16}
+                      className="object-contain w-full h-full"
+                    />
+                  </div>
+                </div>
                 <div className="text-center">
                   <Button
                     onClick={() => handleBuyOrder(order)}
@@ -134,7 +147,7 @@ export function ListingsTable({
                       approvalStep !== "idle" ||
                       !account
                     }
-                    className="bg-teal-500 hover:bg-teal-600 text-black font-medium px-4 py-1 rounded text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="cursor-pointer bg-white hover:bg-gray-200 text-black font-medium px-3 py-1 rounded-md text-xs disabled:opacity-50 disabled:cursor-not-allowed min-w-[50px] h-7"
                   >
                     {((isExecuting || isConfirming) &&
                       currentOrder?.id === order.id) ||
@@ -143,6 +156,7 @@ export function ListingsTable({
                       <>
                         <Loader2 className="w-3 h-3 animate-spin mr-1" />
                         {approvalStep === "fetching-order" && "Fetching Order"}
+                        {approvalStep === "approving-yrt" && "Approving YRT"}
                         {approvalStep === "approving-usdc" && "Approving USDC"}
                         {approvalStep === "executing" && "Executing"}
                       </>

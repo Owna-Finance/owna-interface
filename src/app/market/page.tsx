@@ -81,6 +81,8 @@ export default function MarketPage() {
               activeTab={activeTab}
               setActiveTab={setActiveTab}
               onCreateOrder={handleCreateOrder}
+              onRefresh={refreshOrders}
+              isRefreshing={isLoading}
             />
 
             <MarketTable

@@ -210,7 +210,7 @@ export function CreateOrderModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50">
       <div className="bg-[#0A0A0A] rounded-2xl border border-[#2A2A2A] p-6 w-full max-w-md mx-4">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
@@ -219,7 +219,7 @@ export function CreateOrderModal({
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-white transition-colors"
+            className="text-gray-400 hover:text-white transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -242,7 +242,7 @@ export function CreateOrderModal({
                 type="button"
                 onClick={fillSampleData}
                 variant="outline"
-                className="border-gray-600 text-gray-600 hover:bg-gray-800 hover:text-white text-sm"
+                className="border-gray-600 text-gray-600 hover:bg-gray-800 hover:text-white text-sm flex items-start cursor-pointer"
               >
                 Fill Sample Data
               </Button>
@@ -334,7 +334,7 @@ export function CreateOrderModal({
                 isConfirmingApproval ||
                 approvalStep !== "idle"
               }
-              className="w-full bg-teal-500 hover:bg-teal-600 text-black font-medium py-3 rounded-lg flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-white hover:bg-gray-200 text-black font-medium py-3 rounded-lg flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isApproving || isConfirmingApproval ? (
                 <>
@@ -351,9 +351,9 @@ export function CreateOrderModal({
                   <span>Creating & Signing Order...</span>
                 </>
               ) : (
-                <span>
+                <span className="cursor-pointer">
                   {orderType === "sell"
-                    ? "Create & Sign Sell Order"
+                    ? "List Token"
                     : "Create & Sign Offer"}
                 </span>
               )}
@@ -367,11 +367,10 @@ export function CreateOrderModal({
 
             {/* Approval Status */}
             {approvalStep !== "idle" && (
-              <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
-                <p className="text-blue-400 text-sm">
-                  {approvalStep === "approving" && "⏳ Approving token..."}
+              <div className="rounded-lg p-3">
+                <p className="text-white font-medium text-sm">
                   {approvalStep === "approved" &&
-                    "✅ Token approved! Creating order..."}
+                    "Token approved! Creating order..."}
                 </p>
               </div>
             )}

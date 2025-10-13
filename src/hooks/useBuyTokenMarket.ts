@@ -8,10 +8,12 @@ import { erc20Abi } from "viem";
 import { CONTRACTS } from "@/constants/contracts/contracts";
 import { SECONDARY_MARKET_ABI } from "@/constants/abis/SECONDARYMARKETAbi";
 import { useSecondaryMarket, Order } from "./useSecondaryMarket";
+import { toast } from "sonner";
 
 export type ApprovalStep =
   | "idle"
   | "fetching-order"
+  | "approving-yrt"
   | "approving-usdc"
   | "executing";
 
@@ -37,12 +39,24 @@ export function useBuyTokenMarket(onOrderExecuted?: () => void) {
 
   const handleBuyOrder = async (order: Order) => {
     if (!order.signature) {
-      alert("Order signature not available");
+      toast.error("Order signature not available", {
+        style: {
+          background: '#111111',
+          border: '1px solid #2A2A2A',
+          color: '#ffffff',
+        }
+      });
       return;
     }
 
     if (!account) {
-      alert("Please connect your wallet");
+      toast.error("Please connect your wallet", {
+        style: {
+          background: '#111111',
+          border: '1px solid #2A2A2A',
+          color: '#ffffff',
+        }
+      });
       return;
     }
 
@@ -55,18 +69,24 @@ export function useBuyTokenMarket(onOrderExecuted?: () => void) {
 
       setSignedOrderData(signedOrder);
 
-      // Step 2: Approve USDC token (buyer only needs to approve USDC)
-      setApprovalStep("approving-usdc");
+      // Step 2: First approve YRT token 
+      setApprovalStep("approving-yrt");
 
       writeContract({
-        address: order.takerToken as `0x${string}`,
+        address: order.makerToken as `0x${string}`,
         abi: erc20Abi,
         functionName: "approve",
-        args: [CONTRACTS.SECONDARY_MARKET, BigInt(order.takerAmount)],
+        args: [CONTRACTS.SECONDARY_MARKET, BigInt(order.makerAmount)],
       });
     } catch (error) {
       console.error("Error starting buy process:", error);
-      alert("Failed to start buy process");
+      toast.error("Failed to start buy process", {
+        style: {
+          background: '#111111',
+          border: '1px solid #2A2A2A',
+          color: '#ffffff',
+        }
+      });
       setApprovalStep("idle");
       setCurrentOrder(null);
       setSignedOrderData(null);
@@ -74,11 +94,28 @@ export function useBuyTokenMarket(onOrderExecuted?: () => void) {
   };
 
 
+  const approveUSDC = (order: Order) => {
+    setApprovalStep("approving-usdc");
+
+    writeContract({
+      address: order.takerToken as `0x${string}`,
+      abi: erc20Abi,
+      functionName: "approve",
+      args: [CONTRACTS.SECONDARY_MARKET, BigInt(order.takerAmount)],
+    });
+  };
+
   const executeSwap = (order: Order) => {
     setApprovalStep("executing");
 
     if (!signedOrderData) {
-      alert("Signed order data not available");
+      toast.error("Signed order data not available", {
+        style: {
+          background: '#111111',
+          border: '1px solid #2A2A2A',
+          color: '#ffffff',
+        }
+      });
       setApprovalStep("idle");
       setCurrentOrder(null);
       return;
@@ -112,11 +149,37 @@ export function useBuyTokenMarket(onOrderExecuted?: () => void) {
   // Handle transaction success
   useEffect(() => {
     if (isConfirmed && currentOrder) {
-      if (approvalStep === "approving-usdc") {
-        alert("USDC approval successful! Now executing swap...");
+      if (approvalStep === "approving-yrt") {
+        toast.success("YRT approved! Now approving USDC...", {
+          style: {
+            background: '#111111',
+            border: '1px solid #2A2A2A',
+            color: '#ffffff',
+          }
+        });
+        approveUSDC(currentOrder);
+      } else if (approvalStep === "approving-usdc") {
+        toast.success("USDC approved! Executing swap...", {
+          style: {
+            background: '#111111',
+            border: '1px solid #2A2A2A',
+            color: '#ffffff',
+          }
+        });
         executeSwap(currentOrder);
       } else if (approvalStep === "executing") {
-        alert("Order executed successfully!");
+        toast.success("Order executed successfully! View transaction on Base Sepolia", {
+          style: {
+            background: '#111111',
+            border: '1px solid #2A2A2A',
+            color: '#ffffff',
+          },
+          duration: 5000,
+          action: {
+            label: "View Transaction",
+            onClick: () => window.open(`https://sepolia.basescan.org/tx/${hash}`, '_blank')
+          }
+        });
         // Reset state
         resetState();
         // Call the callback to refresh orders
@@ -134,13 +197,21 @@ export function useBuyTokenMarket(onOrderExecuted?: () => void) {
       console.error("Execute error:", executeError);
 
       let errorMessage = "Transaction failed";
-      if (approvalStep === "approving-usdc") {
+      if (approvalStep === "approving-yrt") {
+        errorMessage = "YRT approval failed";
+      } else if (approvalStep === "approving-usdc") {
         errorMessage = "USDC approval failed";
       } else if (approvalStep === "executing") {
         errorMessage = "Swap execution failed";
       }
 
-      alert(`${errorMessage}: ${executeError.message}`);
+      toast.error(`${errorMessage}: ${executeError.message}`, {
+        style: {
+          background: '#111111',
+          border: '1px solid #2A2A2A',
+          color: '#ffffff',
+        }
+      });
 
       // Reset approval state on error
       resetState();
