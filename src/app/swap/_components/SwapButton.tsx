@@ -44,7 +44,7 @@ export function SwapButton({
       <Button
         type="submit"
         disabled={isDisabled}
-        className="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-4 rounded-lg flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="cursor-pointer w-full bg-white hover:bg-gray-300 text-white font-medium py-4 rounded-lg flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {isProcessing ? (
           <>
@@ -53,8 +53,7 @@ export function SwapButton({
           </>
         ) : (
           <>
-            <ArrowRightLeft className="w-4 h-4 cursor-pointer" />
-            <span className='cursor-pointer'>{getButtonText()}</span>
+            <span className='cursor-pointer text-black'>{getButtonText()}</span>
           </>
         )}
       </Button>
