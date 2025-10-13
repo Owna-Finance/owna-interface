@@ -8,7 +8,7 @@ import { useSwap } from '@/hooks';
 import { formatUnits } from 'viem';
 import { SwapHeader, SwapForm } from './_components';
 
-type TokenType = 'YRT' | 'USDC';
+type TokenType = 'YRT' | 'USDC' | 'IDRX';
 
 interface SwapFormData {
   tokenFrom: TokenType;
@@ -47,6 +47,7 @@ export default function SwapPage() {
 
   const getTokenAddress = (token: TokenType): `0x${string}` => {
     if (token === 'USDC') return CONTRACTS.USDC;
+    if (token === 'IDRX') return CONTRACTS.IDRX;
     if (token === 'YRT') return formData.yrtAddress as `0x${string}`;
     return CONTRACTS.USDC;
   };

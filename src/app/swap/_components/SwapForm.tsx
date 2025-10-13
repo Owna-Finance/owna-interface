@@ -2,8 +2,11 @@ import { TokenInput } from './TokenInput';
 import { SwapSettings } from './SwapSettings';
 import { TransactionStatus } from './TransactionStatus';
 import { SwapButton } from './SwapButton';
+import { ChevronDown } from 'lucide-react';
+import Image from 'next/image';
+import { useState, useEffect, useRef } from 'react';
 
-type TokenType = 'YRT' | 'USDC';
+type TokenType = 'YRT' | 'USDC' | 'IDRX';
 type SwapStep = 'idle' | 'approving-yrt' | 'yrt-approved' | 'approving-usdc' | 'tokens-approved' | 'swapping' | 'completed';
 
 interface SwapFormData {
@@ -56,16 +59,31 @@ export function SwapForm({
       <form onSubmit={onSubmit} className="space-y-6">
         <div>
           <label className="block text-sm font-medium text-gray-300 mb-2">
-            YRT Token Address
+            YRT Token
           </label>
-          <input
-            type="text"
-            name="yrtAddress"
+          <YRTTokenDropdown 
             value={formData.yrtAddress}
-            onChange={onInputChange}
-            placeholder="0x..."
-            className="w-full px-4 py-3 bg-[#111111] border border-[#2A2A2A] rounded-lg text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none"
-            required
+            onChange={(value) => onInputChange({ target: { name: 'yrtAddress', value } } as any)}
+            options={[
+              { 
+                value: '0x8DE41E5c1CB99a8658401058a0c685caFE06a886', 
+                label: 'YRT Sudirman', 
+                symbol: 'YRT-SDR',
+                logo: '/Images/Logo/logo_YRT.jpg' 
+              },
+              { 
+                value: '0x1234567890123456789012345678901234567890', 
+                label: 'YRT Thamrin', 
+                symbol: 'YRT-THM',
+                logo: '/Images/Logo/logo_YRT.jpg' 
+              },
+              { 
+                value: '0x9876543210987654321098765432109876543210', 
+                label: 'YRT Kemang', 
+                symbol: 'YRT-KMG',
+                logo: '/Images/Logo/logo_YRT.jpg' 
+              }
+            ]}
           />
         </div>
 
@@ -113,6 +131,103 @@ export function SwapForm({
           needsUsdcApproval={needsUsdcApproval}
         />
       </form>
+    </div>
+  );
+}
+
+interface YRTTokenOption {
+  value: string;
+  label: string;
+  symbol: string;
+  logo: string;
+}
+
+interface YRTTokenDropdownProps {
+  value: string;
+  onChange: (value: string) => void;
+  options: YRTTokenOption[];
+}
+
+function YRTTokenDropdown({ value, onChange, options }: YRTTokenDropdownProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const selectedOption = options.find(opt => opt.value === value) || options[0];
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full px-4 py-3 pl-12 pr-10 bg-[#111111] border border-[#2A2A2A] rounded-lg text-white focus:border-blue-500 focus:outline-none text-left flex items-center justify-between"
+      >
+        <div className="flex flex-col">
+          <span className="text-white">{selectedOption?.label || 'Select YRT Token'}</span>
+          {selectedOption && (
+            <span className="text-xs text-gray-400 truncate">{selectedOption.value}</span>
+          )}
+        </div>
+        <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+      
+      <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+        {selectedOption && (
+          <Image 
+            src={selectedOption.logo} 
+            alt={selectedOption.label} 
+            width={20} 
+            height={20}
+            className="rounded-full"
+          />
+        )}
+      </div>
+
+      {isOpen && (
+        <div className="absolute top-full left-0 right-0 mt-1 bg-[#111111] border border-[#2A2A2A] rounded-lg shadow-lg z-10 max-h-60 overflow-y-auto">
+          {options.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => {
+                onChange(option.value);
+                setIsOpen(false);
+              }}
+              className="w-full px-4 py-3 pl-12 text-left text-white hover:bg-[#1A1A1A] flex items-center first:rounded-t-lg last:rounded-b-lg"
+            >
+              <div className="absolute left-3">
+                <Image 
+                  src={option.logo} 
+                  alt={option.label} 
+                  width={20} 
+                  height={20}
+                  className="rounded-full"
+                />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-white">{option.label}</span>
+                <span className="text-xs text-gray-400 truncate">{option.value}</span>
+              </div>
+              {option.value === value && (
+                <div className="ml-auto">
+                  <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                </div>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

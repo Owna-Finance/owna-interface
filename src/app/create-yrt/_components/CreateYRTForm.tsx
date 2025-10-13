@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { CONTRACTS } from '@/constants/contracts/contracts';
-import { Building, DollarSign, Plus, ChevronDown } from 'lucide-react';
+import { Building, DollarSign, ChevronDown } from 'lucide-react';
 import Image from 'next/image';
 import { useState, useEffect, useRef } from 'react';
 
