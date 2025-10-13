@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { CONTRACTS } from '@/constants/contracts/contracts';
-import { DollarSign, ChevronDown } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import Image from 'next/image';
 import { useState, useEffect, useRef } from 'react';
 
@@ -147,7 +147,7 @@ export function DepositYieldForm({
           <Button
             type="submit"
             disabled={isYieldLoading || !address || (!yieldFormData.amount)}
-            className={`font-medium px-6 py-2 rounded-lg flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed ${
+            className={`font-medium px-6 py-2 rounded-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed ${
               needsApproval && approvalStep !== 'deposit' 
                 ? 'bg-gray-400 hover:bg-gray-500 text-white' 
                 : 'bg-white hover:bg-gray-200 text-black'
@@ -164,12 +164,10 @@ export function DepositYieldForm({
               <>
                 {needsApproval && approvalStep !== 'deposit' ? (
                   <>
-                    <DollarSign className="w-4 h-4" />
                     <span>Approve Token</span>
                   </>
                 ) : (
                   <>
-                    <DollarSign className="w-4 h-4" />
                     <span>Deposit Yield</span>
                   </>
                 )}

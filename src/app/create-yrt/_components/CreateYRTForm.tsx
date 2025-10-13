@@ -205,7 +205,7 @@ export function CreateYRTForm({
           <Button
             type="submit"
             disabled={isLoading || !address || !isFormValid()}
-            className="bg-white hover:bg-gray-200 text-black font-medium px-8 py-3 rounded-lg flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-white hover:bg-gray-200 text-black font-medium px-8 py-3 rounded-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? (
               <>
@@ -214,7 +214,6 @@ export function CreateYRTForm({
               </>
             ) : (
               <>
-                <Plus className="w-4 h-4" />
                 <span>Create YRT Series</span>
               </>
             )}
