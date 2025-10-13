@@ -1,5 +1,7 @@
 import { Button } from '@/components/ui/button';
-import { Calendar } from 'lucide-react';
+import { Calendar, ExternalLink } from 'lucide-react';
+import { useEffect } from 'react';
+import { toast } from 'sonner';
 
 interface PeriodFormData {
   seriesId: string;
@@ -27,6 +29,32 @@ export function StartNewPeriodForm({
   periodError,
   address
 }: StartNewPeriodFormProps) {
+  useEffect(() => {
+    if (isPeriodSuccess && periodHash) {
+      toast.success('New period started successfully!', {
+        description: (
+          <p className="text-xs font-mono text-white break-all">
+            <a
+              href={`https://sepolia.basescan.org/tx/${periodHash}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:text-blue-800 flex items-center space-x-1"
+            >
+              <ExternalLink className="w-3 h-3" /> <span>View On Explorer</span>
+            </a>
+          </p>
+        )
+      });
+    }
+  }, [isPeriodSuccess, periodHash]);
+
+  useEffect(() => {
+    if (periodError) {
+      toast.error('Failed to start new period', {
+        description: periodError.message
+      });
+    }
+  }, [periodError]);
   return (
     <div className="mt-8 bg-[#0A0A0A] rounded-xl border border-[#2A2A2A] p-8">
       <div className="flex items-center space-x-2 mb-6">
@@ -73,17 +101,27 @@ export function StartNewPeriodForm({
 
         {(periodHash || periodError) && (
           <div className="p-4 bg-[#111111] border border-[#2A2A2A] rounded-lg">
+            {isPeriodSuccess && (
+              <p className="text-sm text-white mb-1">
+                New period started successfully!
+              </p>
+            )}
             {periodHash && (
               <>
-                <p className="text-sm text-gray-400 mb-2">Period Transaction Hash:</p>
-                <p className="text-xs font-mono text-white break-all">{periodHash}</p>
+                <p className="text-md font-mono text-white break-all">
+                  <a
+                    href={`https://sepolia.basescan.org/tx/${periodHash}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-800 flex items-center space-x-1"
+                  >
+                    <ExternalLink className="w-4 h-4" /> <span>View On Explorer</span>
+                  </a>
+                </p>
               </>
             )}
             {isPeriodLoading && (
               <p className="text-sm text-gray-300 mt-2">⏳ Starting new period...</p>
-            )}
-            {isPeriodSuccess && (
-              <p className="text-sm text-white mt-2">✅ New period started successfully!</p>
             )}
             {periodError && (
               <p className="text-sm text-gray-300 mt-2">❌ Error: {periodError.message}</p>
@@ -94,7 +132,7 @@ export function StartNewPeriodForm({
         <div className="flex justify-end">
           <Button
             type="submit"
-            disabled={isPeriodLoading || !address}
+          disabled={isPeriodLoading || !address}
             className="bg-white hover:bg-gray-200 text-black font-medium px-6 py-2 rounded-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isPeriodLoading ? (
@@ -104,7 +142,7 @@ export function StartNewPeriodForm({
               </>
             ) : (
               <>
-                <span>Start New Period</span>
+                <span className='cursor-pointer'>Start New Period</span>
               </>
             )}
           </Button>

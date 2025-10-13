@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Kantumruy_Pro } from "next/font/google";
 import { OnchainProviders } from "@/providers/rainbowkit-provider";
+import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
 const kantumruyPro = Kantumruy_Pro({
@@ -136,6 +137,7 @@ export default function RootLayout({
       >
         <OnchainProviders>
           {children}
+          <Toaster position="bottom-right" />
         </OnchainProviders>
       </body>
     </html>

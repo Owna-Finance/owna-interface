@@ -1,8 +1,9 @@
 import { Button } from '@/components/ui/button';
 import { CONTRACTS } from '@/constants/contracts/contracts';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, ExternalLink } from 'lucide-react';
 import Image from 'next/image';
 import { useState, useEffect, useRef } from 'react';
+import { toast } from 'sonner';
 
 interface YieldFormData {
   seriesId: string;
@@ -36,6 +37,32 @@ export function DepositYieldForm({
   yieldError,
   address
 }: DepositYieldFormProps) {
+  useEffect(() => {
+    if (isYieldSuccess && yieldHash) {
+      toast.success('Yield deposited successfully!', {
+        description: (
+          <p className="text-xs font-mono text-white break-all">
+            <a
+              href={`https://sepolia.basescan.org/tx/${yieldHash}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:text-blue-800 flex items-center space-x-1"
+            >
+              <ExternalLink className="w-3 h-3" /> <span>View On Explorer</span>
+            </a>
+          </p>
+        )
+      });
+    }
+  }, [isYieldSuccess, yieldHash]);
+
+  useEffect(() => {
+    if (yieldError) {
+      toast.error('Failed to deposit yield', {
+        description: yieldError.message
+      });
+    }
+  }, [yieldError]);
   return (
     <div className="mt-8 bg-[#0A0A0A] rounded-xl border border-[#2A2A2A] p-8">
       <div className="flex items-center space-x-2 mb-6">
@@ -125,17 +152,27 @@ export function DepositYieldForm({
 
         {(yieldHash || yieldError) && (
           <div className="p-4 bg-[#111111] border border-[#2A2A2A] rounded-lg">
+            {isYieldSuccess && (
+              <p className="text-sm text-white mb-1">
+                Yield deposited successfully!
+              </p>
+            )}
             {yieldHash && (
               <>
-                <p className="text-sm text-gray-400 mb-2">Yield Transaction Hash:</p>
-                <p className="text-xs font-mono text-white break-all">{yieldHash}</p>
+                <p className="text-md font-mono text-white break-all">
+                  <a
+                    href={`https://sepolia.basescan.org/tx/${yieldHash}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-800 flex items-center space-x-1"
+                  >
+                    <ExternalLink className="w-4 h-4" /> <span>View On Explorer</span>
+                  </a>
+                </p>
               </>
             )}
             {isYieldLoading && (
               <p className="text-sm text-gray-300 mt-2">⏳ Depositing yield...</p>
-            )}
-            {isYieldSuccess && (
-              <p className="text-sm text-white mt-2">✅ Yield deposited successfully!</p>
             )}
             {yieldError && (
               <p className="text-sm text-gray-300 mt-2">❌ Error: {yieldError.message}</p>
