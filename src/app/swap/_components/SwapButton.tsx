@@ -53,8 +53,8 @@ export function SwapButton({
           </>
         ) : (
           <>
-            <ArrowRightLeft className="w-4 h-4" />
-            <span>{getButtonText()}</span>
+            <ArrowRightLeft className="w-4 h-4 cursor-pointer" />
+            <span className='cursor-pointer'>{getButtonText()}</span>
           </>
         )}
       </Button>

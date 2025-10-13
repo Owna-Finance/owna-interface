@@ -1,3 +1,5 @@
+import { ExternalLink } from 'lucide-react';
+
 type SwapStep = 'idle' | 'approving-yrt' | 'yrt-approved' | 'approving-usdc' | 'tokens-approved' | 'swapping' | 'completed';
 
 interface TransactionStatusProps {
@@ -41,11 +43,18 @@ export function TransactionStatus({
               <span className="text-xs text-green-400">✅ Approved</span>
             )}
           </div>
-          {yrtApprovalHash && (
-            <p className="text-xs font-mono text-blue-400 break-all">
-              {yrtApprovalHash}
+          {/* {yrtApprovalHash && (
+            <p className="text-xs font-mono text-white break-all">
+              <a
+                href={`https://sepolia.basescan.org/tx/${yrtApprovalHash}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-800 flex items-center space-x-1"
+              >
+                <ExternalLink className="w-3 h-3" /> <span>View YRT Approval</span>
+              </a>
             </p>
-          )}
+          )} */}
         </div>
       )}
 
@@ -60,11 +69,18 @@ export function TransactionStatus({
               <span className="text-xs text-green-400">✅ Approved</span>
             )}
           </div>
-          {usdcApprovalHash && (
-            <p className="text-xs font-mono text-blue-400 break-all">
-              {usdcApprovalHash}
+          {/* {usdcApprovalHash && (
+            <p className="text-xs font-mono text-white break-all">
+              <a
+                href={`https://sepolia.basescan.org/tx/${usdcApprovalHash}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-800 flex items-center space-x-1"
+              >
+                <ExternalLink className="w-3 h-3" /> <span>View USDC Approval</span>
+              </a>
             </p>
-          )}
+          )} */}
         </div>
       )}
 
@@ -80,8 +96,15 @@ export function TransactionStatus({
             )}
           </div>
           {swapHash && (
-            <p className="text-xs font-mono text-blue-400 break-all">
-              {swapHash}
+            <p className="text-xs font-mono text-white break-all">
+              <a
+                href={`https://sepolia.basescan.org/tx/${swapHash}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-800 flex items-center space-x-1"
+              >
+                <ExternalLink className="w-3 h-3" /> <span>View Swap Transaction</span>
+              </a>
             </p>
           )}
         </div>

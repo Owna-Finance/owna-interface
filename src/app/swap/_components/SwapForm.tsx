@@ -66,7 +66,7 @@ export function SwapForm({
             onChange={(value) => onInputChange({ target: { name: 'yrtAddress', value } } as any)}
             options={[
               { 
-                value: '0x8DE41E5c1CB99a8658401058a0c685caFE06a886', 
+                value: '0x4e0f63A8a31156DE5d232F47AD7aAFd2C9014991', 
                 label: 'YRT Sudirman', 
                 symbol: 'YRT-SDR',
                 logo: '/Images/Logo/logo_YRT.jpg' 

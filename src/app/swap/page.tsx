@@ -7,6 +7,8 @@ import { CONTRACTS } from '@/constants/contracts/contracts';
 import { useSwap } from '@/hooks';
 import { formatUnits } from 'viem';
 import { SwapHeader, SwapForm } from './_components';
+import { toast } from 'sonner';
+import { ExternalLink } from 'lucide-react';
 
 type TokenType = 'YRT' | 'USDC' | 'IDRX';
 
@@ -91,6 +93,23 @@ export default function SwapPage() {
     path: swapPath
   });
 
+  // Auto-fill functionality when From token changes to USDC
+  useEffect(() => {
+    if (formData.tokenFrom === 'USDC' && formData.tokenTo !== 'YRT') {
+      setFormData(prev => ({
+        ...prev,
+        tokenTo: 'YRT',
+        yrtAddress: '0x4e0f63A8a31156DE5d232F47AD7aAFd2C9014991' // YRT Sudirman address
+      }));
+    } else if (formData.tokenFrom === 'IDRX' && formData.tokenTo !== 'YRT') {
+      setFormData(prev => ({
+        ...prev,
+        tokenTo: 'YRT',
+        yrtAddress: '0x4e0f63A8a31156DE5d232F47AD7aAFd2C9014991' // YRT Sudirman address
+      }));
+    }
+  }, [formData.tokenFrom, formData.tokenTo]);
+
   useEffect(() => {
     if (amountsOut && formData.amountFrom && formData.amountFrom !== '0' && Array.isArray(amountsOut) && amountsOut.length > 1) {
       const outputAmount = amountsOut[1] as bigint;
@@ -123,16 +142,59 @@ export default function SwapPage() {
         setYrtApprovalHash(hash);
         setCurrentStep('yrt-approved');
         refetchYrtAllowance();
+        toast.success('YRT approved successfully!', {
+          description: (
+            <p className="text-xs font-mono text-white break-all">
+              <a
+                href={`https://sepolia.basescan.org/tx/${hash}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-800 flex items-center space-x-1"
+              >
+                <ExternalLink className="w-3 h-3" /> <span>View On Explorer</span>
+              </a>
+            </p>
+          )
+        });
       } else if (currentStep === 'approving-usdc') {
         setUsdcApprovalHash(hash);
         setCurrentStep('tokens-approved');
         refetchUsdcAllowance();
+        const tokenName = formData.tokenFrom === 'USDC' ? 'USDC' : formData.tokenFrom === 'IDRX' ? 'IDRX' : 'Token';
+        toast.success(`${tokenName} approved successfully!`, {
+          description: (
+            <p className="text-xs font-mono text-white break-all">
+              <a
+                href={`https://sepolia.basescan.org/tx/${hash}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-800 flex items-center space-x-1"
+              >
+                <ExternalLink className="w-3 h-3" /> <span>View On Explorer</span>
+              </a>
+            </p>
+          )
+        });
       } else if (currentStep === 'swapping') {
         setSwapHash(hash);
         setCurrentStep('completed');
+        toast.success('Tokens swapped successfully!', {
+          description: (
+            <p className="text-xs font-mono text-white break-all">
+              <a
+                href={`https://sepolia.basescan.org/tx/${hash}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-800 flex items-center space-x-1"
+              >
+                <ExternalLink className="w-3 h-3" /> <span>View On Explorer</span>
+              </a>
+            </p>
+          )
+        });
       }
     }
-  }, [isTransactionSuccess, currentStep, hash, refetchYrtAllowance, refetchUsdcAllowance]);
+  }, [isTransactionSuccess, currentStep, hash, refetchYrtAllowance, refetchUsdcAllowance, formData.tokenFrom]);
 
   const handleApproveYRT = async (): Promise<boolean> => {
     if (!address || !formData.yrtAddress) return false;
@@ -149,7 +211,9 @@ export default function SwapPage() {
       return true;
     } catch (error) {
       setCurrentStep('idle');
-      alert(error instanceof Error ? error.message : 'Failed to approve YRT');
+      toast.error('Failed to approve YRT', {
+        description: error instanceof Error ? error.message : 'Unknown error occurred'
+      });
       return false;
     }
   };
@@ -168,7 +232,10 @@ export default function SwapPage() {
       return true;
     } catch (error) {
       setCurrentStep('idle');
-      alert(error instanceof Error ? error.message : 'Failed to approve USDC');
+      const tokenName = formData.tokenFrom === 'USDC' ? 'USDC' : formData.tokenFrom === 'IDRX' ? 'IDRX' : 'Token';
+      toast.error(`Failed to approve ${tokenName}`, {
+        description: error instanceof Error ? error.message : 'Unknown error occurred'
+      });
       return false;
     }
   };
@@ -196,7 +263,9 @@ export default function SwapPage() {
       
     } catch (error) {
       setCurrentStep('idle');
-      alert(error instanceof Error ? error.message : 'Failed to swap tokens');
+      toast.error('Failed to swap tokens', {
+        description: error instanceof Error ? error.message : 'Unknown error occurred'
+      });
     }
   };
 
@@ -204,12 +273,16 @@ export default function SwapPage() {
     e.preventDefault();
     
     if (!address) {
-      alert('Please connect your wallet');
+      toast.error('Wallet not connected', {
+        description: 'Please connect your wallet to continue'
+      });
       return;
     }
 
     if (!formData.yrtAddress || !formData.amountFrom || !formData.amountTo) {
-      alert('Please fill in all required fields');
+      toast.error('Form incomplete', {
+        description: 'Please fill in all required fields'
+      });
       return;
     }
 
@@ -260,7 +333,9 @@ export default function SwapPage() {
   const fillSampleData = () => {
     setFormData(prev => ({
       ...prev,
-      yrtAddress: '0x8DE41E5c1CB99a8658401058a0c685caFE06a886',
+      tokenFrom: 'USDC',
+      tokenTo: 'YRT',
+      yrtAddress: '0x4e0f63A8a31156DE5d232F47AD7aAFd2C9014991',
       amountFrom: '100',
       amountTo: ''
     }));
