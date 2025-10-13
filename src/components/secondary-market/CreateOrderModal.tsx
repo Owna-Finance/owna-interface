@@ -1,16 +1,17 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { useSecondaryMarket, CreateOrderParams } from '@/hooks';
-import { CONTRACTS } from '@/constants/contracts/contracts';
-import { parseUnits } from 'viem';
-import { X, Loader2 } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { useSecondaryMarket, CreateOrderParams } from "@/hooks";
+import { CONTRACTS } from "@/constants/contracts/contracts";
+import { erc20Abi, parseUnits } from "viem";
+import { X, Loader2 } from "lucide-react";
+import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 
 interface CreateOrderModalProps {
   isOpen: boolean;
   onClose: () => void;
-  orderType: 'sell' | 'offer';
+  orderType: "sell" | "offer";
 }
 
 interface OrderFormData {
@@ -20,27 +21,109 @@ interface OrderFormData {
   slippagePercent: string;
 }
 
-export function CreateOrderModal({ isOpen, onClose, orderType }: CreateOrderModalProps) {
-  const { createAndVerifyOrder, isLoading, error, address, clearError } = useSecondaryMarket();
-  
+export function CreateOrderModal({
+  isOpen,
+  onClose,
+  orderType,
+}: CreateOrderModalProps) {
+  const { createAndVerifyOrder, isLoading, error, address, clearError } =
+    useSecondaryMarket();
+
   const [formData, setFormData] = useState<OrderFormData>({
-    yrtAddress: '',
-    yrtAmount: '',
-    usdcAmount: '',
-    slippagePercent: '2.0'
+    yrtAddress: "",
+    yrtAmount: "",
+    usdcAmount: "",
+    slippagePercent: "2.0",
   });
 
   const [success, setSuccess] = useState(false);
+  const [approvalStep, setApprovalStep] = useState<
+    "idle" | "approving" | "approved"
+  >("idle");
+  const [pendingOrderParams, setPendingOrderParams] =
+    useState<CreateOrderParams | null>(null);
+
+  // Wagmi hooks for approval
+  const {
+    writeContract,
+    data: approvalHash,
+    isPending: isApproving,
+    error: approvalError,
+  } = useWriteContract();
+
+  const { isLoading: isConfirmingApproval, isSuccess: isApprovalConfirmed } =
+    useWaitForTransactionReceipt({
+      hash: approvalHash,
+    });
+
+  // Handle approval confirmation
+  useEffect(() => {
+    const processOrder = async () => {
+      if (
+        isApprovalConfirmed &&
+        pendingOrderParams &&
+        approvalStep === "approving"
+      ) {
+        setApprovalStep("approved");
+        console.log("Token approval confirmed! Creating order...");
+
+        try {
+          // Step 2: Create and verify order after approval is confirmed
+          const result = await createAndVerifyOrder(pendingOrderParams);
+
+          if (result.success) {
+            setSuccess(true);
+            // Reset form and states
+            setFormData({
+              yrtAddress: "",
+              yrtAmount: "",
+              usdcAmount: "",
+              slippagePercent: "2.0",
+            });
+            setApprovalStep("idle");
+            setPendingOrderParams(null);
+
+            // Close modal after 2 seconds
+            setTimeout(() => {
+              setSuccess(false);
+              onClose();
+            }, 2000);
+          } else {
+            console.error("Order creation failed:", result.error);
+            setApprovalStep("idle");
+            setPendingOrderParams(null);
+          }
+        } catch (error) {
+          console.error("Error after approval:", error);
+          setApprovalStep("idle");
+          setPendingOrderParams(null);
+        }
+      }
+    };
+
+    processOrder();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isApprovalConfirmed, pendingOrderParams, approvalStep]);
+
+  // Handle approval error
+  useEffect(() => {
+    if (approvalError) {
+      console.error("Approval error:", approvalError);
+      alert(`Token approval failed: ${approvalError.message}`);
+      setApprovalStep("idle");
+      setPendingOrderParams(null);
+    }
+  }, [approvalError]);
 
   if (!isOpen) return null;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
-    
+
     // Clear any previous errors when user starts typing
     if (error) {
       clearError();
@@ -49,14 +132,14 @@ export function CreateOrderModal({ isOpen, onClose, orderType }: CreateOrderModa
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!address) {
-      alert('Please connect your wallet first');
+      alert("Please connect your wallet first");
       return;
     }
 
     if (!formData.yrtAddress || !formData.yrtAmount || !formData.usdcAmount) {
-      alert('Please fill in all required fields');
+      alert("Please fill in all required fields");
       return;
     }
 
@@ -66,8 +149,10 @@ export function CreateOrderModal({ isOpen, onClose, orderType }: CreateOrderModa
       const usdcAmountWei = parseUnits(formData.usdcAmount, 18).toString();
 
       let orderParams: CreateOrderParams;
+      let tokenToApprove: `0x${string}`;
+      let amountToApprove: bigint;
 
-      if (orderType === 'sell') {
+      if (orderType === "sell") {
         // Selling YRT for USDC
         orderParams = {
           maker: address,
@@ -76,6 +161,8 @@ export function CreateOrderModal({ isOpen, onClose, orderType }: CreateOrderModa
           takerToken: CONTRACTS.USDC, // USDC token address
           takerAmount: usdcAmountWei, // Amount of USDC to receive
         };
+        tokenToApprove = formData.yrtAddress as `0x${string}`;
+        amountToApprove = BigInt(yrtAmountWei);
       } else {
         // Making offer: Offering USDC for YRT
         orderParams = {
@@ -85,39 +172,40 @@ export function CreateOrderModal({ isOpen, onClose, orderType }: CreateOrderModa
           takerToken: formData.yrtAddress, // YRT token address
           takerAmount: yrtAmountWei, // Amount of YRT to receive
         };
+        tokenToApprove = CONTRACTS.USDC;
+        amountToApprove = BigInt(usdcAmountWei);
       }
 
-      const result = await createAndVerifyOrder(orderParams);
+      // Save order params for later use after approval
+      setPendingOrderParams(orderParams);
+      setApprovalStep("approving");
 
-      if (result.success) {
-        setSuccess(true);
-        // Reset form
-        setFormData({
-          yrtAddress: '',
-          yrtAmount: '',
-          usdcAmount: '',
-          slippagePercent: '2.0'
-        });
-        
-        // Close modal after 2 seconds
-        setTimeout(() => {
-          setSuccess(false);
-          onClose();
-        }, 2000);
-      } else {
-        console.error('Order creation failed:', result.error);
-      }
+      // Step 1: Approve token to SecondaryMarket contract
+      console.log(
+        "Approving token:",
+        tokenToApprove,
+        "amount:",
+        amountToApprove.toString()
+      );
+      writeContract({
+        address: tokenToApprove,
+        abi: erc20Abi,
+        functionName: "approve",
+        args: [CONTRACTS.SECONDARY_MARKET, amountToApprove],
+      });
     } catch (error) {
-      console.error('Error creating order:', error);
+      console.error("Error creating order:", error);
+      setApprovalStep("idle");
+      setPendingOrderParams(null);
     }
   };
 
   const fillSampleData = () => {
     setFormData({
-      yrtAddress: '0x8DE41E5c1CB99a8658401058a0c685caFE06a886',
-      yrtAmount: '100',
-      usdcAmount: '95',
-      slippagePercent: '2.0'
+      yrtAddress: "0x8DE41E5c1CB99a8658401058a0c685caFE06a886",
+      yrtAmount: "100",
+      usdcAmount: "95",
+      slippagePercent: "2.0",
     });
   };
 
@@ -127,7 +215,7 @@ export function CreateOrderModal({ isOpen, onClose, orderType }: CreateOrderModa
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-semibold text-white">
-            {orderType === 'sell' ? 'Sell YRT' : 'Make Offer'}
+            {orderType === "sell" ? "Sell YRT" : "Make Offer"}
           </h2>
           <button
             onClick={onClose}
@@ -216,10 +304,15 @@ export function CreateOrderModal({ isOpen, onClose, orderType }: CreateOrderModa
             {formData.yrtAmount && formData.usdcAmount && (
               <div className="bg-[#111111] rounded-lg p-3 border border-[#2A2A2A]">
                 <div className="text-sm text-gray-400 mb-1">
-                  {orderType === 'sell' ? 'Selling Price' : 'Offering Price'}
+                  {orderType === "sell" ? "Selling Price" : "Offering Price"}
                 </div>
                 <div className="text-white font-medium">
-                  1 YRT = {(parseFloat(formData.usdcAmount) / parseFloat(formData.yrtAmount)).toFixed(6)} USDC
+                  1 YRT ={" "}
+                  {(
+                    parseFloat(formData.usdcAmount) /
+                    parseFloat(formData.yrtAmount)
+                  ).toFixed(6)}{" "}
+                  USDC
                 </div>
               </div>
             )}
@@ -234,17 +327,34 @@ export function CreateOrderModal({ isOpen, onClose, orderType }: CreateOrderModa
             {/* Submit Button */}
             <Button
               type="submit"
-              disabled={isLoading || !address}
+              disabled={
+                isLoading ||
+                !address ||
+                isApproving ||
+                isConfirmingApproval ||
+                approvalStep !== "idle"
+              }
               className="w-full bg-teal-500 hover:bg-teal-600 text-black font-medium py-3 rounded-lg flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? (
+              {isApproving || isConfirmingApproval ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>
+                    {isApproving
+                      ? "Approving Token..."
+                      : "Waiting for Confirmation..."}
+                  </span>
+                </>
+              ) : isLoading ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
                   <span>Creating & Signing Order...</span>
                 </>
               ) : (
                 <span>
-                  {orderType === 'sell' ? 'Create & Sign Sell Order' : 'Create & Sign Offer'}
+                  {orderType === "sell"
+                    ? "Create & Sign Sell Order"
+                    : "Create & Sign Offer"}
                 </span>
               )}
             </Button>
@@ -255,16 +365,26 @@ export function CreateOrderModal({ isOpen, onClose, orderType }: CreateOrderModa
               </p>
             )}
 
+            {/* Approval Status */}
+            {approvalStep !== "idle" && (
+              <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                <p className="text-blue-400 text-sm">
+                  {approvalStep === "approving" && "⏳ Approving token..."}
+                  {approvalStep === "approved" &&
+                    "✅ Token approved! Creating order..."}
+                </p>
+              </div>
+            )}
+
             {/* Info */}
             <div className="text-center text-xs text-gray-500 space-y-1">
               <p>
-                {orderType === 'sell' 
-                  ? '1. Order will be created → 2. Wallet will prompt for signature → 3. Order becomes active'
-                  : '1. Offer will be created → 2. Wallet will prompt for signature → 3. Offer becomes active'
-                }
+                {orderType === "sell"
+                  ? "1. Approve token → 2. Order will be created → 3. Wallet will prompt for signature → 4. Order becomes active"
+                  : "1. Approve USDC → 2. Offer will be created → 3. Wallet will prompt for signature → 4. Offer becomes active"}
               </p>
               <p className="text-yellow-500">
-                💡 The signature step (EIP-712) is secure and costs no gas
+                💡 Approval requires gas fee, signature (EIP-712) is free
               </p>
             </div>
           </form>

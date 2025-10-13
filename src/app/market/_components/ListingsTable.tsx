@@ -1,8 +1,8 @@
-import { Button } from '@/components/ui/button';
-import { ArrowUpDown, Loader2 } from 'lucide-react';
-import Image from 'next/image';
-import { Order, ApprovalStep } from '@/hooks';
-import { formatUnits } from 'viem';
+import { Button } from "@/components/ui/button";
+import { ArrowUpDown, Loader2 } from "lucide-react";
+import Image from "next/image";
+import { Order, ApprovalStep } from "@/hooks";
+import { formatUnits } from "viem";
 
 interface ListingsTableProps {
   orders: Order[];
@@ -25,34 +25,42 @@ export function ListingsTable({
   isConfirming,
   approvalStep,
   currentOrder,
-  account
+  account,
 }: ListingsTableProps) {
   const formatTokenAmount = (amount: string, decimals: number = 18) => {
     try {
       const formatted = formatUnits(BigInt(amount), decimals);
       return parseFloat(formatted).toFixed(6);
     } catch {
-      return '0.000000';
+      return "0.000000";
     }
   };
 
   const getTokenSymbol = (address: string) => {
-    if (address.toLowerCase() === '0x70667aea00Fc7f087D6bFFB9De3eD95Af37140a4'.toLowerCase()) {
-      return 'USDC';
+    if (
+      address.toLowerCase() ===
+      "0x70667aea00Fc7f087D6bFFB9De3eD95Af37140a4".toLowerCase()
+    ) {
+      return "USDC";
     }
-    return 'YRT';
+    return "YRT";
   };
 
   const getYRTName = (address: string) => {
-    if (address.toLowerCase() === '0x8DE41E5c1CB99a8658401058a0c685caFE06a886'.toLowerCase()) {
-      return 'YRT-SUDIRMAN';
+    if (
+      address.toLowerCase() ===
+      "0x8DE41E5c1CB99a8658401058a0c685caFE06a886".toLowerCase()
+    ) {
+      return "YRT-SUDIRMAN";
     }
     return `YRT-${address.slice(2, 8).toUpperCase()}`;
   };
 
-  const sellOrders = orders.filter(order => 
-    getTokenSymbol(order.makerToken) === 'YRT' && getTokenSymbol(order.takerToken) === 'USDC'
-  );
+  const sellOrders = orders;
+
+  // const sellOrders = orders.filter(order =>
+  //   getTokenSymbol(order.makerToken) === 'YRT' && getTokenSymbol(order.takerToken) === 'USDC'
+  // );
 
   return (
     <>
@@ -80,11 +88,20 @@ export function ListingsTable({
           </div>
         ) : sellOrders.length > 0 ? (
           sellOrders.map((order) => {
-            const yrtAmount = formatTokenAmount(order.makerAmount, order.makerTokenDecimals);
-            const usdcAmount = formatTokenAmount(order.takerAmount, order.takerTokenDecimals);
-            
+            const yrtAmount = formatTokenAmount(
+              order.makerAmount,
+              order.makerTokenDecimals
+            );
+            const usdcAmount = formatTokenAmount(
+              order.takerAmount,
+              order.takerTokenDecimals
+            );
+
             return (
-              <div key={order.id} className="grid grid-cols-5 gap-4 px-4 py-3 text-sm hover:bg-[#111111] transition-colors">
+              <div
+                key={order.id}
+                className="grid grid-cols-5 gap-4 px-4 py-3 text-sm hover:bg-[#111111] transition-colors"
+              >
                 <div className="flex items-center space-x-2">
                   <div className="w-6 h-6 rounded-full overflow-hidden bg-white flex items-center justify-center p-0.5">
                     <Image
@@ -95,10 +112,14 @@ export function ListingsTable({
                       className="object-contain w-full h-full"
                     />
                   </div>
-                  <span className="text-white">{getYRTName(order.makerToken)}</span>
+                  <span className="text-white">
+                    {getYRTName(order.makerToken)}
+                  </span>
                 </div>
                 <div className="text-center text-white">
-                  <span className="text-xs">{order.maker.slice(0, 6)}...{order.maker.slice(-4)}</span>
+                  <span className="text-xs">
+                    {order.maker.slice(0, 6)}...{order.maker.slice(-4)}
+                  </span>
                 </div>
                 <div className="text-center text-white">{yrtAmount}</div>
                 <div className="text-center text-white">{usdcAmount}</div>
@@ -106,25 +127,27 @@ export function ListingsTable({
                   <Button
                     onClick={() => handleBuyOrder(order)}
                     disabled={
-                      isExecuting || 
-                      isConfirming || 
-                      !order.signature || 
-                      order.status !== 'ACTIVE' || 
-                      approvalStep !== 'idle' ||
+                      isExecuting ||
+                      isConfirming ||
+                      !order.signature ||
+                      order.status !== "ACTIVE" ||
+                      approvalStep !== "idle" ||
                       !account
                     }
                     className="bg-teal-500 hover:bg-teal-600 text-black font-medium px-4 py-1 rounded text-xs disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {((isExecuting || isConfirming) && currentOrder?.id === order.id) || (approvalStep === 'fetching-order' && currentOrder?.id === order.id) ? (
+                    {((isExecuting || isConfirming) &&
+                      currentOrder?.id === order.id) ||
+                    (approvalStep === "fetching-order" &&
+                      currentOrder?.id === order.id) ? (
                       <>
                         <Loader2 className="w-3 h-3 animate-spin mr-1" />
-                        {approvalStep === 'fetching-order' && 'Fetching Order'}
-                        {approvalStep === 'approving-yrt' && 'Approving YRT'}
-                        {approvalStep === 'approving-usdc' && 'Approving USDC'}
-                        {approvalStep === 'executing' && 'Executing'}
+                        {approvalStep === "fetching-order" && "Fetching Order"}
+                        {approvalStep === "approving-usdc" && "Approving USDC"}
+                        {approvalStep === "executing" && "Executing"}
                       </>
                     ) : (
-                      'Buy'
+                      "Buy"
                     )}
                   </Button>
                 </div>
@@ -134,7 +157,9 @@ export function ListingsTable({
         ) : (
           <div className="text-center py-8">
             <p className="text-gray-400">No active orders found</p>
-            <p className="text-gray-500 text-sm mt-1">Create a sell order to get started</p>
+            <p className="text-gray-500 text-sm mt-1">
+              Create a sell order to get started
+            </p>
           </div>
         )}
       </div>

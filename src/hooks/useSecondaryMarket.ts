@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useSignTypedData, useAccount } from 'wagmi';
+import { useState } from "react";
+import { useSignTypedData, useAccount } from "wagmi";
 
 // Types based on the documentation
 export interface CreateOrderParams {
@@ -19,12 +19,12 @@ export interface UnsignedTypedData {
     verifyingContract: `0x${string}`;
   };
   types: {
-    Order: Array<{
+    SwapOrder: Array<{
       name: string;
       type: string;
     }>;
   };
-  primaryType: 'Order';
+  primaryType: "SwapOrder";
   message: {
     maker: string;
     makerToken: string;
@@ -37,7 +37,7 @@ export interface UnsignedTypedData {
 
 export interface Order {
   id: number;
-  status: 'PENDING_SIGNATURE' | 'ACTIVE' | 'FILLED' | 'CANCELLED';
+  status: "PENDING_SIGNATURE" | "ACTIVE" | "FILLED" | "CANCELLED";
   maker: string;
   makerToken: string;
   makerTokenDecimals: number;
@@ -79,21 +79,25 @@ export function useSecondaryMarket() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const apiBaseUrl = process.env.NEXT_PUBLIC_OWNA_ENDPOINT_API || 'https://owna-backend-secondary-market-production.up.railway.app';
-  
+  const apiBaseUrl =
+    process.env.NEXT_PUBLIC_OWNA_ENDPOINT_API ||
+    "https://owna-backend-secondary-market-production.up.railway.app";
+
   // Debug: Log API base URL
-  console.log('Secondary Market API Base URL:', apiBaseUrl);
+  // console.log('Secondary Market API Base URL:', apiBaseUrl);
 
   // Create order - Step 1 of the flow
-  const createOrder = async (params: CreateOrderParams): Promise<UnsignedTypedData> => {
+  const createOrder = async (
+    params: CreateOrderParams
+  ): Promise<UnsignedTypedData> => {
     setIsLoading(true);
     setError(null);
 
     try {
       const response = await fetch(`${apiBaseUrl}/orders`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(params),
       });
@@ -105,7 +109,8 @@ export function useSecondaryMarket() {
       const unsignedTypedData = await response.json();
       return unsignedTypedData;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to create order';
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to create order";
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
@@ -114,7 +119,9 @@ export function useSecondaryMarket() {
   };
 
   // Sign order - Step 2 of the flow
-  const signOrder = async (unsignedTypedData: UnsignedTypedData): Promise<string> => {
+  const signOrder = async (
+    unsignedTypedData: UnsignedTypedData
+  ): Promise<string> => {
     setIsLoading(true);
     setError(null);
 
@@ -124,12 +131,13 @@ export function useSecondaryMarket() {
           name: unsignedTypedData.domain.name,
           version: unsignedTypedData.domain.version,
           chainId: unsignedTypedData.domain.chainId,
-          verifyingContract: unsignedTypedData.domain.verifyingContract as `0x${string}`,
+          verifyingContract: unsignedTypedData.domain
+            .verifyingContract as `0x${string}`,
         },
         types: {
-          Order: unsignedTypedData.types.Order,
+          SwapOrder: unsignedTypedData.types.SwapOrder,
         },
-        primaryType: 'Order',
+        primaryType: "SwapOrder",
         message: {
           maker: unsignedTypedData.message.maker as `0x${string}`,
           makerToken: unsignedTypedData.message.makerToken as `0x${string}`,
@@ -142,19 +150,24 @@ export function useSecondaryMarket() {
 
       return signature;
     } catch (error) {
-      let errorMessage = 'Failed to sign order';
-      
+      let errorMessage = "Failed to sign order";
+
       // Handle user rejection of signature (following documentation)
-      if (error && typeof error === 'object' && 'code' in error && error.code === 4001) {
-        errorMessage = 'User cancelled signing';
-        console.log('User cancelled signing');
+      if (
+        error &&
+        typeof error === "object" &&
+        "code" in error &&
+        error.code === 4001
+      ) {
+        errorMessage = "User cancelled signing";
+        console.log("User cancelled signing");
       } else if (error instanceof Error) {
         errorMessage = error.message;
-        console.error('Signing failed:', error);
+        console.error("Signing failed:", error);
       } else {
-        console.error('Signing failed:', error);
+        console.error("Signing failed:", error);
       }
-      
+
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
@@ -171,34 +184,37 @@ export function useSecondaryMarket() {
     setError(null);
 
     try {
-      console.log('Verifying order signature...', {
+      console.log("Verifying order signature...", {
         endpoint: `${apiBaseUrl}/orders/verify`,
         orderSalt: unsignedTypedData.message.salt,
         signatureLength: signature.length,
       });
 
       const response = await fetch(`${apiBaseUrl}/orders/verify`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           order: unsignedTypedData,
           signature: signature,
         }),
-      }); 
+      });
 
       if (!response.ok) {
-        console.warn(`Verify API error ${response.status}: Orders verify endpoint not available`);
+        console.warn(
+          `Verify API error ${response.status}: Orders verify endpoint not available`
+        );
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const result = await response.json();
-      console.log('✅ Order verification result:', result);
+      console.log("✅ Order verification result:", result);
       return result; // Returns: true if valid
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to verify order';
-      console.error('Order verification failed:', errorMessage);
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to verify order";
+      console.error("Order verification failed:", errorMessage);
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
@@ -207,27 +223,31 @@ export function useSecondaryMarket() {
   };
 
   // Get orders list with pagination
-  const getOrders = async (query: PaginationQuery = {}): Promise<OrdersResponse> => {
+  const getOrders = async (
+    query: PaginationQuery = {}
+  ): Promise<OrdersResponse> => {
     setIsLoading(true);
     setError(null);
 
     try {
       const params = new URLSearchParams();
-      if (query.page) params.append('page', query.page.toString());
-      if (query.limit) params.append('limit', query.limit.toString());
+      if (query.page) params.append("page", query.page.toString());
+      if (query.limit) params.append("limit", query.limit.toString());
 
       const url = `${apiBaseUrl}/orders?${params.toString()}`;
-      console.log('Fetching orders from:', url);
+      console.log("Fetching orders from:", url);
 
       const response = await fetch(url, {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
       });
 
       if (!response.ok) {
-        console.warn(`API error ${response.status}: Orders endpoint not available`);
+        console.warn(
+          `API error ${response.status}: Orders endpoint not available`
+        );
         // Return empty response for graceful fallback
         return {
           data: [],
@@ -236,17 +256,18 @@ export function useSecondaryMarket() {
             page: query.page || 1,
             totalPages: 0,
             limit: query.limit || 10,
-          }
+          },
         };
       }
 
       const ordersResponse = await response.json();
       return ordersResponse;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch orders';
-      console.warn('Orders API not available:', errorMessage);
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to fetch orders";
+      console.warn("Orders API not available:", errorMessage);
       setError(errorMessage);
-      
+
       // Return empty response instead of throwing to prevent infinite loops
       return {
         data: [],
@@ -255,7 +276,7 @@ export function useSecondaryMarket() {
           page: query.page || 1,
           totalPages: 0,
           limit: query.limit || 10,
-        }
+        },
       };
     } finally {
       setIsLoading(false);
@@ -263,15 +284,17 @@ export function useSecondaryMarket() {
   };
 
   // Execute order - Get signed typed data for on-chain execution
-  const executeOrder = async (orderId: string): Promise<SignedTypedDataResponse> => {
+  const executeOrder = async (
+    orderId: string
+  ): Promise<SignedTypedDataResponse> => {
     setIsLoading(true);
     setError(null);
 
     try {
       const response = await fetch(`${apiBaseUrl}/orders/${orderId}/execute`, {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
       });
 
@@ -282,7 +305,8 @@ export function useSecondaryMarket() {
       const signedOrder = await response.json();
       return signedOrder;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to execute order';
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to execute order";
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
@@ -291,7 +315,9 @@ export function useSecondaryMarket() {
   };
 
   // Complete flow: Create, sign, and verify order
-  const createAndVerifyOrder = async (params: CreateOrderParams): Promise<{
+  const createAndVerifyOrder = async (
+    params: CreateOrderParams
+  ): Promise<{
     success: boolean;
     orderId?: string;
     error?: string;
@@ -300,29 +326,32 @@ export function useSecondaryMarket() {
       setError(null);
 
       // Step 1: Create order
-      console.log('Creating order...');
+      console.log("Creating order...");
       const unsignedTypedData = await createOrder(params);
 
       // Step 2: Sign order
-      console.log('Requesting signature from user...');
+      console.log("Requesting signature from user...");
       const signature = await signOrder(unsignedTypedData);
 
       // Step 3: Verify signature
-      console.log('Verifying signature...');
+      console.log("Verifying signature...");
       const isValid = await verifyOrder(unsignedTypedData, signature);
 
       if (isValid) {
-        console.log('✅ Order created and verified successfully!');
+        console.log("✅ Order created and verified successfully!");
         return {
           success: true,
           orderId: unsignedTypedData.message.salt,
         };
       } else {
-        throw new Error('Order verification failed');
+        throw new Error("Order verification failed");
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to create and verify order';
-      console.error('Error in createAndVerifyOrder:', errorMessage);
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Failed to create and verify order";
+      console.error("Error in createAndVerifyOrder:", errorMessage);
       return {
         success: false,
         error: errorMessage,
@@ -338,12 +367,12 @@ export function useSecondaryMarket() {
     getOrders,
     executeOrder,
     createAndVerifyOrder,
-    
+
     // State
     isLoading,
     error,
     address,
-    
+
     // Utilities
     clearError: () => setError(null),
   };
