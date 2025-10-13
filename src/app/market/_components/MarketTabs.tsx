@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { Plus, RefreshCw } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 
 interface MarketTabsProps {
   activeTab: string;
@@ -23,16 +23,6 @@ export function MarketTabs({ activeTab, setActiveTab, onCreateOrder, onRefresh, 
         >
           Listings
         </button>
-        <button
-          onClick={() => setActiveTab('offers')}
-          className={`pb-3 text-sm font-medium transition-colors relative ${
-            activeTab === 'offers'
-              ? 'text-white border-b-2 border-white'
-              : 'text-gray-400 hover:text-white'
-          }`}
-        >
-          Offers
-        </button>
       </div>
       
       <div className="flex items-center space-x-3">
@@ -46,17 +36,10 @@ export function MarketTabs({ activeTab, setActiveTab, onCreateOrder, onRefresh, 
         </Button>
         
         <Button 
-        onClick={() => onCreateOrder(activeTab === 'listings' ? 'sell' : 'offer')}
+        onClick={() => onCreateOrder('sell')}
         className="bg-white hover:bg-gray-200 text-black font-medium px-8 py-2 rounded-lg mb-3 flex items-center space-x-2 cursor-pointer"
       >
-        {activeTab === 'listings' ? (
           <span>Sell</span>
-        ) : (
-          <>
-            <Plus className="w-4 h-4" />
-            <span>Offer</span>
-          </>
-        )}
         </Button>
       </div>
     </div>
