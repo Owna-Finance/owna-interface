@@ -75,14 +75,14 @@ export function DistributeYield({
               {distributeHash && (
                 <>
                   <p className="text-sm text-gray-400 mb-2">Distribution Transaction Hash:</p>
-                  <p className="text-xs font-mono text-white break-all">{distributeHash}</p>
+                  <a className="text-md text-blue-500 font-mono break-all" href={`https://sepolia.basescan.org/tx/${distributeHash}`} target="_blank" rel="noopener noreferrer">View on Explorer</a>
                 </>
               )}
               {isDistributeLoading && (
                 <p className="text-sm text-gray-300 mt-2">⏳ Distributing to all holders...</p>
               )}
               {isDistributeSuccess && (
-                <p className="text-sm text-white mt-2">✅ Distribution completed successfully!</p>
+                <p className="text-sm text-white mt-2">Distribution completed successfully!</p>
               )}
               {distributeError && (
                 <p className="text-sm text-gray-300 mt-2">❌ Error: {distributeError.message}</p>
@@ -104,7 +104,7 @@ export function DistributeYield({
               ) : (
                 <>
                   <Send className="w-4 h-4" />
-                  <span>Distribute to All Holders</span>
+                  <span className='cursor-pointer'>Distribute to All Holders</span>
                 </>
               )}
             </Button>

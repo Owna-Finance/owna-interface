@@ -7,6 +7,7 @@ import { usePortfolioStore } from '@/stores/portfolio-store';
 import { Button } from '@/components/ui/button';
 import { useAccount } from 'wagmi';
 import { useDistributeToAllHolders } from '@/hooks';
+import { toast } from 'sonner';
 import {
   DashboardHeader,
   DashboardTabs,
@@ -47,19 +48,47 @@ export default function DashboardPage() {
     e.preventDefault();
     
     if (!address) {
-      alert('Please connect your wallet');
+      toast.error('Please connect your wallet', {
+        style: {
+          background: '#111111',
+          border: '1px solid #2A2A2A',
+          color: '#ffffff',
+        }
+      });
       return;
     }
 
     if (!distributeFormData.seriesId || !distributeFormData.periodId) {
-      alert('Please fill in all required fields');
+      toast.error('Please fill in all required fields', {
+        style: {
+          background: '#111111',
+          border: '1px solid #2A2A2A',
+          color: '#ffffff',
+        }
+      });
       return;
     }
 
     try {
+      toast.loading('Initiating distribution...', {
+        id: 'distribute-toast',
+        style: {
+          background: '#111111',
+          border: '1px solid #2A2A2A',
+          color: '#ffffff',
+        }
+      });
+      
       await distributeToAllHolders(distributeFormData);
     } catch (error) {
-      alert(error instanceof Error ? error.message : 'Failed to distribute to all holders');
+      toast.error(error instanceof Error ? error.message : 'Failed to distribute to all holders', {
+        id: 'distribute-toast',
+        style: {
+          background: '#111111',
+          border: '1px solid #2A2A2A',
+          color: '#ffffff',
+        }
+      });
     }
   };
 
