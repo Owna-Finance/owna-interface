@@ -73,7 +73,7 @@ export function ListingsTable({
         </div>
         <div className="text-center">Maker</div>
         <div className="text-center">Amount YRT Token</div>
-        <div className="text-center">Amount USDC</div>
+        <div className="text-center">Amount </div>
         <div className="text-center">Action</div>
       </div>
 

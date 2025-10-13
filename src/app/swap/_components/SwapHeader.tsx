@@ -18,7 +18,7 @@ export function SwapHeader({ onFillSampleData }: SwapHeaderProps) {
           type="button"
           onClick={onFillSampleData}
           variant="outline"
-          className="border-gray-600 text-gray-600 hover:bg-gray-800 hover:text-white text-sm"
+          className="border-gray-600 text-gray-600 hover:bg-gray-800 hover:text-white text-sm cursor-pointer"
         >
           <RefreshCw className="w-4 h-4 mr-2" />
           Fill Sample Data
