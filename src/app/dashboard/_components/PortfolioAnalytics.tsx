@@ -13,9 +13,9 @@ export function PortfolioAnalytics() {
           <div className="relative">
             <svg className="w-32 h-32" viewBox="0 0 100 100">
               <circle cx="50" cy="50" r="40" fill="none" stroke="#2A2A2A" strokeWidth="8"/>
-              <circle cx="50" cy="50" r="40" fill="none" stroke="#3B82F6" strokeWidth="8" 
+              <circle cx="50" cy="50" r="40" fill="none" stroke="#FFFFFF" strokeWidth="8" 
                 strokeDasharray="188 251" strokeLinecap="round" className="transition-all duration-1000"/>
-              <circle cx="50" cy="50" r="40" fill="none" stroke="#10B981" strokeWidth="8" 
+              <circle cx="50" cy="50" r="40" fill="none" stroke="#808080" strokeWidth="8" 
                 strokeDasharray="63 251" strokeDashoffset="-188" strokeLinecap="round" className="transition-all duration-1000"/>
             </svg>
             <div className="absolute inset-0 flex items-center justify-center">
@@ -27,14 +27,14 @@ export function PortfolioAnalytics() {
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 rounded-full bg-blue-400"></div>
+              <div className="w-3 h-3 rounded-full bg-white"></div>
               <span className="text-sm text-gray-300">Hotels</span>
             </div>
             <span className="text-sm font-medium text-white">75%</span>
           </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 rounded-full bg-green-400"></div>
+              <div className="w-3 h-3 rounded-full bg-gray-500"></div>
               <span className="text-sm text-gray-300">Educational</span>
             </div>
             <span className="text-sm font-medium text-white">25%</span>
@@ -56,24 +56,24 @@ export function PortfolioAnalytics() {
         <div className="space-y-4">
           <div className="flex items-center justify-between p-3 bg-[#111111] rounded-lg">
             <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 rounded-full bg-green-400"></div>
+              <div className="w-2 h-2 rounded-full bg-white"></div>
               <span className="text-sm text-gray-300">Total Gains</span>
             </div>
-            <span className="text-sm font-medium text-green-400">+$5,624</span>
+            <span className="text-sm font-medium text-white">+$5,624</span>
           </div>
           <div className="flex items-center justify-between p-3 bg-[#111111] rounded-lg">
             <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 rounded-full bg-yellow-400"></div>
+              <div className="w-2 h-2 rounded-full bg-gray-400"></div>
               <span className="text-sm text-gray-300">Monthly Yield</span>
             </div>
-            <span className="text-sm font-medium text-yellow-400">$2,847</span>
+            <span className="text-sm font-medium text-gray-400">$2,847</span>
           </div>
           <div className="flex items-center justify-between p-3 bg-[#111111] rounded-lg">
             <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 rounded-full bg-purple-400"></div>
+              <div className="w-2 h-2 rounded-full bg-gray-300"></div>
               <span className="text-sm text-gray-300">Property Appreciation</span>
             </div>
-            <span className="text-sm font-medium text-purple-400">+8.5%</span>
+            <span className="text-sm font-medium text-gray-300">+8.5%</span>
           </div>
         </div>
       </div>
