@@ -5,6 +5,8 @@ import { useAccount, useWaitForTransactionReceipt } from 'wagmi';
 import { DashboardLayout } from '@/components/layout/dashboard-layout';
 import { CONTRACTS } from '@/constants/contracts/contracts';
 import { useAddLiquidity } from '@/hooks';
+import { toast } from 'sonner';
+import { ExternalLink } from 'lucide-react';
 import { AmountsSection } from './_components/AmountSection';
 import { InformationPanel } from './_components/InformationPanel';
 import { PageHeader } from './_components/PageHeader';
@@ -79,26 +81,47 @@ export default function AddLiquidityPage() {
 
   const needsTokenAApproval = useMemo(() => {
     if (!formData.amountADesired || !address || !formData.tokenA) {
+      console.log('Token A: No approval needed - missing data', { 
+        amountADesired: formData.amountADesired, 
+        address, 
+        tokenA: formData.tokenA 
+      });
       return false;
     }
 
     if (tokenAAllowance === undefined) {
+      console.log('Token A: Approval needed - allowance undefined');
       return true;
     }
 
-    return checkNeedsApproval(tokenAAllowance as bigint, formData.amountADesired);
+    const needsApproval = checkNeedsApproval(tokenAAllowance as bigint, formData.amountADesired);
+    console.log('Token A: Needs approval?', needsApproval, { 
+      allowance: tokenAAllowance?.toString(), 
+      amount: formData.amountADesired 
+    });
+    return needsApproval;
   }, [address, checkNeedsApproval, formData.amountADesired, formData.tokenA, tokenAAllowance]);
 
   const needsTokenBApproval = useMemo(() => {
     if (!formData.amountBDesired || !address) {
+      console.log('Token B: No approval needed - missing data', { 
+        amountBDesired: formData.amountBDesired, 
+        address 
+      });
       return false;
     }
 
     if (tokenBAllowance === undefined) {
+      console.log('Token B: Approval needed - allowance undefined');
       return true;
     }
 
-    return checkNeedsApproval(tokenBAllowance as bigint, formData.amountBDesired);
+    const needsApproval = checkNeedsApproval(tokenBAllowance as bigint, formData.amountBDesired);
+    console.log('Token B: Needs approval?', needsApproval, { 
+      allowance: tokenBAllowance?.toString(), 
+      amount: formData.amountBDesired 
+    });
+    return needsApproval;
   }, [address, checkNeedsApproval, formData.amountBDesired, tokenBAllowance]);
 
   const amountAMin = useMemo(
@@ -117,20 +140,66 @@ export default function AddLiquidityPage() {
         setApprovalHash(hash);
         setCurrentStep('token-a-approved');
         refetchTokenAAllowance();
+        toast.success('Token A (YRT) approved successfully!', {
+          description: (
+            <p className="text-xs font-mono text-white break-all">
+              <a
+                href={`https://sepolia.basescan.org/tx/${hash}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-800 flex items-center space-x-1"
+              >
+                <ExternalLink className="w-3 h-3" /> <span>View On Explorer</span>
+              </a>
+            </p>
+          )
+        });
       } else if (currentStep === 'approving-token-b') {
         setApprovalHash(hash);
         setCurrentStep('tokens-approved');
         refetchTokenBAllowance();
+        const tokenName = formData.tokenB === CONTRACTS.USDC ? 'USDC' : 'IDRX';
+        toast.success(`Token B (${tokenName}) approved successfully!`, {
+          description: (
+            <p className="text-xs font-mono text-white break-all">
+              <a
+                href={`https://sepolia.basescan.org/tx/${hash}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-800 flex items-center space-x-1"
+              >
+                <ExternalLink className="w-3 h-3" /> <span>View On Explorer</span>
+              </a>
+            </p>
+          )
+        });
       } else if (currentStep === 'adding-liquidity') {
         setLiquidityHash(hash);
         setCurrentStep('completed');
+        toast.success('Liquidity added successfully!', {
+          description: (
+            <p className="text-xs font-mono text-white break-all">
+              <a
+                href={`https://sepolia.basescan.org/tx/${hash}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-800 flex items-center space-x-1"
+              >
+                <ExternalLink className="w-3 h-3" /> <span>View On Explorer</span>
+              </a>
+            </p>
+          )
+        });
       }
     }
-  }, [currentStep, hash, isTransactionSuccess, refetchTokenAAllowance, refetchTokenBAllowance]);
+  }, [currentStep, hash, isTransactionSuccess, refetchTokenAAllowance, refetchTokenBAllowance, formData.tokenB]);
 
-  const handleApproveTokenA = async () => {
+  const handleApproveTokenA = async (): Promise<void> => {
     if (!address || !formData.amountADesired || !formData.tokenA) {
-      return false;
+      toast.error('Cannot approve YRT', {
+        description: 'Missing required data for approval'
+      });
+      return;
     }
 
     try {
@@ -140,17 +209,22 @@ export default function AddLiquidityPage() {
         amount: formData.amountADesired,
         userAddress: address as Address,
       });
-      return true;
+      // Success is handled in useEffect when transaction confirms
     } catch (error) {
       setCurrentStep('idle');
-      alert(error instanceof Error ? error.message : 'Failed to approve Token A (YRT)');
-      return false;
+      toast.error('Failed to approve YRT', {
+        description: error instanceof Error ? error.message : 'Unknown error occurred'
+      });
     }
   };
 
-  const handleApproveTokenB = async () => {
+  const handleApproveTokenB = async (): Promise<void> => {
     if (!address || !formData.amountBDesired) {
-      return false;
+      const tokenName = formData.tokenB === CONTRACTS.USDC ? 'USDC' : 'IDRX';
+      toast.error(`Cannot approve ${tokenName}`, {
+        description: 'Missing required data for approval'
+      });
+      return;
     }
 
     try {
@@ -160,12 +234,13 @@ export default function AddLiquidityPage() {
         amount: formData.amountBDesired,
         userAddress: address as Address,
       });
-      return true;
+      // Success is handled in useEffect when transaction confirms
     } catch (error) {
       setCurrentStep('idle');
       const tokenName = formData.tokenB === CONTRACTS.USDC ? 'USDC' : 'IDRX';
-      alert(error instanceof Error ? error.message : `Failed to approve ${tokenName}`);
-      return false;
+      toast.error(`Failed to approve ${tokenName}`, {
+        description: error instanceof Error ? error.message : 'Unknown error occurred'
+      });
     }
   };
 
@@ -190,7 +265,9 @@ export default function AddLiquidityPage() {
       });
     } catch (error) {
       setCurrentStep('idle');
-      alert(error instanceof Error ? error.message : 'Failed to add liquidity');
+      toast.error('Failed to add liquidity', {
+        description: error instanceof Error ? error.message : 'Unknown error occurred'
+      });
     }
   };
 
@@ -198,7 +275,9 @@ export default function AddLiquidityPage() {
     event.preventDefault();
 
     if (!address) {
-      alert('Please connect your wallet');
+      toast.error('Wallet not connected', {
+        description: 'Please connect your wallet to continue'
+      });
       return;
     }
 
@@ -209,42 +288,59 @@ export default function AddLiquidityPage() {
       !formData.propertyName ||
       !formData.propertyOwner
     ) {
-      alert('Please fill in all required fields');
+      toast.error('Form incomplete', {
+        description: 'Please fill in all required fields'
+      });
       return;
     }
 
+    // STEP 1: Approve YRT if needed
     if (needsTokenAApproval && currentStep === 'idle') {
-      const approvalSuccess = await handleApproveTokenA();
-      if (!approvalSuccess) {
-        return;
-      }
+      console.log('Executing Step 1: Approve YRT');
+      await handleApproveTokenA();
       return;
     }
 
+    // STEP 2: Approve Token B if needed (after YRT is approved)
     if (needsTokenBApproval && currentStep === 'token-a-approved') {
-      const approvalSuccess = await handleApproveTokenB();
-      if (!approvalSuccess) {
-        return;
-      }
+      console.log('Executing Step 2: Approve Token B after YRT approved');
+      await handleApproveTokenB();
       return;
     }
 
-    if (currentStep === 'tokens-approved' || (!needsTokenAApproval && !needsTokenBApproval)) {
-      await handleAddLiquidity();
-      return;
-    }
-
+    // STEP 2 (alternative): Approve Token B if it's the only approval needed
     if (!needsTokenAApproval && needsTokenBApproval && currentStep === 'idle') {
-      const approvalSuccess = await handleApproveTokenB();
-      if (!approvalSuccess) {
-        return;
-      }
+      console.log('Executing Step 2: Approve Token B only');
+      await handleApproveTokenB();
       return;
     }
 
-    if (needsTokenAApproval && !needsTokenBApproval && currentStep === 'token-a-approved') {
+    // STEP 3: Add liquidity after all approvals are done
+    if (currentStep === 'tokens-approved') {
+      console.log('Executing Step 3: Add liquidity - all tokens approved');
       await handleAddLiquidity();
+      return;
     }
+
+    // STEP 3 (alternative): Add liquidity if YRT approved but Token B doesn't need approval
+    if (!needsTokenBApproval && currentStep === 'token-a-approved') {
+      console.log('Executing Step 3: Add liquidity - YRT approved, Token B not needed');
+      await handleAddLiquidity();
+      return;
+    }
+
+    // STEP 3 (alternative): Add liquidity if no approvals needed
+    if (!needsTokenAApproval && !needsTokenBApproval && currentStep === 'idle') {
+      console.log('Executing Step 3: Add liquidity - no approvals needed');
+      await handleAddLiquidity();
+      return;
+    }
+
+    console.log('No matching condition - this should not happen', {
+      needsTokenAApproval,
+      needsTokenBApproval,
+      currentStep
+    });
   };
 
   const handleInputChange = (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -273,6 +369,18 @@ export default function AddLiquidityPage() {
   };
 
   const hasAddress = Boolean(address);
+
+  // Debug logging
+  console.log('Add Liquidity Debug:', {
+    currentStep,
+    needsTokenAApproval,
+    needsTokenBApproval,
+    hasAddress,
+    tokenA: formData.tokenA,
+    tokenB: formData.tokenB,
+    amountADesired: formData.amountADesired,
+    amountBDesired: formData.amountBDesired
+  });
 
   return (
     <DashboardLayout>
