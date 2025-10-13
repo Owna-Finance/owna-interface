@@ -44,7 +44,7 @@ export function DashboardHeader({ showWalletDropdown, setShowWalletDropdown }: D
                 <span className="text-gray-300 font-mono text-sm">
                   {address ? `${address.slice(0, 6)}...${address.slice(-4)}` : '0xebFA...4179'}
                 </span>
-                <div className="w-6 h-6 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                <div className="w-6 h-6 bg-black rounded-full flex items-center justify-center">
                   <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                   </svg>
@@ -55,7 +55,7 @@ export function DashboardHeader({ showWalletDropdown, setShowWalletDropdown }: D
                 <div className="absolute top-full right-0 mt-2 w-64 bg-[#1A1A1A] border border-[#2A2A2A] rounded-2xl shadow-[0_0_30px_rgba(0,0,0,0.5)] backdrop-blur-sm z-50">
                   <div className="p-4">
                     <div className="flex items-center space-x-3 mb-4">
-                      <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                      <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center">
                         <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                         </svg>
