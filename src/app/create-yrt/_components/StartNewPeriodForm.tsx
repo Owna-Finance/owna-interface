@@ -30,7 +30,7 @@ export function StartNewPeriodForm({
   return (
     <div className="mt-8 bg-[#0A0A0A] rounded-xl border border-[#2A2A2A] p-8">
       <div className="flex items-center space-x-2 mb-6">
-        <Calendar className="w-5 h-5 text-blue-500" />
+        <Calendar className="w-5 h-5 text-white" />
         <h3 className="text-lg font-semibold text-white">Start New Period</h3>
       </div>
       
@@ -46,7 +46,7 @@ export function StartNewPeriodForm({
               value={periodFormData.seriesId}
               onChange={onInputChange}
               placeholder="e.g., 1"
-              className="w-full px-4 py-3 bg-[#111111] border border-[#2A2A2A] rounded-lg text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none"
+              className="w-full px-4 py-3 bg-[#111111] border border-[#2A2A2A] rounded-lg text-white placeholder-gray-500 focus:border-white focus:outline-none"
               required
             />
             <p className="text-xs text-gray-500 mt-1">ID of the YRT series to start period for</p>
@@ -64,7 +64,7 @@ export function StartNewPeriodForm({
               placeholder="300"
               step="1"
               min="1"
-              className="w-full px-4 py-3 bg-[#111111] border border-[#2A2A2A] rounded-lg text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none"
+              className="w-full px-4 py-3 bg-[#111111] border border-[#2A2A2A] rounded-lg text-white placeholder-gray-500 focus:border-white focus:outline-none"
               required
             />
             <p className="text-xs text-gray-500 mt-1">Period duration (300s = 5 minutes demo)</p>
@@ -76,17 +76,17 @@ export function StartNewPeriodForm({
             {periodHash && (
               <>
                 <p className="text-sm text-gray-400 mb-2">Period Transaction Hash:</p>
-                <p className="text-xs font-mono text-blue-400 break-all">{periodHash}</p>
+                <p className="text-xs font-mono text-white break-all">{periodHash}</p>
               </>
             )}
             {isPeriodLoading && (
-              <p className="text-sm text-yellow-400 mt-2">⏳ Starting new period...</p>
+              <p className="text-sm text-gray-300 mt-2">⏳ Starting new period...</p>
             )}
             {isPeriodSuccess && (
-              <p className="text-sm text-green-400 mt-2">✅ New period started successfully!</p>
+              <p className="text-sm text-white mt-2">✅ New period started successfully!</p>
             )}
             {periodError && (
-              <p className="text-sm text-red-400 mt-2">❌ Error: {periodError.message}</p>
+              <p className="text-sm text-gray-300 mt-2">❌ Error: {periodError.message}</p>
             )}
           </div>
         )}
@@ -95,7 +95,7 @@ export function StartNewPeriodForm({
           <Button
             type="submit"
             disabled={isPeriodLoading || !address}
-            className="bg-blue-500 hover:bg-blue-600 text-white font-medium px-6 py-2 rounded-lg flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-white hover:bg-gray-200 text-black font-medium px-6 py-2 rounded-lg flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isPeriodLoading ? (
               <>

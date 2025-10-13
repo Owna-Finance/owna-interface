@@ -59,7 +59,7 @@ export function AmountsSection({
             required
           />
           <p className="text-xs text-gray-500 mt-1">
-            {needsTokenBApproval ? '⚠️ Will require approval' : '✅ Sufficient allowance'}
+            {needsTokenBApproval ? '⚠️ Will require approval' : 'Sufficient allowance'}
           </p>
         </div>
       </div>

@@ -1,6 +1,8 @@
 import { Button } from '@/components/ui/button';
 import { CONTRACTS } from '@/constants/contracts/contracts';
-import { Building, DollarSign, Plus } from 'lucide-react';
+import { Building, DollarSign, Plus, ChevronDown } from 'lucide-react';
+import Image from 'next/image';
+import { useState, useEffect, useRef } from 'react';
 
 interface YRTFormData {
   name: string;
@@ -40,7 +42,7 @@ export function CreateYRTForm({
       <form onSubmit={onSubmit} className="space-y-6">
         <div className="space-y-4">
           <div className="flex items-center space-x-2 mb-4">
-            <Building className="w-5 h-5 text-teal-500" />
+            <Building className="w-5 h-5 text-white" />
             <h3 className="text-lg font-semibold text-white">Token Information</h3>
           </div>
           
@@ -55,7 +57,7 @@ export function CreateYRTForm({
                 value={formData.name}
                 onChange={onInputChange}
                 placeholder="e.g., YRT Sudirman"
-                className="w-full px-4 py-3 bg-[#111111] border border-[#2A2A2A] rounded-lg text-white placeholder-gray-500 focus:border-teal-500 focus:outline-none"
+                className="w-full px-4 py-3 bg-[#111111] border border-[#2A2A2A] rounded-lg text-white placeholder-gray-500 focus:border-white focus:outline-none"
                 required
               />
             </div>
@@ -70,7 +72,7 @@ export function CreateYRTForm({
                 value={formData.symbol}
                 onChange={onInputChange}
                 placeholder="e.g., YRT-SDR"
-                className="w-full px-4 py-3 bg-[#111111] border border-[#2A2A2A] rounded-lg text-white placeholder-gray-500 focus:border-teal-500 focus:outline-none"
+                className="w-full px-4 py-3 bg-[#111111] border border-[#2A2A2A] rounded-lg text-white placeholder-gray-500 focus:border-white focus:outline-none"
                 required
               />
             </div>
@@ -94,7 +96,7 @@ export function CreateYRTForm({
 
         <div className="space-y-4">
           <div className="flex items-center space-x-2 mb-4">
-            <DollarSign className="w-5 h-5 text-teal-500" />
+            <Image src="/Images/Logo/usdc-logo.png" alt="USDC" width={20} height={20} />
             <h3 className="text-lg font-semibold text-white">Economic Parameters</h3>
           </div>
 
@@ -111,7 +113,7 @@ export function CreateYRTForm({
                 placeholder="0"
                 step="0.01"
                 min="0"
-                className="w-full px-4 py-3 bg-[#111111] border border-[#2A2A2A] rounded-lg text-white placeholder-gray-500 focus:border-teal-500 focus:outline-none"
+                className="w-full px-4 py-3 bg-[#111111] border border-[#2A2A2A] rounded-lg text-white placeholder-gray-500 focus:border-white focus:outline-none"
               />
               <p className="text-xs text-gray-500 mt-1">Set to 0 for unlimited minting during sale periods</p>
             </div>
@@ -128,7 +130,7 @@ export function CreateYRTForm({
                 placeholder="1.0"
                 step="0.000001"
                 min="0"
-                className="w-full px-4 py-3 bg-[#111111] border border-[#2A2A2A] rounded-lg text-white placeholder-gray-500 focus:border-teal-500 focus:outline-none"
+                className="w-full px-4 py-3 bg-[#111111] border border-[#2A2A2A] rounded-lg text-white placeholder-gray-500 focus:border-white focus:outline-none"
                 required
               />
               <p className="text-xs text-gray-500 mt-1">Price per YRT token</p>
@@ -140,16 +142,22 @@ export function CreateYRTForm({
               <label className="block text-sm font-medium text-gray-300 mb-2">
                 Underlying Token
               </label>
-              <select
-                name="underlyingToken"
+              <TokenDropdown 
                 value={formData.underlyingToken}
-                onChange={onInputChange}
-                className="w-full px-4 py-3 bg-[#111111] border border-[#2A2A2A] rounded-lg text-white focus:border-teal-500 focus:outline-none"
-                required
-              >
-                <option value={CONTRACTS.USDC}>USDC</option>
-                <option value={CONTRACTS.IDRX}>IDRX</option>
-              </select>
+                onChange={(value) => {
+                  const event = {
+                    target: {
+                      name: 'underlyingToken',
+                      value: value
+                    }
+                  } as React.ChangeEvent<HTMLSelectElement>;
+                  onInputChange(event);
+                }}
+                options={[
+                  { value: CONTRACTS.USDC, label: 'USDC', logo: '/Images/Logo/usdc-logo.png' },
+                  { value: CONTRACTS.IDRX, label: 'IDRX', logo: '/Images/Logo/idrx-logo.svg' }
+                ]}
+              />
               <p className="text-xs text-gray-500 mt-1">Token used for purchases and yield distributions</p>
             </div>
 
@@ -165,7 +173,7 @@ export function CreateYRTForm({
                 placeholder="180"
                 step="1"
                 min="1"
-                className="w-full px-4 py-3 bg-[#111111] border border-[#2A2A2A] rounded-lg text-white placeholder-gray-500 focus:border-teal-500 focus:outline-none"
+                className="w-full px-4 py-3 bg-[#111111] border border-[#2A2A2A] rounded-lg text-white placeholder-gray-500 focus:border-white focus:outline-none"
                 required
               />
               <p className="text-xs text-gray-500 mt-1">Duration for token sale period (180s = 3 minutes demo)</p>
@@ -178,17 +186,17 @@ export function CreateYRTForm({
             {hash && (
               <>
                 <p className="text-sm text-gray-400 mb-2">Transaction Hash:</p>
-                <p className="text-xs font-mono text-teal-400 break-all">{hash}</p>
+                <p className="text-xs font-mono text-white break-all">{hash}</p>
               </>
             )}
             {isLoading && (
-              <p className="text-sm text-yellow-400 mt-2">⏳ Confirming transaction...</p>
+              <p className="text-sm text-gray-300 mt-2">⏳ Confirming transaction...</p>
             )}
             {isSuccess && (
-              <p className="text-sm text-green-400 mt-2">✅ YRT Series created successfully!</p>
+              <p className="text-sm text-white mt-2">✅ YRT Series created successfully!</p>
             )}
             {error && (
-              <p className="text-sm text-red-400 mt-2">❌ Error: {error.message}</p>
+              <p className="text-sm text-gray-300 mt-2">❌ Error: {error.message}</p>
             )}
           </div>
         )}
@@ -197,7 +205,7 @@ export function CreateYRTForm({
           <Button
             type="submit"
             disabled={isLoading || !address || !isFormValid()}
-            className="bg-teal-500 hover:bg-teal-600 text-black font-medium px-8 py-3 rounded-lg flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-white hover:bg-gray-200 text-black font-medium px-8 py-3 rounded-lg flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? (
               <>
@@ -214,11 +222,95 @@ export function CreateYRTForm({
         </div>
 
         {!address && (
-          <p className="text-center text-red-400 text-sm">
+          <p className="text-center text-gray-300 text-sm">
             Please connect your wallet to create a YRT series
           </p>
         )}
       </form>
+    </div>
+  );
+}
+
+interface TokenOption {
+  value: string;
+  label: string;
+  logo: string;
+}
+
+interface TokenDropdownProps {
+  value: string;
+  onChange: (value: string) => void;
+  options: TokenOption[];
+}
+
+function TokenDropdown({ value, onChange, options }: TokenDropdownProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const selectedOption = options.find(opt => opt.value === value) || options[0];
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full px-4 py-3 pl-12 pr-10 bg-[#111111] border border-[#2A2A2A] rounded-lg text-white focus:border-white focus:outline-none text-left flex items-center justify-between"
+      >
+        <span>{selectedOption.label}</span>
+        <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+      
+      <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+        <Image 
+          src={selectedOption.logo} 
+          alt={selectedOption.label} 
+          width={20} 
+          height={20} 
+        />
+      </div>
+
+      {isOpen && (
+        <div className="absolute top-full left-0 right-0 mt-1 bg-[#111111] border border-[#2A2A2A] rounded-lg shadow-lg z-10">
+          {options.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => {
+                onChange(option.value);
+                setIsOpen(false);
+              }}
+              className="w-full px-4 py-3 pl-12 text-left text-white hover:bg-[#1A1A1A] flex items-center first:rounded-t-lg last:rounded-b-lg"
+            >
+              <div className="absolute left-3">
+                <Image 
+                  src={option.logo} 
+                  alt={option.label} 
+                  width={20} 
+                  height={20} 
+                />
+              </div>
+              <span>{option.label}</span>
+              {option.value === value && (
+                <div className="ml-auto">
+                  <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                </div>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
