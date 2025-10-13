@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { Calendar } from 'lucide-react';
 
 interface PeriodFormData {
   seriesId: string;

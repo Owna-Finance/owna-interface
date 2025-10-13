@@ -165,6 +165,7 @@ export const YRT_ABI = [
         name: "tokenPrice",
         type: "uint256",
       },
+      { indexed: false, internalType: "string", name: "slug", type: "string" },
     ],
     name: "SeriesCreated",
     type: "event",
@@ -482,6 +483,45 @@ export const YRT_ABI = [
     type: "function",
   },
   {
+    inputs: [{ internalType: "string", name: "_slug", type: "string" }],
+    name: "getSeriesIdBySlug",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "address", name: "_tokenAddress", type: "address" },
+    ],
+    name: "getSeriesIdByToken",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "uint256", name: "_seriesId", type: "uint256" }],
+    name: "getSeriesInfoWithSlug",
+    outputs: [
+      {
+        components: [
+          { internalType: "address", name: "tokenAddress", type: "address" },
+          { internalType: "address", name: "underlyingToken", type: "address" },
+          { internalType: "address", name: "seriesAdmin", type: "address" },
+          { internalType: "string", name: "propertyName", type: "string" },
+          { internalType: "uint96", name: "createdAt", type: "uint96" },
+          { internalType: "uint96", name: "initialSupply", type: "uint96" },
+          { internalType: "bool", name: "isActive", type: "bool" },
+        ],
+        internalType: "struct YRTFactory.SeriesInfo",
+        name: "info",
+        type: "tuple",
+      },
+      { internalType: "string", name: "slug", type: "string" },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
     inputs: [
       { internalType: "bytes32", name: "role", type: "bytes32" },
       { internalType: "address", name: "account", type: "address" },
@@ -593,6 +633,13 @@ export const YRT_ABI = [
     type: "function",
   },
   {
+    inputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    name: "seriesSlug",
+    outputs: [{ internalType: "string", name: "", type: "string" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
     inputs: [
       { internalType: "address", name: "_newUnderlying", type: "address" },
     ],
@@ -622,6 +669,13 @@ export const YRT_ABI = [
     type: "function",
   },
   {
+    inputs: [{ internalType: "string", name: "", type: "string" }],
+    name: "slugToSeriesId",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
     inputs: [
       { internalType: "uint256", name: "_seriesId", type: "uint256" },
       { internalType: "uint256", name: "_durationInSeconds", type: "uint256" },
@@ -641,6 +695,13 @@ export const YRT_ABI = [
   {
     inputs: [{ internalType: "uint256", name: "", type: "uint256" }],
     name: "tokenPrice",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "address", name: "", type: "address" }],
+    name: "tokenToSeriesId",
     outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
     stateMutability: "view",
     type: "function",
