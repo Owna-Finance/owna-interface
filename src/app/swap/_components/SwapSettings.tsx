@@ -25,7 +25,7 @@ export function SwapSettings({
           step="0.1"
           min="0.1"
           max="50"
-          className="w-full px-3 py-2 bg-[#111111] border border-[#2A2A2A] rounded-lg text-white text-sm placeholder-gray-500 focus:border-blue-500 focus:outline-none"
+          className="w-full px-3 py-2 bg-[#111111] border border-[#2A2A2A] rounded-lg text-white text-sm placeholder-gray-500 focus:border-blue-500 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
           required
         />
       </div>
@@ -40,7 +40,7 @@ export function SwapSettings({
           placeholder="20"
           step="1"
           min="1"
-          className="w-full px-3 py-2 bg-[#111111] border border-[#2A2A2A] rounded-lg text-white text-sm placeholder-gray-500 focus:border-blue-500 focus:outline-none"
+          className="w-full px-3 py-2 bg-[#111111] border border-[#2A2A2A] rounded-lg text-white text-sm placeholder-gray-500 focus:border-blue-500 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
           required
         />
       </div>

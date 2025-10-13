@@ -1,5 +1,4 @@
 import { Button } from '@/components/ui/button';
-import { Droplets } from 'lucide-react';
 import { CONTRACTS } from '@/constants/contracts/contracts';
 import { AddLiquidityFormData, CurrentStep } from './types';
 
@@ -63,7 +62,7 @@ export function SubmitButton({ currentStep, needsTokenAApproval, needsTokenBAppr
     <Button
       type="submit"
       disabled={isDisabled}
-      className="bg-blue-500 hover:bg-blue-600 text-white font-medium px-8 py-3 rounded-lg flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+      className="bg-white hover:bg-gray-200 text-black font-medium rounded-lg flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
     >
       {isProcessing ? (
         <>
@@ -72,7 +71,7 @@ export function SubmitButton({ currentStep, needsTokenAApproval, needsTokenBAppr
         </>
       ) : (
         <>
-          <Droplets className="w-4 h-4" />
+          <span />
           <span>{buttonText}</span>
         </>
       )}

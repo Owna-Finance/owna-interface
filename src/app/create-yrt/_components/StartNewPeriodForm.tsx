@@ -46,7 +46,7 @@ export function StartNewPeriodForm({
               value={periodFormData.seriesId}
               onChange={onInputChange}
               placeholder="e.g., 1"
-              className="w-full px-4 py-3 bg-[#111111] border border-[#2A2A2A] rounded-lg text-white placeholder-gray-500 focus:border-white focus:outline-none"
+              className="w-full px-4 py-3 bg-[#111111] border border-[#2A2A2A] rounded-lg text-white placeholder-gray-500 focus:border-white focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               required
             />
             <p className="text-xs text-gray-500 mt-1">ID of the YRT series to start period for</p>
@@ -64,7 +64,7 @@ export function StartNewPeriodForm({
               placeholder="300"
               step="1"
               min="1"
-              className="w-full px-4 py-3 bg-[#111111] border border-[#2A2A2A] rounded-lg text-white placeholder-gray-500 focus:border-white focus:outline-none"
+              className="w-full px-4 py-3 bg-[#111111] border border-[#2A2A2A] rounded-lg text-white placeholder-gray-500 focus:border-white focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               required
             />
             <p className="text-xs text-gray-500 mt-1">Period duration (300s = 5 minutes demo)</p>

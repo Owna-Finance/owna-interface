@@ -11,7 +11,6 @@ export function TransactionSettingsSection({ formData, onChange }: TransactionSe
   return (
     <div className="space-y-4">
       <div className="flex items-center space-x-2 mb-4">
-        <Clock className="w-5 h-5 text-orange-500" />
         <h3 className="text-lg font-semibold text-white">Transaction Settings</h3>
       </div>
 
@@ -26,7 +25,7 @@ export function TransactionSettingsSection({ formData, onChange }: TransactionSe
             placeholder="20"
             step="1"
             min="1"
-            className="w-full px-4 py-3 bg-[#111111] border border-[#2A2A2A] rounded-lg text-white placeholder-gray-500 focus:border-orange-500 focus:outline-none"
+            className="w-full px-4 py-3 bg-[#111111] border border-[#2A2A2A] rounded-lg text-white placeholder-gray-500 focus:border-white focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             required
           />
           <p className="text-xs text-gray-500 mt-1">Transaction deadline from now</p>
@@ -40,7 +39,7 @@ export function TransactionSettingsSection({ formData, onChange }: TransactionSe
             value={formData.to}
             onChange={onChange}
             placeholder="0x..."
-            className="w-full px-4 py-3 bg-[#111111] border border-[#2A2A2A] rounded-lg text-white placeholder-gray-500 focus:border-orange-500 focus:outline-none"
+            className="w-full px-4 py-3 bg-[#111111] border border-[#2A2A2A] rounded-lg text-white placeholder-gray-500 focus:border-white focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             required
           />
           <p className="text-xs text-gray-500 mt-1">Address to receive LP tokens</p>

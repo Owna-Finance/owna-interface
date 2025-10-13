@@ -50,7 +50,7 @@ export function TokenInput({
           step="0.000001"
           min="0"
           readOnly={readOnly}
-          className={`w-full px-4 py-4 bg-[#111111] border border-[#2A2A2A] rounded-lg text-white text-xl placeholder-gray-500 focus:border-blue-500 focus:outline-none ${
+          className={`w-full px-4 py-4 bg-[#111111] border border-[#2A2A2A] rounded-lg text-white text-xl placeholder-gray-500 focus:border-blue-500 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
             readOnly ? 'cursor-not-allowed opacity-75' : ''
           }`}
           required={!readOnly}

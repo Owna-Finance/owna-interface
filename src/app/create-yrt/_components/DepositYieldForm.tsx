@@ -55,7 +55,7 @@ export function DepositYieldForm({
               value={yieldFormData.seriesId}
               onChange={onInputChange}
               placeholder="e.g., 1"
-              className="w-full px-4 py-3 bg-[#111111] border border-[#2A2A2A] rounded-lg text-white placeholder-gray-500 focus:border-white focus:outline-none"
+              className="w-full px-4 py-3 bg-[#111111] border border-[#2A2A2A] rounded-lg text-white placeholder-gray-500 focus:border-white focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               required
             />
             <p className="text-xs text-gray-500 mt-1">YRT series ID</p>
@@ -71,7 +71,7 @@ export function DepositYieldForm({
               value={yieldFormData.periodId}
               onChange={onInputChange}
               placeholder="e.g., 1"
-              className="w-full px-4 py-3 bg-[#111111] border border-[#2A2A2A] rounded-lg text-white placeholder-gray-500 focus:border-white focus:outline-none"
+              className="w-full px-4 py-3 bg-[#111111] border border-[#2A2A2A] rounded-lg text-white placeholder-gray-500 focus:border-white focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               required
             />
             <p className="text-xs text-gray-500 mt-1">Period ID to deposit yield for</p>
@@ -114,7 +114,7 @@ export function DepositYieldForm({
               placeholder="e.g., 100"
               step="0.000001"
               min="0"
-              className="w-full px-4 py-3 bg-[#111111] border border-[#2A2A2A] rounded-lg text-white placeholder-gray-500 focus:border-white focus:outline-none"
+              className="w-full px-4 py-3 bg-[#111111] border border-[#2A2A2A] rounded-lg text-white placeholder-gray-500 focus:border-white focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               required
             />
             <p className="text-xs text-gray-500 mt-1">

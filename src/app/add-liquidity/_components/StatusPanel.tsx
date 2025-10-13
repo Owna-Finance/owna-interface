@@ -50,7 +50,7 @@ export function StatusPanel({
           <div className="flex items-center space-x-2 mb-2">
             <span className="text-sm font-medium text-gray-300">YRT Approval:</span>
             {currentStep === 'approving-token-a' && isTransactionConfirming && (
-              <span className="text-xs text-yellow-400">⏳ Confirming...</span>
+              <span className="text-xs text-gray-300">⏳ Confirming...</span>
             )}
             {(currentStep === 'token-a-approved' ||
               currentStep === 'approving-token-b' ||
@@ -58,12 +58,12 @@ export function StatusPanel({
               currentStep === 'adding-liquidity' ||
               currentStep === 'completed') &&
               needsTokenAApproval && (
-                <span className="text-xs text-green-400">✅ Approved</span>
+                <span className="text-xs text-white">✅ Approved</span>
               )}
             {!needsTokenAApproval && <span className="text-xs text-gray-400">Not required</span>}
           </div>
           {approvalHash && currentStep !== 'approving-token-b' && (
-            <p className="text-xs font-mono text-blue-400 break-all">YRT: {approvalHash}</p>
+            <p className="text-xs font-mono text-white break-all">YRT: {approvalHash}</p>
           )}
         </div>
       )}
@@ -73,16 +73,16 @@ export function StatusPanel({
           <div className="flex items-center space-x-2 mb-2">
             <span className="text-sm font-medium text-gray-300">{tokenBLabel} Approval:</span>
             {currentStep === 'approving-token-b' && isTransactionConfirming && (
-              <span className="text-xs text-yellow-400">⏳ Confirming...</span>
+              <span className="text-xs text-gray-300">⏳ Confirming...</span>
             )}
             {(currentStep === 'tokens-approved' || currentStep === 'adding-liquidity' || currentStep === 'completed') &&
               needsTokenBApproval && (
-                <span className="text-xs text-green-400">✅ Approved</span>
+                <span className="text-xs text-white">✅ Approved</span>
               )}
             {!needsTokenBApproval && <span className="text-xs text-gray-400">Not required</span>}
           </div>
           {approvalHash && currentStep === 'approving-token-b' && (
-            <p className="text-xs font-mono text-blue-400 break-all">
+            <p className="text-xs font-mono text-white break-all">
               {tokenBLabel}: {approvalHash}
             </p>
           )}
@@ -94,20 +94,20 @@ export function StatusPanel({
           <div className="flex items-center space-x-2 mb-2">
             <span className="text-sm font-medium text-gray-300">Add Liquidity:</span>
             {currentStep === 'adding-liquidity' && isTransactionConfirming && (
-              <span className="text-xs text-yellow-400">⏳ Confirming...</span>
+              <span className="text-xs text-gray-300">⏳ Confirming...</span>
             )}
             {currentStep === 'completed' && (
-              <span className="text-xs text-green-400">✅ Completed</span>
+              <span className="text-xs text-white">✅ Completed</span>
             )}
           </div>
           {liquidityHash && (
-            <p className="text-xs font-mono text-blue-400 break-all">Liquidity: {liquidityHash}</p>
+            <p className="text-xs font-mono text-white break-all">Liquidity: {liquidityHash}</p>
           )}
         </div>
       )}
 
       {currentStep === 'idle' && (needsTokenAApproval || needsTokenBApproval) && (
-        <p className="text-sm text-yellow-400">
+        <p className="text-sm text-gray-300">
           {needsTokenAApproval && needsTokenBApproval
             ? 'YRT and token approvals required before adding liquidity'
             : needsTokenAApproval
