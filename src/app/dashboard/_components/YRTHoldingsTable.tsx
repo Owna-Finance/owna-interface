@@ -1,8 +1,11 @@
-import Image from 'next/image';
-import { useAccount, useReadContract } from 'wagmi';
-import { erc20Abi } from 'viem';
-import { CONTRACTS } from '@/constants/contracts/contracts';
-import { formatUnits } from 'viem';
+import Image from "next/image";
+import { useAccount, useReadContract } from "wagmi";
+import { erc20Abi } from "viem";
+import { CONTRACTS } from "@/constants/contracts/contracts";
+import { formatUnits } from "viem";
+import { Copy, Check } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 
 interface TokenHolding {
   symbol: string;
@@ -20,78 +23,111 @@ interface TokenHoldingsTableProps {
 
 export function YRTHoldingsTable({ title, subtitle }: TokenHoldingsTableProps) {
   const { address } = useAccount();
+  const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
+
+  const copyToClipboard = async (addressToCopy: string) => {
+    try {
+      await navigator.clipboard.writeText(addressToCopy);
+      setCopiedAddress(addressToCopy);
+      toast.success("Address copied to clipboard!", {
+        style: {
+          background: "#111111",
+          border: "1px solid #2A2A2A",
+          color: "#ffffff",
+        },
+        duration: 2000,
+      });
+
+      // Reset copied state after 2 seconds
+      setTimeout(() => setCopiedAddress(null), 2000);
+    } catch (error) {
+      toast.error("Failed to copy address", {
+        style: {
+          background: "#111111",
+          border: "1px solid #2A2A2A",
+          color: "#ffffff",
+        },
+      });
+    }
+  };
 
   // Read YRT-SUDIRMAN balance
   const { data: yrtBalance } = useReadContract({
-    address: '0x4e0f63A8a31156DE5d232F47AD7aAFd2C9014991' as `0x${string}`,
+    address: "0x4e0f63A8a31156DE5d232F47AD7aAFd2C9014991" as `0x${string}`,
     abi: erc20Abi,
-    functionName: 'balanceOf',
+    functionName: "balanceOf",
     args: address ? [address] : undefined,
-    query: { enabled: !!address }
+    query: { enabled: !!address },
   });
 
   // Read YRT-SUDIRMAN name
   const { data: yrtName } = useReadContract({
-    address: '0x4e0f63A8a31156DE5d232F47AD7aAFd2C9014991' as `0x${string}`,
+    address: "0x4e0f63A8a31156DE5d232F47AD7aAFd2C9014991" as `0x${string}`,
     abi: erc20Abi,
-    functionName: 'name',
+    functionName: "name",
   });
 
   // Read USDC balance
   const { data: usdcBalance } = useReadContract({
     address: CONTRACTS.USDC,
     abi: erc20Abi,
-    functionName: 'balanceOf',
+    functionName: "balanceOf",
     args: address ? [address] : undefined,
-    query: { enabled: !!address }
+    query: { enabled: !!address },
   });
 
   // Read IDRX balance
   const { data: idrxBalance } = useReadContract({
     address: CONTRACTS.IDRX,
     abi: erc20Abi,
-    functionName: 'balanceOf',
+    functionName: "balanceOf",
     args: address ? [address] : undefined,
-    query: { enabled: !!address }
+    query: { enabled: !!address },
   });
 
-  const formatTokenAmount = (balance: bigint | undefined, decimals: number = 18) => {
-    if (!balance) return '0';
+  const formatTokenAmount = (
+    balance: bigint | undefined,
+    decimals: number = 18
+  ) => {
+    if (!balance) return "0";
     const formatted = formatUnits(balance, decimals);
     const num = parseFloat(formatted);
-    const finalNum = num % 1 === 0 ? num : parseFloat(num.toFixed(6).replace(/\.?0+$/, ''));
-    return finalNum.toLocaleString('en-US', { maximumFractionDigits: 6 });
+    const finalNum =
+      num % 1 === 0 ? num : parseFloat(num.toFixed(6).replace(/\.?0+$/, ""));
+    return finalNum.toLocaleString("en-US", { maximumFractionDigits: 6 });
   };
 
   const tokenHoldings: TokenHolding[] = [
     {
-      symbol: 'YRT-SUDIRMAN',
-      name: yrtName || 'YRT-SUDIRMAN',
+      symbol: "YRT-SUDIRMAN",
+      name: yrtName || "YRT-SUDIRMAN",
       balance: formatTokenAmount(yrtBalance),
-      value: '$0.00', // Mock value for now
-      address: '0x4e0f63A8a31156DE5d232F47AD7aAFd2C9014991',
-      logoPath: '/Images/Logo/logo_YRT.jpg'
+      value: "$0.00", // Mock value for now
+      address: "0x4e0f63A8a31156DE5d232F47AD7aAFd2C9014991",
+      logoPath: "/Images/Logo/logo_YRT.jpg",
     },
     {
-      symbol: 'USDC',
-      name: 'USD Coin',
+      symbol: "USDC",
+      name: "USD Coin",
       balance: formatTokenAmount(usdcBalance, 18),
-      value: '$0.00', // Mock value for now
+      value: "$0.00", // Mock value for now
       address: CONTRACTS.USDC,
-      logoPath: '/Images/Logo/usdc-logo.png'
+      logoPath: "/Images/Logo/usdc-logo.png",
     },
     {
-      symbol: 'IDRX',
-      name: 'Indonesian Rupiah Token',
+      symbol: "IDRX",
+      name: "Indonesian Rupiah Token",
       balance: formatTokenAmount(idrxBalance, 18),
-      value: '$0.00', // Mock value for now
+      value: "$0.00", // Mock value for now
       address: CONTRACTS.IDRX,
-      logoPath: '/Images/Logo/idrx-logo.svg'
-    }
-  ].filter(holding => parseFloat(holding.balance) > 0);
+      logoPath: "/Images/Logo/idrx-logo.svg",
+    },
+  ].filter((holding) => parseFloat(holding.balance) > 0);
 
-  const totalValue = tokenHoldings.reduce((sum, holding) => 
-    sum + parseFloat(holding.value.replace('$', '').replace(',', '')), 0
+  const totalValue = tokenHoldings.reduce(
+    (sum, holding) =>
+      sum + parseFloat(holding.value.replace("$", "").replace(",", "")),
+    0
   );
   return (
     <div className="bg-[#0A0A0A] rounded-xl border border-[#2A2A2A] overflow-hidden">
@@ -103,7 +139,9 @@ export function YRTHoldingsTable({ title, subtitle }: TokenHoldingsTableProps) {
               {subtitle}
             </div>
           </div>
-          <div className="text-sm text-gray-400">Total Value: ${totalValue.toLocaleString()}</div>
+          <div className="text-sm text-gray-400">
+            Total Value: ${totalValue.toLocaleString()}
+          </div>
         </div>
       </div>
       <div className="p-6">
@@ -115,7 +153,10 @@ export function YRTHoldingsTable({ title, subtitle }: TokenHoldingsTableProps) {
         </div>
         <div className="space-y-1">
           {tokenHoldings.map((holding, index) => (
-            <div key={index} className="grid grid-cols-4 gap-4 p-4 hover:bg-[#111111]/50 transition-colors rounded-lg border-b border-white/5 last:border-b-0">
+            <div
+              key={index}
+              className="grid grid-cols-4 gap-4 p-4 hover:bg-[#111111]/50 transition-colors rounded-lg border-b border-white/5 last:border-b-0"
+            >
               <div className="flex items-center space-x-3">
                 <div className="w-8 h-8 rounded-full overflow-hidden bg-white flex items-center justify-center p-1">
                   <Image
@@ -127,14 +168,32 @@ export function YRTHoldingsTable({ title, subtitle }: TokenHoldingsTableProps) {
                   />
                 </div>
                 <div>
-                  <div className="text-sm font-medium text-white">{holding.symbol}</div>
+                  <div className="text-sm font-medium text-white">
+                    {holding.symbol}
+                  </div>
                   <div className="text-xs text-gray-500">{holding.name}</div>
                 </div>
               </div>
-              <div className="text-right text-white font-medium">{holding.balance}</div>
-              <div className="text-right text-white font-medium">{holding.value}</div>
-              <div className="text-right text-gray-400 text-xs font-mono">
-                {holding.address.slice(0, 6)}...{holding.address.slice(-4)}
+              <div className="text-right text-white font-medium">
+                {holding.balance}
+              </div>
+              <div className="text-right text-white font-medium">
+                {holding.value}
+              </div>
+              <div className="text-right">
+                <button
+                  onClick={() => copyToClipboard(holding.address)}
+                  className="flex items-center space-x-2 text-white hover:text-white text-xs font-mono transition-colors cursor-pointer group ml-auto"
+                >
+                  <span>
+                    {holding.address.slice(0, 6)}...{holding.address.slice(-4)}
+                  </span>
+                  {copiedAddress === holding.address ? (
+                    <Check className="w-3 h-3 text-green-400" />
+                  ) : (
+                    <Copy className="w-3 h-3 group-hover:opacity-100 transition-opacity text-white" />
+                  )}
+                </button>
               </div>
             </div>
           ))}
