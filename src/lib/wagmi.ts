@@ -1,16 +1,18 @@
 import { http, createConfig, cookieStorage, createStorage } from 'wagmi';
-import { base, baseSepolia, mainnet } from 'viem/chains';
 import { metaMask, walletConnect } from 'wagmi/connectors';
+import { CHAIN } from '@/constants/chain';
 
 // Get projectId from https://cloud.reown.com
 export const projectId = process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || 'demo-project-id';
 
+// Base Sepolia Testnet Only Configuration
 export const config = createConfig({
-  chains: [base, baseSepolia, mainnet],
+  chains: [CHAIN], // ✅ Only Base Sepolia Testnet
   connectors: [
     metaMask(),
     walletConnect({
       projectId,
+      showQrModal: false, // Hide QR modal for better UX
     }),
   ],
   storage: createStorage({
@@ -18,8 +20,6 @@ export const config = createConfig({
   }),
   ssr: true,
   transports: {
-    [base.id]: http(),
-    [baseSepolia.id]: http(),
-    [mainnet.id]: http(),
+    [CHAIN.id]: http(), // ✅ Only Base Sepolia RPC
   },
 });

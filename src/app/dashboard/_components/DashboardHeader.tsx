@@ -3,6 +3,7 @@ import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount, useDisconnect, useBalance } from 'wagmi';
 import { Copy, ExternalLink, LogOut } from 'lucide-react';
 import Image from 'next/image';
+import { CHAIN_ID, getExplorerUrl } from '@/constants/chain';
 
 interface DashboardHeaderProps {
   showWalletDropdown: boolean;
@@ -14,7 +15,7 @@ export function DashboardHeader({ showWalletDropdown, setShowWalletDropdown }: D
   const { disconnect } = useDisconnect();
   const { data: balance, isLoading: balanceLoading } = useBalance({
     address: address,
-    chainId: 84532,
+    chainId: CHAIN_ID,
   });
 
   return (
@@ -85,7 +86,7 @@ export function DashboardHeader({ showWalletDropdown, setShowWalletDropdown }: D
                       <button
                         onClick={() => {
                           if (address) {
-                            window.open(`https://sepolia.basescan.org/address/${address}`, '_blank');
+                            window.open(getExplorerUrl('address', address), '_blank');
                           }
                           setShowWalletDropdown(false);
                         }}

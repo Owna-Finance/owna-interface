@@ -1,6 +1,6 @@
 import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { CONTRACTS } from '@/constants/contracts/contracts';
-import { YRT_ABI } from '@/constants/abis/YRTAbi';
+import { YRT_FACTORY_ABI } from '@/constants/abis/YRT_FACTORY_Abi';
 
 export interface StartNewPeriodParams {
   seriesId: string;
@@ -16,8 +16,8 @@ export function useStartNewPeriod() {
   const startNewPeriod = async (params: StartNewPeriodParams) => {
     try {
       return writeContract({
-        address: CONTRACTS.FACTORY,
-        abi: YRT_ABI,
+        address: CONTRACTS.YRT_FACTORY as `0x${string}`,
+        abi: YRT_FACTORY_ABI,
         functionName: 'startNewPeriod',
         args: [
           params.seriesId,

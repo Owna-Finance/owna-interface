@@ -3,7 +3,8 @@ import { parseUnits } from 'viem';
 import { CONTRACTS } from '@/constants/contracts/contracts';
 import { USDC_ABI } from '@/constants/abis/USDCAbi';
 import { IDRX_ABI } from '@/constants/abis/IDRXAbi';
-import { DEX_ABI } from '@/constants/abis/DEXAbi';
+import { DEX_ROUTER_ABI } from '@/constants/abis/DEX_ROUTER_ABI';
+import { useGetAmountsOut as useGetAmountsOutUtil } from '@/utils/dex-discovery';
 
 export interface SwapParams {
   amountIn: string;
@@ -28,7 +29,17 @@ export interface DualTokenApprovalParams {
 
 export interface GetAmountsOutParams {
   amountIn: string;
-  path: `0x${string}`[];
+  tokenIn: `0x${string}`;
+  tokenOut: `0x${string}`;
+}
+
+export interface SimpleSwapParams {
+  amountIn: string;
+  amountOutMin: string;
+  tokenIn: `0x${string}`;
+  tokenOut: `0x${string}`;
+  recipient: `0x${string}`;
+  deadline: number;
 }
 
 export function useSwap() {
@@ -48,7 +59,7 @@ export function useSwap() {
       address: params.tokenAddress,
       abi: getTokenABI(params.tokenAddress),
       functionName: 'allowance',
-      args: [params.userAddress, CONTRACTS.DEX],
+      args: [params.userAddress, CONTRACTS.DEX_ROUTER as `0x${string}`],
       query: {
         enabled: !!params.userAddress && !!params.tokenAddress,
       }
@@ -60,7 +71,7 @@ export function useSwap() {
       address: params.yrtAddress,
       abi: USDC_ABI, // YRT uses same ERC20 interface
       functionName: 'allowance',
-      args: [params.userAddress, CONTRACTS.DEX],
+      args: [params.userAddress, CONTRACTS.DEX_ROUTER as `0x${string}`],
       query: {
         enabled: !!params.userAddress && !!params.yrtAddress,
       }
@@ -69,10 +80,10 @@ export function useSwap() {
 
   const useUSDCAllowance = (params: { userAddress: `0x${string}` }) => {
     return useReadContract({
-      address: CONTRACTS.USDC,
+      address: CONTRACTS.USDC as `0x${string}`,
       abi: USDC_ABI,
       functionName: 'allowance',
-      args: [params.userAddress, CONTRACTS.DEX],
+      args: [params.userAddress, CONTRACTS.DEX_ROUTER as `0x${string}`],
       query: {
         enabled: !!params.userAddress,
       }
@@ -93,7 +104,7 @@ export function useSwap() {
         address: params.tokenAddress,
         abi: getTokenABI(params.tokenAddress),
         functionName: 'approve',
-        args: [CONTRACTS.DEX, amountWei],
+        args: [CONTRACTS.DEX_ROUTER as `0x${string}`, amountWei],
       });
     } catch (error) {
       console.error('Error approving token:', error);
@@ -109,7 +120,7 @@ export function useSwap() {
         address: params.yrtAddress,
         abi: USDC_ABI, // YRT uses same ERC20 interface
         functionName: 'approve',
-        args: [CONTRACTS.DEX, amountWei],
+        args: [CONTRACTS.DEX_ROUTER as `0x${string}`, amountWei],
       });
     } catch (error) {
       console.error('Error approving YRT:', error);
@@ -122,10 +133,10 @@ export function useSwap() {
       const amountWei = parseUnits(params.amount, 18);
 
       return writeContract({
-        address: CONTRACTS.USDC,
+        address: CONTRACTS.USDC as `0x${string}`,
         abi: USDC_ABI,
         functionName: 'approve',
-        args: [CONTRACTS.DEX, amountWei],
+        args: [CONTRACTS.DEX_ROUTER as `0x${string}`, amountWei],
       });
     } catch (error) {
       console.error('Error approving USDC:', error);
@@ -140,8 +151,8 @@ export function useSwap() {
       const deadlineTimestamp = BigInt(Math.floor(Date.now() / 1000) + parseInt(params.deadline) * 60);
 
       return writeContract({
-        address: CONTRACTS.DEX,
-        abi: DEX_ABI,
+        address: CONTRACTS.DEX_ROUTER as `0x${string}`,
+        abi: DEX_ROUTER_ABI,
         functionName: 'swapExactTokensForTokens',
         args: [
           amountInWei,
@@ -158,22 +169,39 @@ export function useSwap() {
   };
 
 
+  // Use utility function for getAmountsOut
   const useGetAmountsOut = (params: GetAmountsOutParams) => {
-    return useReadContract({
-      address: CONTRACTS.DEX,
-      abi: DEX_ABI,
-      functionName: 'getAmountsOut',
-      args: [
-        parseUnits(params.amountIn || '0', 18),
-        params.path
-      ],
-      query: {
-        enabled: !!params.amountIn && !!params.path && params.path.length >= 2 && params.amountIn !== '0',
-      }
-    });
+    return useGetAmountsOutUtil(params.amountIn || '0', [params.tokenIn, params.tokenOut]);
   };
 
+  // Simple swap function
+  const swap = async (params: SimpleSwapParams) => {
+    try {
+      const amountInWei = parseUnits(params.amountIn, 18);
+      const amountOutMinWei = parseUnits(params.amountOutMin, 18);
+      const deadlineTimestamp = BigInt(params.deadline);
+
+      return writeContract({
+        address: CONTRACTS.DEX_ROUTER as `0x${string}`,
+        abi: DEX_ROUTER_ABI,
+        functionName: 'swapExactTokensForTokens',
+        args: [
+          amountInWei,
+          amountOutMinWei,
+          [params.tokenIn, params.tokenOut], // path: [tokenIn, tokenOut]
+          params.recipient,
+          deadlineTimestamp,
+        ],
+      });
+    } catch (error) {
+      console.error('Error swapping tokens:', error);
+      throw new Error('Error swapping tokens. Please check your input values.');
+    }
+  };
+
+  
   return {
+    swap, // New simple swap function
     swapExactTokensForTokens,
     approveToken,
     approveYRT,

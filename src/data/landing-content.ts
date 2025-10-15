@@ -14,8 +14,8 @@ export const landingPageContent: LandingPageContent = {
       variant: "primary",
     },
     secondaryCTA: {
-      text: "Learn About RWA",
-      href: "/how-it-works",
+      text: "Owna Docs",
+      href: "https://owna-finance.gitbook.io/owna-finance-docs/introduction/readme",
       variant: "outline",
     },
   },
@@ -89,7 +89,7 @@ export const landingPageContent: LandingPageContent = {
       "Join thousands of investors already earning monthly returns from tokenized hotel properties. Get started in minutes with our simple onboarding process.",
     primaryCTA: {
       text: "Launch App",
-      href: "/signup",
+      href: "/dashboard",
       variant: "primary",
     },
   },
@@ -102,6 +102,7 @@ export const videoConfiguration = {
       type: "video/mp4",
     },
   ],
+  poster: "/Images/hero-poster.jpg", // Add poster image for video
   playbackSettings: {
     autoplay: true,
     muted: true,

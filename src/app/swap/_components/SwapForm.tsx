@@ -2,6 +2,7 @@ import { TokenInput } from './TokenInput';
 import { SwapSettings } from './SwapSettings';
 import { TransactionStatus } from './TransactionStatus';
 import { SwapButton } from './SwapButton';
+import { PoolSelector } from './PoolSelector';
 import { ChevronDown } from 'lucide-react';
 import Image from 'next/image';
 import { useState, useEffect, useRef } from 'react';
@@ -10,6 +11,7 @@ type TokenType = 'YRT' | 'USDC' | 'IDRX';
 type SwapStep = 'idle' | 'approving-yrt' | 'yrt-approved' | 'approving-usdc' | 'tokens-approved' | 'swapping' | 'completed';
 
 interface SwapFormData {
+  poolAddress: string;
   tokenFrom: TokenType;
   tokenTo: TokenType;
   amountFrom: string;
@@ -17,6 +19,7 @@ interface SwapFormData {
   slippage: string;
   deadline: string;
   yrtAddress: string;
+  propertyName?: string;
 }
 
 interface SwapFormProps {
@@ -25,6 +28,8 @@ interface SwapFormProps {
   onSubmit: (e: React.FormEvent) => void;
   onInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
   onSwapTokens: () => void;
+  onPoolSelect: (poolAddress: string, token0: string, token1: string, propertyName?: string) => void;
+  onTokenSelect: (tokenFrom: string, tokenTo: string) => void;
   needsYrtApproval: boolean;
   needsUsdcApproval: boolean;
   yrtApprovalHash?: `0x${string}`;
@@ -41,6 +46,8 @@ export function SwapForm({
   onSubmit,
   onInputChange,
   onSwapTokens,
+  onPoolSelect,
+  onTokenSelect,
   needsYrtApproval,
   needsUsdcApproval,
   yrtApprovalHash,
@@ -55,37 +62,35 @@ export function SwapForm({
   if (needsUsdcApproval) approvalTokens.push('USDC');
 
   return (
-    <div className="bg-[#0A0A0A] rounded-2xl border border-[#2A2A2A] p-6">
-      <form onSubmit={onSubmit} className="space-y-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
-            YRT Token
-          </label>
-          <YRTTokenDropdown 
-            value={formData.yrtAddress}
-            onChange={(value) => onInputChange({ target: { name: 'yrtAddress', value } } as any)}
-            options={[
-              { 
-                value: '0x4e0f63A8a31156DE5d232F47AD7aAFd2C9014991', 
-                label: 'YRT Sudirman', 
-                symbol: 'YRT-SDR',
-                logo: '/Images/Logo/logo_YRT.jpg' 
-              },
-              { 
-                value: '0x1234567890123456789012345678901234567890', 
-                label: 'YRT Thamrin', 
-                symbol: 'YRT-THM',
-                logo: '/Images/Logo/logo_YRT.jpg' 
-              },
-              { 
-                value: '0x9876543210987654321098765432109876543210', 
-                label: 'YRT Kemang', 
-                symbol: 'YRT-KMG',
-                logo: '/Images/Logo/logo_YRT.jpg' 
-              }
-            ]}
-          />
-        </div>
+    <div className="space-y-6">
+      {/* Pool Selection */}
+      <PoolSelector
+        selectedPool={formData.poolAddress}
+        onPoolSelect={onPoolSelect}
+        onTokenSelect={onTokenSelect}
+      />
+
+      {/* Swap Form */}
+      <div className="bg-[#0A0A0A] rounded-2xl border border-[#2A2A2A] p-6">
+        <form onSubmit={onSubmit} className="space-y-6">
+          {/* Selected Pool Info */}
+          {formData.poolAddress && formData.poolAddress !== '0x0000000000000000000000000000000000000000' && (
+            <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-lg">
+              <h4 className="text-green-400 font-medium mb-2">Selected Pool</h4>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Trading Pair:</span>
+                  <span className="text-white">{formData.tokenFrom} → {formData.tokenTo}</span>
+                </div>
+                {formData.propertyName && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Property:</span>
+                    <span className="text-white">{formData.propertyName}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
         <TokenInput
           label="From"
@@ -132,6 +137,7 @@ export function SwapForm({
         />
       </form>
     </div>
+  </div>
   );
 }
 

@@ -17,7 +17,7 @@ export function FeatureGrid({
   className
 }: FeatureGridProps) {
   return (
-    <SectionContainer background="light" className={className}>
+    <SectionContainer background="gray" className={className}>
       <div className="text-center max-w-5xl mx-auto mb-20">
         <div className="mb-6">
           <span className="text-sm text-gray-500 uppercase tracking-wider font-medium">Features</span>

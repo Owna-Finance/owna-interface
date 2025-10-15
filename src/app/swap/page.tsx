@@ -5,21 +5,24 @@ import { DashboardLayout } from '@/components/layout/dashboard-layout';
 import { useAccount, useWaitForTransactionReceipt } from 'wagmi';
 import { CONTRACTS } from '@/constants/contracts/contracts';
 import { useSwap } from '@/hooks';
+import { useAllPools } from '@/hooks/useAllPools';
 import { formatUnits } from 'viem';
 import { SwapHeader, SwapForm } from './_components';
 import { toast } from 'sonner';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, AlertCircle } from 'lucide-react';
 
 type TokenType = 'YRT' | 'USDC' | 'IDRX';
 
 interface SwapFormData {
+  poolAddress: `0x${string}`;
   tokenFrom: TokenType;
   tokenTo: TokenType;
   amountFrom: string;
   amountTo: string;
   slippage: string;
   deadline: string;
-  yrtAddress: string;
+  yrtAddress: `0x${string}`;
+  propertyName?: string;
 }
 
 type SwapStep = 'idle' | 'approving-yrt' | 'yrt-approved' | 'approving-usdc' | 'tokens-approved' | 'swapping' | 'completed';
@@ -27,15 +30,17 @@ type SwapStep = 'idle' | 'approving-yrt' | 'yrt-approved' | 'approving-usdc' | '
 export default function SwapPage() {
   const { address } = useAccount();
   const { swapExactTokensForTokens, approveYRT, approveUSDC, useYRTAllowance, useUSDCAllowance, useGetAmountsOut, checkNeedsApproval, hash, isPending, isSuccess, error } = useSwap();
-  
+  const { pools, isLoading: isLoadingPools, getAvailableTokens, getYRTPools } = useAllPools();
+
   const [formData, setFormData] = useState<SwapFormData>({
+    poolAddress: '0x0000000000000000000000000000000000000000',
     tokenFrom: 'USDC',
     tokenTo: 'YRT',
     amountFrom: '',
     amountTo: '',
     slippage: '1',
     deadline: '20',
-    yrtAddress: ''
+    yrtAddress: '0x0000000000000000000000000000000000000000'
   });
 
   const [currentStep, setCurrentStep] = useState<SwapStep>('idle');
@@ -50,41 +55,45 @@ export default function SwapPage() {
   const getTokenAddress = (token: TokenType): `0x${string}` => {
     if (token === 'USDC') return CONTRACTS.USDC;
     if (token === 'IDRX') return CONTRACTS.IDRX;
-    if (token === 'YRT') return formData.yrtAddress as `0x${string}`;
+    if (token === 'YRT') return formData.yrtAddress;
     return CONTRACTS.USDC;
   };
 
   const { data: yrtAllowance, refetch: refetchYrtAllowance } = useYRTAllowance({
-    yrtAddress: (formData.yrtAddress || '0x0000000000000000000000000000000000000000') as `0x${string}`,
-    userAddress: (address || '0x0000000000000000000000000000000000000000') as `0x${string}`
+    yrtAddress: (formData.yrtAddress || '0x0000000000000000000000000000000000000000'),
+    userAddress: (address || '0x0000000000000000000000000000000000000000')
   });
 
   const { data: usdcAllowance, refetch: refetchUsdcAllowance } = useUSDCAllowance({
-    userAddress: (address || '0x0000000000000000000000000000000000000000') as `0x${string}`
+    userAddress: (address || '0x0000000000000000000000000000000000000000')
   });
 
   const needsYrtApproval = (() => {
     if (!formData.yrtAddress || !address) return false;
     const yrtAmount = formData.tokenFrom === 'YRT' ? formData.amountFrom : formData.amountTo;
     if (!yrtAmount) return false;
-    if (yrtAllowance === undefined) return true;
-    return checkNeedsApproval(yrtAllowance as bigint, yrtAmount);
+    if (yrtAllowance === undefined || yrtAllowance === null) return true;
+    // Handle if yrtAllowance is an object (wagmi query result)
+    const allowanceValue = typeof yrtAllowance === 'bigint' ? yrtAllowance : (yrtAllowance as any)?.result;
+    return checkNeedsApproval(allowanceValue, yrtAmount);
   })();
 
   const needsUsdcApproval = (() => {
     if (!address) return false;
     const usdcAmount = formData.tokenFrom === 'USDC' ? formData.amountFrom : formData.amountTo;
     if (!usdcAmount) return false;
-    if (usdcAllowance === undefined) return true;
-    return checkNeedsApproval(usdcAllowance as bigint, usdcAmount);
+    if (usdcAllowance === undefined || usdcAllowance === null) return true;
+    // Handle if usdcAllowance is an object (wagmi query result)
+    const allowanceValue = typeof usdcAllowance === 'bigint' ? usdcAllowance : (usdcAllowance as any)?.result;
+    return checkNeedsApproval(allowanceValue, usdcAmount);
   })();
 
   const swapPath: `0x${string}`[] = (() => {
-    if (!formData.yrtAddress) return [];
-    
+    if (!formData.yrtAddress || !formData.poolAddress || formData.poolAddress === '0x0000000000000000000000000000000000000000') return [];
+
     const fromAddress = getTokenAddress(formData.tokenFrom);
     const toAddress = getTokenAddress(formData.tokenTo);
-    
+
     return [fromAddress, toAddress];
   })();
 
@@ -112,7 +121,7 @@ export default function SwapPage() {
 
   useEffect(() => {
     if (amountsOut && formData.amountFrom && formData.amountFrom !== '0' && Array.isArray(amountsOut) && amountsOut.length > 1) {
-      const outputAmount = amountsOut[1] as bigint;
+      const outputAmount = amountsOut[1];
       const calculatedAmount = formatUnits(outputAmount, 18);
       setFormData(prev => ({
         ...prev,
@@ -198,16 +207,16 @@ export default function SwapPage() {
 
   const handleApproveYRT = async (): Promise<boolean> => {
     if (!address || !formData.yrtAddress) return false;
-    
+
     try {
       setCurrentStep('approving-yrt');
       const yrtAmount = formData.tokenFrom === 'YRT' ? formData.amountFrom : formData.amountTo;
-      
+
       await approveYRT({
-        yrtAddress: formData.yrtAddress as `0x${string}`,
+        yrtAddress: formData.yrtAddress,
         amount: yrtAmount
       });
-      
+
       return true;
     } catch (error) {
       setCurrentStep('idle');
@@ -257,7 +266,7 @@ export default function SwapPage() {
         amountIn: formData.amountFrom,
         amountOutMin,
         path,
-        to: address as `0x${string}`,
+        to: address,
         deadline: formData.deadline
       });
       
@@ -356,6 +365,25 @@ export default function SwapPage() {
           onSubmit={handleSubmit}
           onInputChange={handleInputChange}
           onSwapTokens={handleSwapTokens}
+          onPoolSelect={(poolAddress, token0, token1, propertyName) => {
+            setFormData(prev => ({
+              ...prev,
+              poolAddress: poolAddress as `0x${string}`,
+              yrtAddress: (token1.includes('YRT') ? token1 : token0) as `0x${string}`, // YRT token address
+              propertyName
+            }));
+          }}
+          onTokenSelect={(tokenFrom, tokenTo) => {
+            setFormData(prev => ({
+              ...prev,
+              tokenFrom: tokenFrom as TokenType,
+              tokenTo: tokenTo as TokenType
+            }));
+            setCurrentStep('idle');
+            setYrtApprovalHash(undefined);
+            setUsdcApprovalHash(undefined);
+            setSwapHash(undefined);
+          }}
           needsYrtApproval={needsYrtApproval}
           needsUsdcApproval={needsUsdcApproval}
           yrtApprovalHash={yrtApprovalHash}

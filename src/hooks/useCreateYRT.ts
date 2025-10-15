@@ -1,7 +1,8 @@
 import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { parseUnits } from 'viem';
-import { CONTRACTS } from '@/constants/contracts/contracts';
-import { YRT_ABI } from '@/constants/abis/YRTAbi';
+import { CONTRACTS, LEGACY_CONTRACTS } from '@/constants/contracts/contracts';
+import { YRT_FACTORY_ABI } from '@/constants/abis/YRT_FACTORY_Abi';
+import { validateBaseSepolia } from '@/utils/chain-validation';
 
 export interface CreateYRTParams {
   name: string;
@@ -21,21 +22,24 @@ export function useCreateYRT() {
 
   const createYRTSeries = async (params: CreateYRTParams) => {
     try {
-      const initialSupplyWei = params.initialSupply 
-        ? parseUnits(params.initialSupply, 18) 
+      // Validate Base Sepolia chain
+      validateBaseSepolia(84532); // Chain ID is hardcoded since we only support Base Sepolia
+
+      const initialSupplyWei = params.initialSupply
+        ? parseUnits(params.initialSupply, 18)
         : BigInt(0);
       const tokenPriceWei = parseUnits(params.tokenPrice, 18);
 
       return writeContract({
-        address: CONTRACTS.FACTORY,
-        abi: YRT_ABI,
+        address: CONTRACTS.YRT_FACTORY,
+        abi: YRT_FACTORY_ABI,
         functionName: 'createSeries',
         args: [
           params.name,
           params.symbol,
           params.propertyName,
           initialSupplyWei,
-          params.underlyingToken as `0x${string}`,
+          params.underlyingToken,
           tokenPriceWei,
           params.fundraisingDuration,
         ],

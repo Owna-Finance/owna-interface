@@ -1,4 +1,4 @@
-export const DISTRIBUTOR_ABI = [
+export const AUTO_DISTRIBUTOR_ABI = [
   {
     inputs: [{ internalType: "address", name: "_factory", type: "address" }],
     stateMutability: "nonpayable",

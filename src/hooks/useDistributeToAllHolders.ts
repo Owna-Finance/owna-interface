@@ -1,6 +1,6 @@
 import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { CONTRACTS } from '@/constants/contracts/contracts';
-import { DISTRIBUTOR_ABI } from '@/constants/abis/DISTRIBUTORAbi';
+import { AUTO_DISTRIBUTOR_ABI } from '@/constants/abis/AUTO_DISTRIBUTOR_ABI';
 import { toast } from 'sonner';
 import { useEffect } from 'react';
 
@@ -18,8 +18,8 @@ export function useDistributeToAllHolders() {
   const distributeToAllHolders = async (params: DistributeToAllHoldersParams) => {
     try {
       return writeContract({
-        address: CONTRACTS.DISTRIBUTOR,
-        abi: DISTRIBUTOR_ABI,
+        address: CONTRACTS.AUTO_DISTRIBUTOR as `0x${string}`,
+        abi: AUTO_DISTRIBUTOR_ABI,
         functionName: 'distributeToAllHolders',
         args: [
           BigInt(params.seriesId),

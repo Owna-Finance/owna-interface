@@ -1,7 +1,7 @@
 import { useWriteContract, useWaitForTransactionReceipt, useReadContract } from 'wagmi';
 import { parseUnits } from 'viem';
 import { CONTRACTS } from '@/constants/contracts/contracts';
-import { YRT_ABI } from '@/constants/abis/YRTAbi';
+import { YRT_FACTORY_ABI } from '@/constants/abis/YRT_FACTORY_Abi';
 import { USDC_ABI } from '@/constants/abis/USDCAbi';
 import { IDRX_ABI } from '@/constants/abis/IDRXAbi';
 
@@ -35,7 +35,7 @@ export function useDepositYield() {
       address: params.tokenAddress,
       abi: getTokenABI(params.tokenAddress),
       functionName: 'allowance',
-      args: [params.userAddress, CONTRACTS.FACTORY],
+      args: [params.userAddress, CONTRACTS.YRT_FACTORY],
       query: {
         enabled: !!params.userAddress && !!params.tokenAddress,
       }
@@ -56,7 +56,7 @@ export function useDepositYield() {
         address: params.tokenAddress,
         abi: getTokenABI(params.tokenAddress),
         functionName: 'approve',
-        args: [CONTRACTS.FACTORY, amountWei],
+        args: [CONTRACTS.YRT_FACTORY, amountWei],
       });
     } catch (error) {
       console.error('Error approving token:', error);
@@ -69,8 +69,8 @@ export function useDepositYield() {
       const amountWei = parseUnits(params.amount, 18);
 
       return writeContract({
-        address: CONTRACTS.FACTORY,
-        abi: YRT_ABI,
+        address: CONTRACTS.YRT_FACTORY as `0x${string}`,
+        abi: YRT_FACTORY_ABI,
         functionName: 'depositYield',
         args: [
           params.seriesId,

@@ -3,7 +3,7 @@ import { parseUnits } from 'viem';
 import { CONTRACTS } from '@/constants/contracts/contracts';
 import { USDC_ABI } from '@/constants/abis/USDCAbi';
 import { IDRX_ABI } from '@/constants/abis/IDRXAbi';
-import { DEX_ABI } from '@/constants/abis/DEXAbi';
+import { DEX_ROUTER_ABI } from '@/constants/abis/DEX_ROUTER_ABI';
 
 export interface AddLiquidityParams {
   tokenA: `0x${string}`;
@@ -41,7 +41,7 @@ export function useAddLiquidity() {
       address: params.tokenAddress,
       abi: getTokenABI(params.tokenAddress),
       functionName: 'allowance',
-      args: [params.userAddress, CONTRACTS.DEX],
+      args: [params.userAddress, CONTRACTS.DEX_ROUTER],
       query: {
         enabled: !!params.userAddress && !!params.tokenAddress,
       }
@@ -62,7 +62,7 @@ export function useAddLiquidity() {
         address: params.tokenAddress,
         abi: getTokenABI(params.tokenAddress),
         functionName: 'approve',
-        args: [CONTRACTS.DEX, amountWei],
+        args: [CONTRACTS.DEX_ROUTER, amountWei],
       });
     } catch (error) {
       console.error('Error approving token:', error);
@@ -79,8 +79,8 @@ export function useAddLiquidity() {
       const deadlineTimestamp = BigInt(Math.floor(Date.now() / 1000) + parseInt(params.deadline) * 60);
 
       return writeContract({
-        address: CONTRACTS.DEX,
-        abi: DEX_ABI,
+        address: CONTRACTS.DEX_ROUTER as `0x${string}`,
+        abi: DEX_ROUTER_ABI,
         functionName: 'addLiquidity',
         args: [
           params.tokenA,

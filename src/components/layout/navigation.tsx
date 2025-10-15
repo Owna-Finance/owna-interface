@@ -34,8 +34,8 @@ const navigationItems = [
     icon: Droplets
   },
   {
-    name: 'Swap',
-    href: '/swap',
+    name: 'DEX',
+    href: '/dex',
     icon: ArrowRightLeft
   },
   {

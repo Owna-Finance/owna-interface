@@ -51,7 +51,7 @@ export default function AddLiquidityPage() {
 
   const [formData, setFormData] = useState<AddLiquidityFormData>({
     tokenA: '' as Address,
-    tokenB: CONTRACTS.USDC,
+    tokenB: CONTRACTS.USDC as Address,
     amountADesired: '',
     amountBDesired: '',
     slippage: '5',

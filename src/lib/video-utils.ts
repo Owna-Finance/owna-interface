@@ -1,9 +1,9 @@
-export function generateVideoPoster(videoSrc: string): string {
+export async function generateVideoPoster(videoSrc: string): Promise<string> {
   if (typeof window === 'undefined') return '/Images/video-poster.jpg'
-  
+
   const canvas = document.createElement('canvas')
   const video = document.createElement('video')
-  
+
   return new Promise((resolve) => {
     video.addEventListener('loadeddata', () => {
       canvas.width = video.videoWidth
@@ -69,9 +69,9 @@ export function preloadVideo(src: string, priority: boolean = false): Promise<HT
   })
 }
 
-export function calculateVideoLoadTime(videoElement: HTMLVideoElement): number {
+export async function calculateVideoLoadTime(videoElement: HTMLVideoElement): Promise<number> {
   const startTime = performance.now()
-  
+
   return new Promise((resolve) => {
     const handleCanPlay = () => {
       const loadTime = performance.now() - startTime

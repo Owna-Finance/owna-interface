@@ -1,4 +1,4 @@
-export const DEX_ABI = [
+export const DEX_ROUTER_ABI = [
   {
     inputs: [{ internalType: "address", name: "_factory", type: "address" }],
     stateMutability: "nonpayable",

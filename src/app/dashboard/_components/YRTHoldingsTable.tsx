@@ -69,7 +69,7 @@ export function YRTHoldingsTable({ title, subtitle }: TokenHoldingsTableProps) {
 
   // Read USDC balance
   const { data: usdcBalance } = useReadContract({
-    address: CONTRACTS.USDC,
+    address: CONTRACTS.USDC as `0x${string}`,
     abi: erc20Abi,
     functionName: "balanceOf",
     args: address ? [address] : undefined,
@@ -78,7 +78,7 @@ export function YRTHoldingsTable({ title, subtitle }: TokenHoldingsTableProps) {
 
   // Read IDRX balance
   const { data: idrxBalance } = useReadContract({
-    address: CONTRACTS.IDRX,
+    address: CONTRACTS.IDRX as `0x${string}`,
     abi: erc20Abi,
     functionName: "balanceOf",
     args: address ? [address] : undefined,
