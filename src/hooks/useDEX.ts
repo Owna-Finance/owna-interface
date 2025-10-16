@@ -58,36 +58,32 @@ export function useDEX() {
     hash,
   });
 
-  // Get pool address for token pair
+  // Get pool address for token pair through factory (READ only)
   const useGetPool = (tokenA: `0x${string}`, tokenB: `0x${string}`) => {
     return useReadContract({
-      address: CONTRACTS.DEX_ROUTER, // Using router as proxy for now
-      abi: DEX_FACTORY_ABI, // This should be router ABI with factory functions
+      address: CONTRACTS.DEX_FACTORY_ADDRESS as `0x${string}`,
+      abi: DEX_FACTORY_ABI,
       functionName: 'getPool',
       args: [tokenA, tokenB],
     });
   };
 
-  // Note: DEX Factory discovery should be done through useDEXFactory() from dex-discovery
-  // For now, we'll use DEX_ROUTER as proxy since DEX functions go through router
-  // In a full implementation, these would be calls to DEX Factory discovered through router
-
-  // Get all pools count through factory (discovered through router)
+  // Get all pools count through factory (READ only)
   const {
     data: allPoolsLength,
     isLoading: isLoadingPoolsLength,
     error: poolsLengthError
   } = useReadContract({
-    address: CONTRACTS.DEX_ROUTER, // Using router as proxy for now
-    abi: DEX_FACTORY_ABI, // This should be router ABI with factory functions
+    address: CONTRACTS.DEX_FACTORY_ADDRESS as `0x${string}`,
+    abi: DEX_FACTORY_ABI,
     functionName: 'allPoolsLength',
   });
 
-  // Get pool at specific index through factory
+  // Get pool at specific index through factory (READ only)
   const useAllPools = (index: number) => {
     return useReadContract({
-      address: CONTRACTS.DEX_ROUTER, // Using router as proxy for now
-      abi: DEX_FACTORY_ABI, // This should be router ABI with factory functions
+      address: CONTRACTS.DEX_FACTORY_ADDRESS as `0x${string}`,
+      abi: DEX_FACTORY_ABI,
       functionName: 'allPools',
       args: [BigInt(index)],
     });
@@ -207,12 +203,12 @@ export function useDEX() {
     });
   };
 
-  // Get fee recipient through router
+  // Get fee recipient through factory (READ only)
   const {
     data: feeRecipient
   } = useReadContract({
-    address: CONTRACTS.DEX_ROUTER, // Using router as proxy for now
-    abi: DEX_FACTORY_ABI, // This should be router ABI with factory functions
+    address: CONTRACTS.DEX_FACTORY_ADDRESS as `0x${string}`,
+    abi: DEX_FACTORY_ABI,
     functionName: 'feeRecipient',
   });
 

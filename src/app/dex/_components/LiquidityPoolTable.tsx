@@ -125,20 +125,20 @@ interface PoolRowProps {
 }
 
 function PoolRow({ poolAddress, onSelect, isSelected }: PoolRowProps) {
-  const { tokenInfo: tokenAInfo } = useTokenInfo(poolAddress);
-  const { tokenInfo: tokenBInfo } = useTokenInfo(poolAddress);
+  const tokenAInfo = useTokenInfo(poolAddress);
+  const tokenBInfo = useTokenInfo(poolAddress);
   const { reserves, token0, token1, propertyName, isLoading: isLoadingPool } = usePoolDetails(poolAddress);
 
   // Calculate real data from contracts
-  const tokenASymbol = tokenAInfo?.symbol || 'YRT';
-  const tokenBSymbol = tokenBInfo?.symbol || 'USDC';
+  const tokenASymbol = tokenAInfo?.symbol?.toString() || 'YRT';
+  const tokenBSymbol = tokenBInfo?.symbol?.toString() || 'USDC';
 
   // Calculate TVL from reserves
-  const tvl = reserves ?
+  const tvl = reserves && Array.isArray(reserves) ?
     parseFloat(formatUnits(reserves[0], 18)) + parseFloat(formatUnits(reserves[1], 18)) : 0;
 
   // Calculate price based on reserves
-  const price = reserves && reserves[1] > 0 ?
+  const price = reserves && Array.isArray(reserves) && reserves[1] && parseFloat(reserves[1].toString()) > 0 ?
     parseFloat(formatUnits(reserves[0], 18)) / parseFloat(formatUnits(reserves[1], 18)) : 0;
 
   // Calculate APR (simplified)
@@ -176,10 +176,10 @@ function PoolRow({ poolAddress, onSelect, isSelected }: PoolRowProps) {
         <div className="flex items-center space-x-3">
           <div className="flex items-center space-x-2">
             <div className="w-8 h-8 bg-[#2A2A2A] rounded-full flex items-center justify-center">
-              <Image src={getTokenLogo(tokenASymbol, token0 || '')} alt={tokenASymbol} width={16} height={16} />
+              <Image src={getTokenLogo(tokenASymbol, token0?.toString() || '')} alt={tokenASymbol} width={16} height={16} />
             </div>
             <div className="w-8 h-8 bg-[#2A2A2A] rounded-full flex items-center justify-center -ml-2">
-              <Image src={getTokenLogo(tokenBSymbol, token1 || '')} alt={tokenBSymbol} width={16} height={16} />
+              <Image src={getTokenLogo(tokenBSymbol, token1?.toString() || '')} alt={tokenBSymbol} width={16} height={16} />
             </div>
           </div>
           <div>

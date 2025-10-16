@@ -12,8 +12,8 @@ interface PoolInformationPanelProps {
 export function PoolInformationPanel({ poolAddress }: PoolInformationPanelProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'holders' | 'analytics'>('overview');
   const { reserves, token0, token1, totalSupply, propertyName, isLoading } = usePoolDetails(poolAddress);
-  const { tokenInfo: tokenAInfo, isLoading: isLoadingTokenA } = useTokenInfo(token0 as `0x${string}`);
-  const { tokenInfo: tokenBInfo, isLoading: isLoadingTokenB } = useTokenInfo(token1 as `0x${string}`);
+  const tokenAInfo = useTokenInfo(token0 as `0x${string}`);
+  const tokenBInfo = useTokenInfo(token1 as `0x${string}`);
 
   // Use real data from contracts
 
@@ -24,32 +24,32 @@ export function PoolInformationPanel({ poolAddress }: PoolInformationPanelProps)
   };
 
   const tokenA = {
-    symbol: tokenAInfo?.symbol || 'YRT',
-    name: tokenAInfo?.name || 'YRT Token',
-    address: token0,
-    logo: getTokenLogo(token0 || '', tokenAInfo?.symbol || ''),
+    symbol: tokenAInfo?.symbol?.toString() || 'YRT',
+    name: tokenAInfo?.name?.toString() || 'YRT Token',
+    address: token0?.toString() || '',
+    logo: getTokenLogo(token0?.toString() || '', tokenAInfo?.symbol?.toString() || ''),
   };
 
   const tokenB = {
-    symbol: tokenBInfo?.symbol || 'USDC',
-    name: tokenBInfo?.name || 'USD Coin',
-    address: token1,
-    logo: getTokenLogo(token1 || '', tokenBInfo?.symbol || ''),
+    symbol: tokenBInfo?.symbol?.toString() || 'USDC',
+    name: tokenBInfo?.name?.toString() || 'USD Coin',
+    address: token1?.toString() || '',
+    logo: getTokenLogo(token1?.toString() || '', tokenBInfo?.symbol?.toString() || ''),
   };
 
   // Calculate reserves from contract data
-  const reserveA = reserves ? formatUnits(reserves[0], 18) : '0';
-  const reserveB = reserves ? formatUnits(reserves[1], 18) : '0';
-  const formattedTotalSupply = totalSupply ? formatUnits(totalSupply, 18) : '0';
+  const reserveA = reserves && Array.isArray(reserves) ? formatUnits(reserves[0], 18) : '0';
+  const reserveB = reserves && Array.isArray(reserves) ? formatUnits(reserves[1], 18) : '0';
+  const formattedTotalSupply = totalSupply && typeof totalSupply === 'bigint' ? formatUnits(totalSupply, 18) : '0';
 
   // Calculate TVL (sum of both reserves)
-  const tvl = reserves ?
+  const tvl = reserves && Array.isArray(reserves) ?
     parseFloat(formatUnits(reserves[0], 18)) + parseFloat(formatUnits(reserves[1], 18)) : 0;
 
   // Calculate APR (mock calculation - would need volume data)
   const apr = tvl > 0 ? ((0.3 * 365 * 25000) / tvl) * 100 : 0; // Assuming $25k daily volume, 0.3% fee
 
-  if (isLoading || isLoadingTokenA || isLoadingTokenB) {
+  if (isLoading || !tokenAInfo || !tokenBInfo) {
     return (
       <div className="bg-[#0A0A0A] rounded-xl border border-[#2A2A2A] p-6">
         <div className="flex items-center justify-center py-8">
@@ -88,7 +88,7 @@ export function PoolInformationPanel({ poolAddress }: PoolInformationPanelProps)
           <div className="font-medium text-white">
             {tokenA.symbol} / {tokenB.symbol}
           </div>
-          <div className="text-xs text-gray-400">{propertyName}</div>
+          <div className="text-xs text-gray-400">{propertyName?.toString() || 'Property'}</div>
         </div>
       </div>
 

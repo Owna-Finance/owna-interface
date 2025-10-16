@@ -23,8 +23,8 @@ interface SwapFormData {
 export function EnhancedSwapForm({ selectedPool, availablePools = [] }: EnhancedSwapFormProps) {
   const { swap, isLoading, hash, isSuccess, error } = useSwap();
   const { reserves, token0, token1 } = usePoolDetails(selectedPool);
-  const { tokenInfo: token0Info } = useTokenInfo(token0);
-  const { tokenInfo: token1Info } = useTokenInfo(token1);
+  const token0Info = useTokenInfo(token0 as `0x${string}`);
+  const token1Info = useTokenInfo(token1 as `0x${string}`);
 
   const [showSettings, setShowSettings] = useState(false);
   const [isCalculating, setIsCalculating] = useState(false);
@@ -60,18 +60,18 @@ export function EnhancedSwapForm({ selectedPool, availablePools = [] }: Enhanced
   useEffect(() => {
     if (selectedPool && token0Info && token1Info && availablePools.length > 0) {
       // Determine which token is YRT and which is stablecoin
-      const yrtToken = token0Info?.symbol !== 'USDC' && token0Info?.symbol !== 'IDRX' ? {
-        value: token0 || selectedPool,
-        label: token0Info?.symbol || 'YRT',
+      const yrtToken: TokenOption = token0Info?.symbol !== 'USDC' && token0Info?.symbol !== 'IDRX' ? {
+        value: token0 as string || selectedPool,
+        label: token0Info?.symbol?.toString() || 'YRT',
         logo: '/Images/Logo/logo_YRT.jpg',
-        address: token0,
+        address: token0 as `0x${string}`,
         isYRT: true,
         poolAddress: selectedPool
       } : {
-        value: token1 || selectedPool,
-        label: token1Info?.symbol || 'YRT',
+        value: token1 as string || selectedPool,
+        label: token1Info?.symbol?.toString() || 'YRT',
         logo: '/Images/Logo/logo_YRT.jpg',
-        address: token1,
+        address: token1 as `0x${string}`,
         isYRT: true,
         poolAddress: selectedPool
       };
@@ -98,7 +98,7 @@ export function EnhancedSwapForm({ selectedPool, availablePools = [] }: Enhanced
   // Update output amount when getAmountsOut result changes
   useEffect(() => {
     if (!isLoadingAmountsOut && amountsOutResult && formData.amountIn && formData.tokenIn && formData.tokenOut && formData.tokenIn.value !== formData.tokenOut.value) {
-      if (amountsOutResult && amountsOutResult.amountsOut && amountsOutResult.amountsOut.length > 0) {
+      if (amountsOutResult && typeof amountsOutResult === 'object' && 'amountsOut' in amountsOutResult && Array.isArray(amountsOutResult.amountsOut) && amountsOutResult.amountsOut.length > 0) {
         // Convert from BigInt to string with proper decimal handling
         const outputAmount = amountsOutResult.amountsOut[amountsOutResult.amountsOut.length - 1].toString();
         setFormData(prev => ({ ...prev, amountOut: outputAmount }));
@@ -183,11 +183,11 @@ export function EnhancedSwapForm({ selectedPool, availablePools = [] }: Enhanced
             <div>
               <div className="text-sm text-gray-400 mb-1">Selected Pool</div>
               <div className="font-medium text-white">
-                {token0Info?.symbol} / {token1Info?.symbol}
+                {token0Info?.symbol?.toString() || 'Unknown'} / {token1Info?.symbol?.toString() || 'Unknown'}
               </div>
-              {reserves && (
+              {!!reserves && (
                 <div className="text-xs text-gray-400 mt-1">
-                  Pool Size: {reserves[0].toString()} / {reserves[1].toString()}
+                  Pool Size: {Array.isArray(reserves) ? `${reserves[0]?.toString() || '0'} / ${reserves[1]?.toString() || '0'}` : 'Loading...'}
                 </div>
               )}
             </div>

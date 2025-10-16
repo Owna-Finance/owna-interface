@@ -1,157 +1,81 @@
 import { useState, useEffect } from 'react';
-import { useDEX, PoolInfo } from './useDEX';
-import { useYRTSeries } from './useYRTSeries';
-import { CONTRACTS } from '@/constants/contracts/contracts';
-import { formatUnits } from 'viem';
+import { PoolInfo } from './useDEX';
+
+// Mock data untuk testing UI development
+const MOCK_POOLS: PoolInfo[] = [
+  {
+    address: "0x1234567890123456789012345678901234567890" as `0x${string}`,
+    token0: "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd" as `0x${string}`,
+    token1: "0x1111111111111111111111111111111111111111" as `0x${string}`,
+    token0Symbol: "USDC",
+    token1Symbol: "IDRX",
+    token0Name: "USD Coin",
+    token1Name: "Indonesian Rupiah Token",
+    reserve0: "10000.000000",
+    reserve1: "150000000.000000",
+    propertyName: "Property A - Jakarta",
+    swapFee: "0.30",
+    totalSupply: "1500.000000",
+    isYRTPool: false,
+  },
+  {
+    address: "0x2345678901234567890123456789012345678901" as `0x${string}`,
+    token0: "0xfedcbafedcbafedcbafedcbafedcbafedcbafed" as `0x${string}`,
+    token1: "0x2222222222222222222222222222222222222222" as `0x${string}`,
+    token0Symbol: "YRT-PROP1",
+    token1Symbol: "USDC",
+    token0Name: "Yield Receipt Token - Property 1",
+    token1Name: "USD Coin",
+    reserve0: "5000.000000",
+    reserve1: "75000.000000",
+    propertyName: "Property 1 - Surabaya",
+    swapFee: "0.30",
+    totalSupply: "2500.000000",
+    isYRTPool: true,
+  },
+  {
+    address: "0x3456789012345678901234567890123456789012" as `0x${string}`,
+    token0: "0x3333333333333333333333333333333333333333" as `0x${string}`,
+    token1: "0x4444444444444444444444444444444444444444" as `0x${string}`,
+    token0Symbol: "YRT-PROP2",
+    token1Symbol: "USDT",
+    token0Name: "Yield Receipt Token - Property 2",
+    token1Name: "Tether USD",
+    reserve0: "8000.000000",
+    reserve1: "120000.000000",
+    propertyName: "Property 2 - Bali",
+    swapFee: "0.30",
+    totalSupply: "3200.000000",
+    isYRTPool: true,
+  }
+];
 
 export function useAllPools() {
-  const {
-    allPoolsLength,
-    useAllPools,
-    usePoolInfo,
-    usePoolTokens,
-    usePoolMetadata,
-    useTokenInfo,
-    useIsYRTToken
-  } = useDEX();
-  const { useSeriesInfoWithSlug } = useYRTSeries();
-
   const [pools, setPools] = useState<PoolInfo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const loadAllPools = async () => {
-      if (!allPoolsLength) return;
+    // Simulasi loading untuk UI testing
+    setIsLoading(true);
+    setError(null);
 
-      setIsLoading(true);
-      setError(null);
-
+    // Simulasi delay async
+    const timer = setTimeout(() => {
       try {
-        const poolCount = Number(allPoolsLength);
-        const poolsData: PoolInfo[] = [];
-
-        for (let i = 0; i < poolCount; i++) {
-          try {
-            // Get pool address
-            const { data: poolAddress } = useAllPools(i);
-
-            if (!poolAddress || poolAddress === '0x0000000000000000000000000000000000000000') {
-              continue;
-            }
-
-            // Get pool tokens
-            const poolTokens = usePoolTokens(poolAddress as `0x${string}`);
-            const token0 = poolTokens.token0.data;
-            const token1 = poolTokens.token1.data;
-
-            if (!token0 || !token1) continue;
-
-            // Get pool info (reserves)
-            const poolInfoResult = usePoolInfo(poolAddress as `0x${string}`);
-            const reserves = poolInfoResult.data;
-
-            const poolMeta = usePoolMetadata(poolAddress as `0x${string}`);
-            const metadata = {
-              propertyName: poolMeta.propertyName.data,
-              swapFee: poolMeta.swapFee.data,
-              totalSupply: poolMeta.totalSupply.data,
-            };
-
-            // Get token info
-            const token0InfoResult = useTokenInfo(token0 as `0x${string}`);
-            const token1InfoResult = useTokenInfo(token1 as `0x${string}`);
-            const token0Info = {
-              name: token0InfoResult.name.data,
-              symbol: token0InfoResult.symbol.data,
-              decimals: token0InfoResult.decimals.data,
-            };
-            const token1Info = {
-              name: token1InfoResult.name.data,
-              symbol: token1InfoResult.symbol.data,
-              decimals: token1InfoResult.decimals.data,
-            };
-
-            // Check if any token is YRT
-            const token0YRT = useIsYRTToken(token0 as `0x${string}`);
-            const token1YRT = useIsYRTToken(token1 as `0x${string}`);
-            const isToken0YRT = token0YRT.data;
-            const isToken1YRT = token1YRT.data;
-
-            const isYRTPool = !!isToken0YRT || !!isToken1YRT;
-
-            // Get YRT series info if applicable
-            let yrtSeriesInfo = null;
-            let propertyName = metadata?.propertyName || '';
-
-            if (isYRTPool) {
-              const yrtTokenAddress = isToken0YRT ? token0 : token1;
-              const yrtSeriesId = isToken0YRT ? isToken0YRT : isToken1YRT;
-
-              if (yrtSeriesId && yrtSeriesId > 0) {
-                const seriesInfoResult = useSeriesInfoWithSlug(Number(yrtSeriesId));
-                const seriesInfo = seriesInfoResult.data;
-                yrtSeriesInfo = seriesInfo;
-                propertyName = (seriesInfo as any)?.info?.propertyName || propertyName;
-              }
-            }
-
-            // Format reserves
-            const reserve0 = reserves && Array.isArray(reserves) ? formatUnits(reserves[0], 18) : '0';
-            const reserve1 = reserves && Array.isArray(reserves) ? formatUnits(reserves[1], 18) : '0';
-
-            // Determine which token is which (YRT should be token0 in display)
-            let displayToken0 = token0 as `0x${string}`;
-            let displayToken1 = token1 as `0x${string}`;
-            let displayToken0Symbol = token0Info?.symbol || 'Unknown';
-            let displayToken1Symbol = token1Info?.symbol || 'Unknown';
-            let displayToken0Name = token0Info?.name;
-            let displayToken1Name = token1Info?.name;
-
-            // If token1 is YRT, swap them for consistent display
-            if (isToken1YRT) {
-              displayToken0 = token1 as `0x${string}`;
-              displayToken1 = token0 as `0x${string}`;
-              displayToken0Symbol = token1Info?.symbol || 'Unknown';
-              displayToken1Symbol = token0Info?.symbol || 'Unknown';
-              displayToken0Name = token1Info?.name;
-              displayToken1Name = token0Info?.name;
-            }
-
-            const poolInfo: PoolInfo = {
-              address: poolAddress as `0x${string}`,
-              token0: displayToken0,
-              token1: displayToken1,
-              token0Symbol: displayToken0Symbol,
-              token1Symbol: displayToken1Symbol,
-              token0Name: displayToken0Name,
-              token1Name: displayToken1Name,
-              reserve0: parseFloat(reserve0).toFixed(6),
-              reserve1: parseFloat(reserve1).toFixed(6),
-              propertyName: (propertyName as string) || '',
-              swapFee: metadata?.swapFee ? ((Number(metadata.swapFee) / 100) * 0.1).toFixed(2) : '0.30', // Convert basis points to percentage
-              totalSupply: metadata?.totalSupply ? formatUnits(metadata.totalSupply as bigint, 18) : '0',
-              isYRTPool,
-            };
-
-            poolsData.push(poolInfo);
-          } catch (poolError) {
-            console.error(`Error loading pool ${i}:`, poolError);
-            continue;
-          }
-        }
-
-        setPools(poolsData);
+        // Untuk development, gunakan mock data
+        console.log('useAllPools: Using mock data for development');
+        setPools(MOCK_POOLS);
       } catch (err) {
-        console.error('Error loading pools:', err);
+        console.error('useAllPools Error:', err);
         setError('Failed to load pools');
       } finally {
         setIsLoading(false);
       }
-    };
+    }, 1000); // 1 detik delay untuk simulasi loading
 
-    loadAllPools();
-  }, [allPoolsLength]);
+    return () => clearTimeout(timer);
+  }, []); // Empty dependency array untuk menghindari infinite loop
 
   // Filter pools by token
   const filterPoolsByToken = (tokenAddress: `0x${string}`) => {

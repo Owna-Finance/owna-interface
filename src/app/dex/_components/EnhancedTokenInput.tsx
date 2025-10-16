@@ -43,8 +43,8 @@ export function EnhancedTokenInput({
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Get token info for available pools
-  const { tokenInfo: token0Info } = useTokenInfo(selectedPool);
-  const { tokenInfo: token1Info } = usePoolDetails(selectedPool);
+  const token0Info = useTokenInfo(selectedPool as `0x${string}`);
+  const poolDetails = usePoolDetails(selectedPool);
 
   // Build token options based on available pools
   const tokenOptions: TokenOption[] = [
@@ -141,7 +141,7 @@ interface TokenDropdownProps {
   options: TokenOption[];
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
-  dropdownRef: React.RefObject<HTMLDivElement>;
+  dropdownRef: React.RefObject<HTMLDivElement | null>;
 }
 
 function TokenDropdown({ value, onChange, options, isOpen, setIsOpen, dropdownRef }: TokenDropdownProps) {

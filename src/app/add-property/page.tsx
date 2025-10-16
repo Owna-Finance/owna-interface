@@ -3,7 +3,7 @@
 import { DashboardLayout } from '@/components/layout/dashboard-layout';
 import { useAccount, useChainId } from 'wagmi';
 import { CONTRACTS } from '@/constants/contracts/contracts';
-import { useCreateYRT, useYRTForm, useStartNewPeriod, useDepositYield, useCreatePool } from '@/hooks';
+import { useCreateYRT, useYRTForm, useStartNewPeriod, useCreatePool } from '@/hooks';
 import { useState, useEffect } from 'react';
 import { isBaseSepolia, switchToBaseSepolia } from '@/utils/chain-switch';
 import { CHAIN } from '@/constants/chain';
@@ -12,11 +12,10 @@ import {
   CreateYRTForm,
   CreatePoolForm,
   StartNewPeriodForm,
-  DepositYieldForm,
   InformationPanel
 } from './_components';
 
-export default function CreateYRTPage() {
+export default function AddPropertyPage() {
   const { address } = useAccount();
   const chainId = useChainId();
   const [isSwitchingChain, setIsSwitchingChain] = useState(false);
@@ -24,21 +23,11 @@ export default function CreateYRTPage() {
   const { createYRTSeries, hash, isLoading, isSuccess, error } = useCreateYRT();
   const { createPool, hash: poolHash, isLoading: isPoolLoading, isSuccess: isPoolSuccess, error: poolError } = useCreatePool();
   const { startNewPeriod, hash: periodHash, isLoading: isPeriodLoading, isSuccess: isPeriodSuccess, error: periodError } = useStartNewPeriod();
-  const { depositYield, approveToken, useTokenAllowance, checkNeedsApproval, hash: yieldHash, isLoading: isYieldLoading, isSuccess: isYieldSuccess, error: yieldError } = useDepositYield();
   
   const [periodFormData, setPeriodFormData] = useState({
     seriesId: '',
     durationInSeconds: 300 // 5 minutes default
   });
-
-  const [yieldFormData, setYieldFormData] = useState({
-    seriesId: '',
-    periodId: '',
-    amount: '',
-    tokenAddress: CONTRACTS.USDC as `0x${string}`
-  });
-
-  const [approvalStep, setApprovalStep] = useState<'check' | 'approve' | 'deposit'>('check');
 
   // Pool form state
   const [poolFormData, setPoolFormData] = useState({
@@ -117,74 +106,7 @@ export default function CreateYRTPage() {
     }));
   };
 
-  // Get allowance for the selected token
-  const { data: allowance, refetch: refetchAllowance } = useTokenAllowance({
-    tokenAddress: yieldFormData.tokenAddress,
-    amount: yieldFormData.amount,
-    userAddress: address as `0x${string}`
-  });
-
-  const needsApproval = yieldFormData.amount ? checkNeedsApproval(allowance as bigint | undefined, yieldFormData.amount) : false;
-
-  const handleApprove = async () => {
-    if (!address || !yieldFormData.amount) return;
-    
-    try {
-      setApprovalStep('approve');
-      await approveToken({
-        tokenAddress: yieldFormData.tokenAddress,
-        amount: yieldFormData.amount,
-        userAddress: address as `0x${string}`
-      });
-      await refetchAllowance();
-      setApprovalStep('deposit');
-    } catch (error) {
-      setApprovalStep('check');
-      alert(error instanceof Error ? error.message : 'Failed to approve token');
-    }
-  };
-
-  const handleYieldSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!address) {
-      alert('Please connect your wallet');
-      return;
-    }
-
-    if (!yieldFormData.seriesId || !yieldFormData.periodId || !yieldFormData.amount) {
-      alert('Please fill in all required fields');
-      return;
-    }
-
-    // Check if approval is needed
-    if (needsApproval && approvalStep !== 'deposit') {
-      await handleApprove();
-      return;
-    }
-
-    try {
-      setApprovalStep('deposit');
-      await depositYield(yieldFormData);
-      setApprovalStep('check');
-    } catch (error) {
-      setApprovalStep('check');
-      alert(error instanceof Error ? error.message : 'Failed to deposit yield');
-    }
-  };
-
-  const handleYieldInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setYieldFormData(prev => ({
-      ...prev,
-      [name]: name === 'tokenAddress' ? value as `0x${string}` : value
-    }));
-
-    if (name === 'amount' || name === 'tokenAddress') {
-      setApprovalStep('check');
-    }
-  };
-
+  
   // Pool form handlers
   const handlePoolInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -311,19 +233,6 @@ export default function CreateYRTPage() {
           isPeriodLoading={isPeriodLoading}
           isPeriodSuccess={isPeriodSuccess}
           periodError={periodError}
-          address={address}
-        />
-
-        <DepositYieldForm
-          yieldFormData={yieldFormData}
-          onSubmit={handleYieldSubmit}
-          onInputChange={handleYieldInputChange}
-          needsApproval={needsApproval}
-          approvalStep={approvalStep}
-          yieldHash={yieldHash}
-          isYieldLoading={isYieldLoading}
-          isYieldSuccess={isYieldSuccess}
-          yieldError={yieldError}
           address={address}
         />
 

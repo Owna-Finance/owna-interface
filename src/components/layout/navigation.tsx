@@ -5,12 +5,12 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Image from 'next/image';
 import { WalletComponents } from '@/components/wallet/connect-wallet';
-import { 
-  LayoutDashboard, 
-  ArrowRightLeft, 
-  Layers, 
+import {
+  LayoutDashboard,
+  ArrowRightLeft,
+  Layers,
   Plus,
-  Droplets
+  Settings
 } from 'lucide-react';
 
 interface NavigationProps {
@@ -24,14 +24,14 @@ const navigationItems = [
     icon: LayoutDashboard
   },
   {
-    name: 'Create YRT',
-    href: '/create-yrt',
+    name: 'Add Property',
+    href: '/add-property',
     icon: Plus
   },
   {
-    name: 'Add Liquidity',
-    href: '/add-liquidity',
-    icon: Droplets
+    name: 'Pool Manager',
+    href: '/pool-manager',
+    icon: Settings
   },
   {
     name: 'DEX',

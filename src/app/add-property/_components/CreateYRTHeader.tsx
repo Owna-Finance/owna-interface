@@ -9,8 +9,8 @@ export function CreateYRTHeader({ onFillSampleData }: CreateYRTHeaderProps) {
   return (
     <>
       <div className="mb-8">
-        <h1 className="text-3xl font-semibold text-white mb-2">Create YRT Series</h1>
-        <p className="text-gray-400">Create a new Yield-bearing Real Estate Token (YRT) series for property tokenization</p>
+        <h1 className="text-3xl font-semibold text-white mb-2">Add Property</h1>
+        <p className="text-gray-400">Create a new property token (YRT), DEX pool, and start earning periods</p>
       </div>
 
       <div className="mb-6">
