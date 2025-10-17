@@ -1,6 +1,7 @@
 import { useReadContract } from 'wagmi';
 import { CONTRACTS } from '@/constants/contracts/contracts';
 import { DEX_ROUTER_ABI } from '@/constants/abis/DEX_ROUTER_ABI';
+import { DEX_FACTORY_ABI } from '@/constants/abis/DEX_FACTORY_ABI';
 
 /**
  * DEX Factory Discovery Utilities
@@ -25,13 +26,14 @@ export function useDEXFactory() {
 
 /**
  * Hook to get pool information by token pair
- * This queries DEX Router which internally checks DEX Factory for pools
+ * This queries DEX Factory directly using getPool function
+ * Fixed: Changed from router.getPair() to factory.getPool()
  */
 export function usePoolInfo(tokenA: `0x${string}`, tokenB: `0x${string}`) {
   return useReadContract({
-    address: CONTRACTS.DEX_ROUTER as `0x${string}`,
-    abi: DEX_ROUTER_ABI,
-    functionName: 'getPair', // Assuming this function exists in DEX Router
+    address: CONTRACTS.DEX_FACTORY as `0x${string}`,
+    abi: DEX_FACTORY_ABI,
+    functionName: 'getPool',
     args: [tokenA, tokenB],
     query: {
       enabled: !!tokenA && !!tokenB && tokenA !== tokenB,
@@ -136,12 +138,40 @@ export interface PoolInfo {
 }
 
 /**
- * Hook to get all pools information (if DEX Router supports this)
- * This would typically query DEX Factory through DEX Router
+ * Hook to get all pools addresses from DEX Factory
+ * Fixed: Now queries DEX Factory directly
+ */
+export function useAllPoolsAddresses() {
+  return useReadContract({
+    address: CONTRACTS.DEX_FACTORY as `0x${string}`,
+    abi: DEX_FACTORY_ABI,
+    functionName: 'allPoolsLength',
+    query: {
+      enabled: true,
+    }
+  });
+}
+
+/**
+ * Hook to get pool address by index
+ */
+export function usePoolByIndex(index: number) {
+  return useReadContract({
+    address: CONTRACTS.DEX_FACTORY as `0x${string}`,
+    abi: DEX_FACTORY_ABI,
+    functionName: 'allPools',
+    args: [BigInt(index)],
+    query: {
+      enabled: index >= 0,
+    }
+  });
+}
+
+/**
+ * Legacy function for backward compatibility
+ * @deprecated Use useAllPoolsAddresses and usePoolByIndex instead
  */
 export function useAllPools() {
-  // This would depend on the actual DEX Router implementation
-  // For now, returning empty array as placeholder
   return {
     data: [] as PoolInfo[],
     isLoading: false,

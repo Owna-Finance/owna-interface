@@ -46,7 +46,7 @@ export function useSimplePoolList() {
     functionName: 'allPools',
     args: [BigInt(0)],
     query: {
-      enabled: factoryLength.data !== undefined && factoryLength.data > 0,
+      enabled: factoryLength.data !== undefined && factoryLength.data !== null && Number(factoryLength.data) > 0,
     },
   });
 
@@ -56,7 +56,7 @@ export function useSimplePoolList() {
     functionName: 'allPools',
     args: [BigInt(1)],
     query: {
-      enabled: factoryLength.data !== undefined && factoryLength.data > 1,
+      enabled: factoryLength.data !== undefined && factoryLength.data !== null && Number(factoryLength.data) > 1,
     },
   });
 
@@ -66,7 +66,7 @@ export function useSimplePoolList() {
     functionName: 'allPools',
     args: [BigInt(2)],
     query: {
-      enabled: factoryLength.data !== undefined && factoryLength.data > 2,
+      enabled: factoryLength.data !== undefined && factoryLength.data !== null && Number(factoryLength.data) > 2,
     },
   });
 

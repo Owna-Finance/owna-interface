@@ -3,9 +3,10 @@ import { Button } from '@/components/ui/button';
 import { ArrowUpDown, Settings, Info } from 'lucide-react';
 import { EnhancedTokenInput, TokenOption } from './EnhancedTokenInput';
 import { useSwap, usePoolDetails, useTokenInfo } from '@/hooks';
-import { useGetAmountsOut } from '@/utils/dex-discovery';
+import { useGetAmountsOut, usePoolInfo } from '@/utils/dex-discovery';
 import { CONTRACTS } from '@/constants/contracts/contracts';
 import { toast } from 'sonner';
+import { formatAmount } from '@coinbase/onchainkit/token';
 
 interface EnhancedSwapFormProps {
   selectedPool?: `0x${string}`;
@@ -21,7 +22,7 @@ interface SwapFormData {
 }
 
 export function EnhancedSwapForm({ selectedPool, availablePools = [] }: EnhancedSwapFormProps) {
-  const { swap, isLoading, hash, isSuccess, error } = useSwap();
+  const { swap, isLoading, hash, error } = useSwap();
   const { reserves, token0, token1 } = usePoolDetails(selectedPool);
   const token0Info = useTokenInfo(token0 as `0x${string}`);
   const token1Info = useTokenInfo(token1 as `0x${string}`);
@@ -45,6 +46,12 @@ export function EnhancedSwapForm({ selectedPool, availablePools = [] }: Enhanced
     amountOut: '',
     slippage: '1.0',
   });
+
+  // Pool validation for manual token selection
+  const { data: manualPoolAddress } = usePoolInfo(
+    formData.tokenIn?.address as `0x${string}`,
+    formData.tokenOut?.address as `0x${string}`
+  );
 
   // Use getAmountsOut as a hook with proper parameters
   const tokenPath = formData.tokenIn?.address && formData.tokenOut?.address
@@ -122,10 +129,16 @@ export function EnhancedSwapForm({ selectedPool, availablePools = [] }: Enhanced
       return;
     }
 
-    try {
-      // Create token path for swap
-      const path = [formData.tokenIn.address, formData.tokenOut.address];
+    // Validate pool exists
+    const poolToUse = selectedPool || manualPoolAddress;
+    if (!poolToUse || poolToUse === '0x0000000000000000000000000000000000000000') {
+      toast.error('Pool does not exist for this token pair', {
+        description: 'Please create a pool first or select different tokens',
+      });
+      return;
+    }
 
+    try {
       // Calculate minimum output with slippage tolerance
       const amountOutMin = formData.amountOut
         ? (parseFloat(formData.amountOut) * (1 - parseFloat(formData.slippage) / 100)).toString()
@@ -185,9 +198,9 @@ export function EnhancedSwapForm({ selectedPool, availablePools = [] }: Enhanced
               <div className="font-medium text-white">
                 {token0Info?.symbol?.toString() || 'Unknown'} / {token1Info?.symbol?.toString() || 'Unknown'}
               </div>
-              {!!reserves && (
+              {!!reserves && Array.isArray(reserves) && (
                 <div className="text-xs text-gray-400 mt-1">
-                  Pool Size: {Array.isArray(reserves) ? `${reserves[0]?.toString() || '0'} / ${reserves[1]?.toString() || '0'}` : 'Loading...'}
+                  Pool Size: {formatAmount(String(Number(reserves[0].toString()) / Math.pow(10, 18)))} / {formatAmount(String(Number(reserves[1].toString()) / Math.pow(10, 18)))}
                 </div>
               )}
             </div>
@@ -285,25 +298,50 @@ export function EnhancedSwapForm({ selectedPool, availablePools = [] }: Enhanced
           )}
         </Button>
 
-        {/* Transaction Status */}
+        {/* Transaction Status with OnchainKit */}
         {(hash || error) && (
           <div className="p-4 bg-[#111111] rounded-lg border border-[#2A2A2A]">
-            {isSuccess && hash && (
-              <div className="text-green-400 text-sm">
-                ✓ Swap successful!
-                <a
-                  href={`https://sepolia.basescan.org/tx/${hash}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block text-xs text-blue-400 hover:text-blue-300 mt-1"
-                >
-                  View on Explorer
-                </a>
+            {hash && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-center p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                      <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div>
+                      <div className="text-green-400 font-medium">Swap submitted!</div>
+                      <div className="text-green-300 text-xs">Transaction is processing on Base Sepolia</div>
+                    </div>
+                  </div>
+                </div>
+                <div className="text-center">
+                  <a
+                    href={`https://sepolia.basescan.org/tx/${hash}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-blue-400 hover:text-blue-300 inline-flex items-center space-x-1"
+                  >
+                    <span>View on Explorer</span>
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </a>
+                </div>
               </div>
             )}
             {error && (
-              <div className="text-red-400 text-sm">
-                ✗ Swap failed: {error.message}
+              <div className="text-red-400 text-sm bg-red-400/10 border border-red-400/30 rounded-lg p-3">
+                <div className="flex items-center space-x-2">
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                  <div>
+                    <div className="font-medium">Swap failed</div>
+                    <div className="text-xs text-red-300">{error.message}</div>
+                  </div>
+                </div>
               </div>
             )}
           </div>

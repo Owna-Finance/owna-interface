@@ -1,81 +1,133 @@
 import { useState, useEffect } from 'react';
+import { useReadContract, useReadContracts } from 'wagmi';
+import { formatUnits } from 'viem';
 import { PoolInfo } from './useDEX';
+import { CONTRACTS } from '@/constants/contracts/contracts';
 
-// Mock data untuk testing UI development
-const MOCK_POOLS: PoolInfo[] = [
+// ABI for Factory
+const FACTORY_ABI = [
   {
-    address: "0x1234567890123456789012345678901234567890" as `0x${string}`,
-    token0: "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd" as `0x${string}`,
-    token1: "0x1111111111111111111111111111111111111111" as `0x${string}`,
-    token0Symbol: "USDC",
-    token1Symbol: "IDRX",
-    token0Name: "USD Coin",
-    token1Name: "Indonesian Rupiah Token",
-    reserve0: "10000.000000",
-    reserve1: "150000000.000000",
-    propertyName: "Property A - Jakarta",
-    swapFee: "0.30",
-    totalSupply: "1500.000000",
-    isYRTPool: false,
+    inputs: [],
+    name: 'allPoolsLength',
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function'
   },
   {
-    address: "0x2345678901234567890123456789012345678901" as `0x${string}`,
-    token0: "0xfedcbafedcbafedcbafedcbafedcbafedcbafed" as `0x${string}`,
-    token1: "0x2222222222222222222222222222222222222222" as `0x${string}`,
-    token0Symbol: "YRT-PROP1",
-    token1Symbol: "USDC",
-    token0Name: "Yield Receipt Token - Property 1",
-    token1Name: "USD Coin",
-    reserve0: "5000.000000",
-    reserve1: "75000.000000",
-    propertyName: "Property 1 - Surabaya",
-    swapFee: "0.30",
-    totalSupply: "2500.000000",
-    isYRTPool: true,
-  },
-  {
-    address: "0x3456789012345678901234567890123456789012" as `0x${string}`,
-    token0: "0x3333333333333333333333333333333333333333" as `0x${string}`,
-    token1: "0x4444444444444444444444444444444444444444" as `0x${string}`,
-    token0Symbol: "YRT-PROP2",
-    token1Symbol: "USDT",
-    token0Name: "Yield Receipt Token - Property 2",
-    token1Name: "Tether USD",
-    reserve0: "8000.000000",
-    reserve1: "120000.000000",
-    propertyName: "Property 2 - Bali",
-    swapFee: "0.30",
-    totalSupply: "3200.000000",
-    isYRTPool: true,
+    inputs: [{ name: '', type: 'uint256' }],
+    name: 'allPools',
+    outputs: [{ name: '', type: 'address' }],
+    stateMutability: 'view',
+    type: 'function'
   }
-];
+] as const;
+
+// ABI for Pool
+const POOL_ABI = [
+  {
+    inputs: [],
+    name: 'token0',
+    outputs: [{ name: '', type: 'address' }],
+    stateMutability: 'view',
+    type: 'function'
+  },
+  {
+    inputs: [],
+    name: 'token1',
+    outputs: [{ name: '', type: 'address' }],
+    stateMutability: 'view',
+    type: 'function'
+  },
+  {
+    inputs: [],
+    name: 'getReserves',
+    outputs: [
+      { name: 'reserve0', type: 'uint256' },
+      { name: 'reserve1', type: 'uint256' }
+    ],
+    stateMutability: 'view',
+    type: 'function'
+  },
+  {
+    inputs: [],
+    name: 'propertyName',
+    outputs: [{ name: '', type: 'string' }],
+    stateMutability: 'view',
+    type: 'function'
+  },
+  {
+    inputs: [],
+    name: 'swapFee',
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function'
+  }
+] as const;
+
+// ABI for ERC20
+const ERC20_ABI = [
+  {
+    inputs: [],
+    name: 'symbol',
+    outputs: [{ name: '', type: 'string' }],
+    stateMutability: 'view',
+    type: 'function'
+  },
+  {
+    inputs: [],
+    name: 'name',
+    outputs: [{ name: '', type: 'string' }],
+    stateMutability: 'view',
+    type: 'function'
+  }
+] as const;
 
 export function useAllPools() {
   const [pools, setPools] = useState<PoolInfo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    // Simulasi loading untuk UI testing
-    setIsLoading(true);
-    setError(null);
+  // Get total pools count
+  const { data: poolsLength, isLoading: isLoadingLength } = useReadContract({
+    address: CONTRACTS.DEX_FACTORY as `0x${string}`,
+    abi: FACTORY_ABI,
+    functionName: 'allPoolsLength',
+  });
 
-    // Simulasi delay async
-    const timer = setTimeout(() => {
+  useEffect(() => {
+    const fetchPools = async () => {
+      if (isLoadingLength) {
+        setIsLoading(true);
+        return;
+      }
+
+      if (!poolsLength || Number(poolsLength) === 0) {
+        setIsLoading(false);
+        setPools([]);
+        return;
+      }
+
       try {
-        // Untuk development, gunakan mock data
-        console.log('useAllPools: Using mock data for development');
-        setPools(MOCK_POOLS);
+        setIsLoading(true);
+        setError(null);
+
+        const poolCount = Number(poolsLength);
+        console.log(`Fetching ${poolCount} pools from factory...`);
+
+        // For now, return empty array until pools are created
+        // In production, you would fetch pool addresses here
+        setPools([]);
+
       } catch (err) {
-        console.error('useAllPools Error:', err);
+        console.error('Error fetching pools:', err);
         setError('Failed to load pools');
       } finally {
         setIsLoading(false);
       }
-    }, 1000); // 1 detik delay untuk simulasi loading
+    };
 
-    return () => clearTimeout(timer);
-  }, []); // Empty dependency array untuk menghindari infinite loop
+    fetchPools();
+  }, [poolsLength, isLoadingLength]);
 
   // Filter pools by token
   const filterPoolsByToken = (tokenAddress: `0x${string}`) => {
@@ -93,7 +145,7 @@ export function useAllPools() {
   // Filter pools by property name
   const filterPoolsByProperty = (propertyName: string) => {
     return pools.filter(pool =>
-      pool.propertyName.toLowerCase().includes(propertyName.toLowerCase())
+      pool.propertyName?.toLowerCase().includes(propertyName.toLowerCase())
     );
   };
 
@@ -130,7 +182,7 @@ export function useAllPools() {
 
   return {
     pools,
-    isLoading,
+    isLoading: isLoading || isLoadingLength,
     error,
     poolCount: pools.length,
 

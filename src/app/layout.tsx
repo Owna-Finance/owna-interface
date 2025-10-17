@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Kantumruy_Pro } from "next/font/google";
-import { OnchainProviders } from "@/providers/rainbowkit-provider";
+import { OnchainKitProviders } from "@/providers/onchainkit-provider";
 import { Toaster } from "@/components/ui/sonner";
+import "@coinbase/onchainkit/styles.css";
 import "./globals.css";
 
 const kantumruyPro = Kantumruy_Pro({
@@ -135,10 +136,10 @@ export default function RootLayout({
         className={`${kantumruyPro.variable} antialiased bg-black overscroll-none`}
         style={{ overscrollBehavior: 'none' }}
       >
-        <OnchainProviders>
+        <OnchainKitProviders>
           {children}
           <Toaster position="bottom-right" />
-        </OnchainProviders>
+        </OnchainKitProviders>
       </body>
     </html>
   );

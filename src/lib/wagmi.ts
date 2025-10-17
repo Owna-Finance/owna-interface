@@ -1,18 +1,19 @@
 import { http, createConfig, cookieStorage, createStorage } from 'wagmi';
-import { metaMask, walletConnect } from 'wagmi/connectors';
+import { coinbaseWallet, metaMask, injected } from 'wagmi/connectors';
 import { CHAIN } from '@/constants/chain';
 
-// Get projectId from https://cloud.reown.com
-export const projectId = process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || 'demo-project-id';
-
-// Base Sepolia Testnet Only Configuration
+// Base Sepolia Testnet Only Configuration with Coinbase Wallet focus
 export const config = createConfig({
   chains: [CHAIN], // ✅ Only Base Sepolia Testnet
   connectors: [
+    coinbaseWallet({
+      appName: 'Owna Finance',
+      appLogoUrl: 'https://owna.finance/logo.png', // Update with your logo
+      preference: 'all', // Allow all wallet options from Coinbase
+    }),
     metaMask(),
-    walletConnect({
-      projectId,
-      showQrModal: false, // Hide QR modal for better UX
+    injected({
+      shimDisconnect: true,
     }),
   ],
   storage: createStorage({

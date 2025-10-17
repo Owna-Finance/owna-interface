@@ -1,6 +1,7 @@
 import { useReadContract } from 'wagmi';
 import { CONTRACTS } from '@/constants/contracts/contracts';
 import { YRT_FACTORY_ABI } from '@/constants/abis/YRT_FACTORY_Abi';
+import { formatAmount } from '@coinbase/onchainkit/token';
 
 export interface SeriesInfo {
   tokenAddress: `0x${string}`;
@@ -16,6 +17,28 @@ export interface SeriesWithSlug {
   info: SeriesInfo;
   slug: string;
 }
+
+// Utility functions for formatting YRT data using OnchainKit
+const formatTokenAmount = (amount: bigint | string, decimals: number = 18): string => {
+  const amountStr = typeof amount === 'bigint' ? amount.toString() : amount;
+  return formatAmount(String(Number(amountStr) / Math.pow(10, decimals)));
+};
+
+const formatDate = (timestamp: bigint | number): string => {
+  const ts = typeof timestamp === 'bigint' ? Number(timestamp) : timestamp;
+  return new Date(ts * 1000).toLocaleDateString();
+};
+
+const formatSeriesInfo = (info: any) => {
+  if (!info) return null;
+
+  return {
+    ...info,
+    formattedSupply: formatTokenAmount(info.initialSupply),
+    formattedCreatedAt: formatDate(info.createdAt),
+    tokenPriceFormatted: formatTokenAmount(info.tokenPrice || '0'),
+  };
+};
 
 export function useYRTSeries() {
   // Get all series IDs
@@ -133,5 +156,10 @@ export function useYRTSeries() {
     isValidSlug,
     extractSymbolFromSlug,
     getTokenSymbolFromSlug,
+
+    // OnchainKit enhanced utilities
+    formatTokenAmount,
+    formatDate,
+    formatSeriesInfo,
   };
 }

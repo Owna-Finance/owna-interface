@@ -27,7 +27,7 @@ export function LiquidityPoolTable({ onPoolSelect, selectedPool }: LiquidityPool
   const filteredPools = useMemo(() => {
     if (!pools || pools.length === 0) return [];
 
-    return pools.filter(pool => {
+    return pools.filter(() => {
       // This is a placeholder - we'd need to fetch pool details
       // For now, we'll just return all pools
       return true;
@@ -103,7 +103,7 @@ export function LiquidityPoolTable({ onPoolSelect, selectedPool }: LiquidityPool
             </tr>
           </thead>
           <tbody>
-            {filteredPools.map((poolAddress, index) => (
+            {filteredPools.map((poolAddress) => (
               <PoolRow
                 key={poolAddress}
                 poolAddress={poolAddress}
@@ -125,9 +125,20 @@ interface PoolRowProps {
 }
 
 function PoolRow({ poolAddress, onSelect, isSelected }: PoolRowProps) {
-  const tokenAInfo = useTokenInfo(poolAddress);
-  const tokenBInfo = useTokenInfo(poolAddress);
   const { reserves, token0, token1, propertyName, isLoading: isLoadingPool } = usePoolDetails(poolAddress);
+  const tokenAInfo = useTokenInfo(token0 as `0x${string}`);
+  const tokenBInfo = useTokenInfo(token1 as `0x${string}`);
+
+  // Handle loading state
+  if (isLoadingPool || !token0 || !token1) {
+    return (
+      <tr>
+        <td colSpan={7} className="py-4 px-4 text-center text-gray-400">
+          Loading pool data...
+        </td>
+      </tr>
+    );
+  }
 
   // Calculate real data from contracts
   const tokenASymbol = tokenAInfo?.symbol?.toString() || 'YRT';
@@ -149,7 +160,7 @@ function PoolRow({ poolAddress, onSelect, isSelected }: PoolRowProps) {
   const change24h = 0;
 
   // Get token logos
-  const getTokenLogo = (symbol: string, address: string) => {
+  const getTokenLogo = (symbol: string) => {
     if (symbol === 'USDC') return '/Images/Logo/usdc-logo.png';
     if (symbol === 'IDRX') return '/Images/Logo/idrx-logo.svg';
     return '/Images/Logo/logo_YRT.jpg'; // Default for YRT tokens
@@ -176,10 +187,10 @@ function PoolRow({ poolAddress, onSelect, isSelected }: PoolRowProps) {
         <div className="flex items-center space-x-3">
           <div className="flex items-center space-x-2">
             <div className="w-8 h-8 bg-[#2A2A2A] rounded-full flex items-center justify-center">
-              <Image src={getTokenLogo(tokenASymbol, token0?.toString() || '')} alt={tokenASymbol} width={16} height={16} />
+              <Image src={getTokenLogo(tokenASymbol)} alt={tokenASymbol} width={16} height={16} />
             </div>
             <div className="w-8 h-8 bg-[#2A2A2A] rounded-full flex items-center justify-center -ml-2">
-              <Image src={getTokenLogo(tokenBSymbol, token1?.toString() || '')} alt={tokenBSymbol} width={16} height={16} />
+              <Image src={getTokenLogo(tokenBSymbol)} alt={tokenBSymbol} width={16} height={16} />
             </div>
           </div>
           <div>
@@ -187,7 +198,7 @@ function PoolRow({ poolAddress, onSelect, isSelected }: PoolRowProps) {
               {tokenASymbol} / {tokenBSymbol}
             </div>
             <div className="text-xs text-gray-400">
-              Pool: {poolAddress.slice(0, 6)}...{poolAddress.slice(-4)}
+              {propertyName ? String(propertyName) : `Pool ${poolAddress.slice(0, 6)}...${poolAddress.slice(-4)}`}
             </div>
           </div>
         </div>

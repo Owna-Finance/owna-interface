@@ -61,7 +61,7 @@ export function useDEX() {
   // Get pool address for token pair through factory (READ only)
   const useGetPool = (tokenA: `0x${string}`, tokenB: `0x${string}`) => {
     return useReadContract({
-      address: CONTRACTS.DEX_FACTORY_ADDRESS as `0x${string}`,
+      address: CONTRACTS.DEX_FACTORY as `0x${string}`,
       abi: DEX_FACTORY_ABI,
       functionName: 'getPool',
       args: [tokenA, tokenB],
@@ -74,7 +74,7 @@ export function useDEX() {
     isLoading: isLoadingPoolsLength,
     error: poolsLengthError
   } = useReadContract({
-    address: CONTRACTS.DEX_FACTORY_ADDRESS as `0x${string}`,
+    address: CONTRACTS.DEX_FACTORY as `0x${string}`,
     abi: DEX_FACTORY_ABI,
     functionName: 'allPoolsLength',
   });
@@ -82,7 +82,7 @@ export function useDEX() {
   // Get pool at specific index through factory (READ only)
   const useAllPools = (index: number) => {
     return useReadContract({
-      address: CONTRACTS.DEX_FACTORY_ADDRESS as `0x${string}`,
+      address: CONTRACTS.DEX_FACTORY as `0x${string}`,
       abi: DEX_FACTORY_ABI,
       functionName: 'allPools',
       args: [BigInt(index)],
@@ -207,7 +207,7 @@ export function useDEX() {
   const {
     data: feeRecipient
   } = useReadContract({
-    address: CONTRACTS.DEX_FACTORY_ADDRESS as `0x${string}`,
+    address: CONTRACTS.DEX_FACTORY as `0x${string}`,
     abi: DEX_FACTORY_ABI,
     functionName: 'feeRecipient',
   });

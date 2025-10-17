@@ -4,6 +4,14 @@ import Image from 'next/image';
 import { useState, useEffect, useRef } from 'react';
 import { useTokenInfo, usePoolDetails } from '@/hooks';
 import { CONTRACTS } from '@/constants/contracts/contracts';
+import {
+  TokenSelectDropdown,
+  TokenRow,
+  TokenImage,
+  TokenChip,
+  formatAmount,
+} from '@coinbase/onchainkit/token';
+import { base } from 'viem/chains';
 
 export interface TokenOption {
   value: string; // Contract address or 'USDC'/'IDRX'
@@ -12,6 +20,18 @@ export interface TokenOption {
   address?: `0x${string}`;
   isYRT?: boolean;
   poolAddress?: `0x${string}`;
+}
+
+// Convert TokenOption to OnchainKit Token format
+function convertToOnchainKitToken(option: TokenOption) {
+  return {
+    address: option.address as `0x${string}`,
+    chainId: base.id,
+    decimals: 18, // Mock USDC/IDRX use 18 decimals
+    image: option.logo,
+    name: option.label,
+    symbol: option.label,
+  };
 }
 
 interface TokenInputProps {
@@ -145,8 +165,11 @@ interface TokenDropdownProps {
 }
 
 function TokenDropdown({ value, onChange, options, isOpen, setIsOpen, dropdownRef }: TokenDropdownProps) {
+  const onchainKitOptions = options.map(convertToOnchainKitToken);
+
   return (
     <div className="relative" ref={dropdownRef}>
+      {/* Custom Token Select Button */}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
@@ -154,11 +177,9 @@ function TokenDropdown({ value, onChange, options, isOpen, setIsOpen, dropdownRe
       >
         {value ? (
           <>
-            <Image
-              src={value.logo}
-              alt={value.label}
-              width={16}
-              height={16}
+            <TokenImage
+              token={convertToOnchainKitToken(value)}
+              size={16}
               className="rounded-full"
             />
             <span>{value.label}</span>
@@ -170,38 +191,26 @@ function TokenDropdown({ value, onChange, options, isOpen, setIsOpen, dropdownRe
       </button>
 
       {isOpen && (
-        <div className="absolute top-full right-0 mt-1 bg-[#111111] border border-[#2A2A2A] rounded-lg shadow-lg z-10 min-w-[160px] max-h-60 overflow-y-auto">
+        <div className="absolute top-full right-0 mt-1 bg-[#111111] border border-[#2A2A2A] rounded-lg shadow-lg z-10 min-w-[200px] max-h-60 overflow-y-auto">
           {/* Group: Stablecoins */}
           <div className="px-2 py-1 text-xs text-gray-400 font-medium border-b border-[#2A2A2A]">
             Stablecoins
           </div>
-          {options.filter(opt => !opt.isYRT).map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              onClick={() => {
-                onChange(option);
-                setIsOpen(false);
-              }}
-              className="w-full px-3 py-2 text-left text-white hover:bg-[#1A1A1A] flex items-center space-x-2"
-            >
-              <Image
-                src={option.logo}
-                alt={option.label}
-                width={16}
-                height={16}
-                className="rounded-full"
-              />
-              <span>{option.label}</span>
-              {value?.value === option.value && (
-                <div className="ml-auto">
-                  <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
-                </div>
-              )}
-            </button>
-          ))}
+          {options.filter(opt => !opt.isYRT).map((option) => {
+            const onchainKitToken = convertToOnchainKitToken(option);
+            return (
+              <div key={option.value} className="px-1">
+                <TokenRow
+                  token={onchainKitToken}
+                  onClick={() => {
+                    onChange(option);
+                    setIsOpen(false);
+                  }}
+                  className="text-white hover:bg-[#1A1A1A] rounded"
+                />
+              </div>
+            );
+          })}
 
           {/* Group: YRT Tokens */}
           {options.filter(opt => opt.isYRT).length > 0 && (
@@ -209,40 +218,26 @@ function TokenDropdown({ value, onChange, options, isOpen, setIsOpen, dropdownRe
               <div className="px-2 py-1 text-xs text-gray-400 font-medium border-b border-[#2A2A2A] mt-2">
                 YRT Tokens
               </div>
-              {options.filter(opt => opt.isYRT).map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => {
-                    onChange(option);
-                    setIsOpen(false);
-                  }}
-                  className="w-full px-3 py-2 text-left text-white hover:bg-[#1A1A1A] flex items-center space-x-2"
-                >
-                  <Image
-                    src={option.logo}
-                    alt={option.label}
-                    width={16}
-                    height={16}
-                    className="rounded-full"
-                  />
-                  <div className="flex-1">
-                    <span>{option.label}</span>
+              {options.filter(opt => opt.isYRT).map((option) => {
+                const onchainKitToken = convertToOnchainKitToken(option);
+                return (
+                  <div key={option.value} className="px-1">
+                    <TokenRow
+                      token={onchainKitToken}
+                      onClick={() => {
+                        onChange(option);
+                        setIsOpen(false);
+                      }}
+                      className="text-white hover:bg-[#1A1A1A] rounded"
+                    />
                     {option.poolAddress && (
-                      <div className="text-xs text-gray-400">
-                        {option.poolAddress.slice(0, 6)}...{option.poolAddress.slice(-4)}
+                      <div className="px-3 pb-2 text-xs text-gray-400">
+                        Pool: {option.poolAddress.slice(0, 6)}...{option.poolAddress.slice(-4)}
                       </div>
                     )}
                   </div>
-                  {value?.value === option.value && (
-                    <div className="ml-auto">
-                      <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                  )}
-                </button>
-              ))}
+                );
+              })}
             </>
           )}
         </div>
