@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Gift, Send, AlertCircle } from 'lucide-react';
+import Image from 'next/image';
 
 export function YieldDistributionTab() {
   const { address } = useAccount();
@@ -23,8 +24,16 @@ export function YieldDistributionTab() {
   } = useDepositYield();
   const { distributeToAllHolders, isLoading: isDistributePending } = useDistributeToAllHolders();
 
-  // Fetch only series owned by connected wallet
-  const { ownedSeries, isLoading: isLoadingSeries } = useUserOwnedSeries();
+  // Fetch only series owned by connected wallet (currently unused)
+  // const { ownedSeries, isLoading: isLoadingSeries } = useUserOwnedSeries();
+
+  // Temporary mock data matching the Select Pool format
+  const mockProperties = [
+    { id: '1', name: 'Sudirman Residence Pool', tokenPair: 'USDC/YRT-SDR' },
+    { id: '2', name: 'Sudirman Residence Pool', tokenPair: 'YRT-SDR/USDC' },
+    { id: '3', name: 'Sudirman Residence Pool', tokenPair: 'YRT-SDR/USDC' },
+    { id: '4', name: 'Sudirman Residence Pool', tokenPair: 'YRT-SDR/USDC' }
+  ];
 
   const [activeAction, setActiveAction] = useState<'deposit' | 'distribute'>('deposit');
   const [isApproving, setIsApproving] = useState(false);
@@ -182,25 +191,30 @@ export function YieldDistributionTab() {
                   <Select
                     value={depositForm.seriesId}
                     onValueChange={(value) => setDepositForm(prev => ({ ...prev, seriesId: value }))}
-                    disabled={isDepositPending || isLoadingSeries || ownedSeries.length === 0}
+                    disabled={isDepositPending}
                   >
                     <SelectTrigger className="bg-[#2A2A2A]/50 border-[#3A3A3A] text-white">
-                      <SelectValue placeholder={
-                        isLoadingSeries
-                          ? "Loading..."
-                          : ownedSeries.length === 0
-                            ? "No properties owned"
-                            : "Select property..."
-                      } />
+                      <SelectValue placeholder="Select property..." />
                     </SelectTrigger>
                     <SelectContent className="bg-[#2A2A2A] border-[#3A3A3A]">
-                      {ownedSeries.map((series) => (
+                      {mockProperties.map((property) => (
                         <SelectItem
-                          key={series.seriesId.toString()}
-                          value={series.seriesId.toString()}
-                          className="text-white hover:bg-[#3A3A3A]"
+                          key={property.id}
+                          value={property.id}
+                          className="text-white hover:bg-[#3A3A3A] py-3"
                         >
-                          {series.propertyName} (Series #{series.seriesId.toString()})
+                          <div className="flex items-center space-x-3">
+                            <div className="w-6 h-6 bg-[#3A3A3A] rounded-full flex items-center justify-center flex-shrink-0">
+                              <Image 
+                                src="/Images/Logo/logo_YRT.jpg" 
+                                alt="YRT Logo" 
+                                width={16} 
+                                height={16} 
+                                className="rounded-full"
+                              />
+                            </div>
+                            <span>{property.name} ({property.tokenPair})</span>
+                          </div>
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -357,25 +371,30 @@ export function YieldDistributionTab() {
                   <Select
                     value={distributeForm.seriesId}
                     onValueChange={(value) => setDistributeForm(prev => ({ ...prev, seriesId: value }))}
-                    disabled={isDistributePending || isLoadingSeries || ownedSeries.length === 0}
+                    disabled={isDistributePending}
                   >
                     <SelectTrigger className="bg-[#2A2A2A]/50 border-[#3A3A3A] text-white">
-                      <SelectValue placeholder={
-                        isLoadingSeries
-                          ? "Loading..."
-                          : ownedSeries.length === 0
-                            ? "No properties owned"
-                            : "Select property..."
-                      } />
+                      <SelectValue placeholder="Select property..." />
                     </SelectTrigger>
                     <SelectContent className="bg-[#2A2A2A] border-[#3A3A3A]">
-                      {ownedSeries.map((series) => (
+                      {mockProperties.map((property) => (
                         <SelectItem
-                          key={series.seriesId.toString()}
-                          value={series.seriesId.toString()}
-                          className="text-white hover:bg-[#3A3A3A]"
+                          key={property.id}
+                          value={property.id}
+                          className="text-white hover:bg-[#3A3A3A] py-3"
                         >
-                          {series.propertyName} (Series #{series.seriesId.toString()})
+                          <div className="flex items-center space-x-3">
+                            <div className="w-6 h-6 bg-[#3A3A3A] rounded-full flex items-center justify-center flex-shrink-0">
+                              <Image 
+                                src="/Images/Logo/logo_YRT.jpg" 
+                                alt="YRT Logo" 
+                                width={16} 
+                                height={16} 
+                                className="rounded-full"
+                              />
+                            </div>
+                            <span>{property.name} ({property.tokenPair})</span>
+                          </div>
                         </SelectItem>
                       ))}
                     </SelectContent>

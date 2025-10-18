@@ -67,7 +67,7 @@ export function useTabs() {
 export function TabsList({ className, children }: TabsListProps) {
   return (
     <div className={cn(
-      "inline-flex h-10 items-center justify-center rounded-md bg-[#111111] border border-[#2A2A2A] p-1 text-gray-400",
+      "inline-flex h-15 items-center justify-center rounded-md bg-[#111111] border border-[#2A2A2A] p-1 text-gray-400",
       className
     )}>
       {children}

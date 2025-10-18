@@ -187,10 +187,10 @@ function PoolRow({ poolAddress, onSelect, isSelected }: PoolRowProps) {
         <div className="flex items-center space-x-3">
           <div className="flex items-center space-x-2">
             <div className="w-8 h-8 bg-[#2A2A2A] rounded-full flex items-center justify-center">
-              <Image src={getTokenLogo(tokenASymbol)} alt={tokenASymbol} width={16} height={16} />
+              <Image src={getTokenLogo(tokenASymbol)} alt={tokenASymbol} width={16} height={16} className="rounded-full" />
             </div>
             <div className="w-8 h-8 bg-[#2A2A2A] rounded-full flex items-center justify-center -ml-2">
-              <Image src={getTokenLogo(tokenBSymbol)} alt={tokenBSymbol} width={16} height={16} />
+              <Image src={getTokenLogo(tokenBSymbol)} alt={tokenBSymbol} width={16} height={16} className="rounded-full" />
             </div>
           </div>
           <div>

@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Droplets, Plus, Info } from 'lucide-react';
 import { formatUnits } from 'viem';
+import Image from 'next/image';
 
 export function LiquidityManagementTab() {
   const { address } = useAccount();
@@ -116,9 +117,20 @@ export function LiquidityManagementTab() {
                   <SelectItem
                     key={pool.poolAddress}
                     value={pool.poolAddress}
-                    className="text-white hover:bg-[#3A3A3A]"
+                    className="text-white hover:bg-[#3A3A3A] py-3"
                   >
-                    {pool.propertyName} ({pool.token0Symbol}/{pool.token1Symbol})
+                    <div className="flex items-center space-x-3">
+                      <div className="w-6 h-6 bg-[#3A3A3A] rounded-full flex items-center justify-center flex-shrink-0">
+                        <Image 
+                          src="/Images/Logo/logo_YRT.jpg" 
+                          alt="YRT Logo" 
+                          width={16} 
+                          height={16} 
+                          className="rounded-full"
+                        />
+                      </div>
+                      <span>{pool.propertyName} ({pool.token0Symbol}/{pool.token1Symbol})</span>
+                    </div>
                   </SelectItem>
                 ))}
               </SelectContent>

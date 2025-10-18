@@ -12,13 +12,22 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Calendar, Clock, CheckCircle2 } from 'lucide-react';
+import Image from 'next/image';
 
 export function PeriodManagementTab() {
   const { address } = useAccount();
   const { startNewPeriod, isPending, isSuccess } = useStartNewPeriod();
 
-  // Fetch only series owned by connected wallet
-  const { ownedSeries, isLoading: isLoadingSeries, error: seriesError } = useUserOwnedSeries();
+  // Fetch only series owned by connected wallet (currently unused)
+  // const { ownedSeries, isLoading: isLoadingSeries, error: seriesError } = useUserOwnedSeries();
+
+  // Temporary mock data with proper series IDs for smart contract
+  const mockProperties = [
+    { seriesId: '1', propertyName: 'Sudirman Residence Pool', tokenPair: 'USDC/YRT-SDR' },
+    { seriesId: '2', propertyName: 'Sudirman Residence Pool', tokenPair: 'YRT-SDR/USDC' },
+    { seriesId: '3', propertyName: 'Sudirman Residence Pool', tokenPair: 'YRT-SDR/USDC' },
+    { seriesId: '4', propertyName: 'Sudirman Residence Pool', tokenPair: 'YRT-SDR/USDC' }
+  ];
 
   const [formData, setFormData] = useState({
     seriesId: '',
@@ -81,40 +90,37 @@ export function PeriodManagementTab() {
                 <Select
                   value={formData.seriesId}
                   onValueChange={(value) => setFormData(prev => ({ ...prev, seriesId: value }))}
-                  disabled={isPending || isLoadingSeries || ownedSeries.length === 0}
+                  disabled={isPending}
                 >
                   <SelectTrigger className="bg-[#2A2A2A]/50 border-[#3A3A3A] text-white">
-                    <SelectValue placeholder={
-                      isLoadingSeries
-                        ? "Loading your properties..."
-                        : ownedSeries.length === 0
-                          ? "No properties owned"
-                          : "Choose a property..."
-                    } />
+                    <SelectValue placeholder="Choose a property..." />
                   </SelectTrigger>
                   <SelectContent className="bg-[#2A2A2A] border-[#3A3A3A]">
-                    {ownedSeries.map((series) => (
+                    {mockProperties.map((property) => (
                       <SelectItem
-                        key={series.seriesId.toString()}
-                        value={series.seriesId.toString()}
-                        className="text-white hover:bg-[#3A3A3A]"
+                        key={property.seriesId}
+                        value={property.seriesId}
+                        className="text-white hover:bg-[#3A3A3A] py-3"
                       >
-                        <div className="flex flex-col">
-                          <span className="font-medium">{series.propertyName}</span>
-                          <span className="text-xs text-gray-400">Series #{series.seriesId.toString()}</span>
+                        <div className="flex items-center space-x-3">
+                          <div className="w-6 h-6 bg-[#3A3A3A] rounded-full flex items-center justify-center flex-shrink-0">
+                            <Image 
+                              src="/Images/Logo/logo_YRT.jpg" 
+                              alt="YRT Logo" 
+                              width={16} 
+                              height={16} 
+                              className="rounded-full"
+                            />
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="font-medium">{property.propertyName}</span>
+                            <span className="text-xs text-gray-400">Series #{property.seriesId} • {property.tokenPair}</span>
+                          </div>
                         </div>
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                {!isLoadingSeries && ownedSeries.length === 0 && (
-                  <p className="text-xs text-red-400">
-                    You don't own any properties. Create a property first in the Add Property page.
-                  </p>
-                )}
-                {seriesError && (
-                  <p className="text-xs text-red-400">Error loading properties: {seriesError}</p>
-                )}
               </div>
 
               <div className="space-y-2">

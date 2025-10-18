@@ -49,13 +49,8 @@ export function ListingsTable({
   };
 
   const getYRTName = (address: string) => {
-    if (
-      address.toLowerCase() ===
-      "0x4e0f63A8a31156DE5d232F47AD7aAFd2C9014991".toLowerCase()
-    ) {
-      return "YRT-SUDIRMAN";
-    }
-    return `YRT-${address.slice(2, 8).toUpperCase()}`;
+    // Return consistent name for all YRT tokens
+    return "YRT-Sudirman";
   };
 
   const sellOrders = orders;

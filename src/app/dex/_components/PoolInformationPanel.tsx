@@ -78,10 +78,10 @@ export function PoolInformationPanel({ poolAddress }: PoolInformationPanelProps)
       <div className="flex items-center justify-center space-x-3 mb-6">
         <div className="flex items-center space-x-2">
           <div className="w-10 h-10 bg-[#2A2A2A] rounded-full flex items-center justify-center">
-            <Image src={tokenA.logo} alt={tokenA.symbol} width={20} height={20} />
+            <Image src={tokenA.logo} alt={tokenA.symbol} width={20} height={20} className="rounded-full" />
           </div>
           <div className="w-10 h-10 bg-[#2A2A2A] rounded-full flex items-center justify-center -ml-2">
-            <Image src={tokenB.logo} alt={tokenB.symbol} width={20} height={20} />
+            <Image src={tokenB.logo} alt={tokenB.symbol} width={20} height={20} className="rounded-full" />
           </div>
         </div>
         <div className="text-center">
@@ -141,14 +141,14 @@ export function PoolInformationPanel({ poolAddress }: PoolInformationPanelProps)
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <div className="flex items-center space-x-2">
-                    <Image src={tokenA.logo} alt={tokenA.symbol} width={16} height={16} />
+                    <Image src={tokenA.logo} alt={tokenA.symbol} width={16} height={16} className="rounded-full" />
                     <span className="text-white">{tokenA.symbol}</span>
                   </div>
                   <span className="text-white font-medium">{parseFloat(reserveA).toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">
                   <div className="flex items-center space-x-2">
-                    <Image src={tokenB.logo} alt={tokenB.symbol} width={16} height={16} />
+                    <Image src={tokenB.logo} alt={tokenB.symbol} width={16} height={16} className="rounded-full" />
                     <span className="text-white">{tokenB.symbol}</span>
                   </div>
                   <span className="text-white font-medium">{parseFloat(reserveB).toLocaleString()}</span>

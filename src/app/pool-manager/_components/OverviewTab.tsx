@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { TrendingUp, Droplets, DollarSign, BarChart3, ExternalLink } from 'lucide-react';
 import { formatUnits } from 'viem';
+import Image from 'next/image';
 
 export function OverviewTab() {
   const { address } = useAccount();
@@ -150,8 +151,14 @@ export function OverviewTab() {
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
-                      <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                        <Droplets className="w-6 h-6 text-white" />
+                      <div className="w-12 h-12 bg-[#2A2A2A] rounded-full flex items-center justify-center">
+                        <Image 
+                          src="/Images/Logo/logo_YRT.jpg" 
+                          alt="YRT Logo" 
+                          width={32} 
+                          height={32} 
+                          className="rounded-full"
+                        />
                       </div>
                       <div>
                         <h3 className="text-lg font-semibold text-white">
