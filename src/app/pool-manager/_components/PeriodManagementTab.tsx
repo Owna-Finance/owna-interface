@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useAccount } from 'wagmi';
 import { useStartNewPeriod } from '@/hooks/useStartNewPeriod';
 import { useUserPools } from '@/hooks/useUserPools';
@@ -16,7 +16,7 @@ import Image from 'next/image';
 
 export function PeriodManagementTab() {
   const { address } = useAccount();
-  const { startNewPeriod, isPending, isSuccess } = useStartNewPeriod();
+  const { startNewPeriod, isPending } = useStartNewPeriod();
 
   // Fetch YRT series from user pools (more reliable approach)
   const { pools, isLoading: isLoadingPools, error: poolsError } = useUserPools();
@@ -32,7 +32,7 @@ export function PeriodManagementTab() {
 
   const [formData, setFormData] = useState({
     seriesId: '',
-    durationDays: '30'
+    durationSeconds: '2592000' // 30 days in seconds
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -43,7 +43,7 @@ export function PeriodManagementTab() {
       return;
     }
 
-    if (!formData.seriesId || !formData.durationDays) {
+    if (!formData.seriesId || !formData.durationSeconds) {
       toast.error('Please fill in all fields');
       return;
     }
@@ -51,16 +51,14 @@ export function PeriodManagementTab() {
     try {
       toast.loading('Starting new period...', { id: 'start-period' });
 
-      const durationSeconds = parseInt(formData.durationDays) * 24 * 60 * 60;
-
       await startNewPeriod({
         seriesId: formData.seriesId,
-        durationInSeconds: durationSeconds
+        durationInSeconds: BigInt(formData.durationSeconds)
       });
 
       toast.success('New period started successfully!', { id: 'start-period' });
 
-      setFormData({ seriesId: '', durationDays: '30' });
+      setFormData({ seriesId: '', durationSeconds: '2592000' });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to start period', {
         id: 'start-period'
@@ -141,22 +139,22 @@ export function PeriodManagementTab() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="durationDays" className="text-gray-300">
-                  Fundraising Duration (Days)
+                <Label htmlFor="durationSeconds" className="text-gray-300">
+                  Fundraising Duration (Seconds)
                 </Label>
                 <Input
-                  id="durationDays"
+                  id="durationSeconds"
                   type="number"
-                  value={formData.durationDays}
-                  onChange={(e) => setFormData(prev => ({ ...prev, durationDays: e.target.value }))}
-                  placeholder="30"
-                  min="1"
-                  max="365"
+                  value={formData.durationSeconds}
+                  onChange={(e) => setFormData(prev => ({ ...prev, durationSeconds: e.target.value }))}
+                  placeholder="2592000"
+                  min="60"
+                  max="31536000"
                   className="bg-[#2A2A2A]/50 border-[#3A3A3A] text-white placeholder-gray-500"
                   disabled={isPending}
                 />
                 <p className="text-xs text-gray-500">
-                  Recommended: 30 days for fundraising periods
+                  Enter duration in seconds. Example: 2592000 = 30 days, 86400 = 1 day
                 </p>
               </div>
             </div>
