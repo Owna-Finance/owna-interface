@@ -15,10 +15,10 @@ export interface DistributionValidation {
 /**
  * Hook to validate if distribution can be executed
  * Checks:
- * 1. Period is active
- * 2. Period has matured
- * 3. Snapshot has been taken
- * 4. Period has yield deposited
+ * 1. Period has matured (matured periods can distribute even if inactive)
+ * 2. Snapshot has been taken
+ * 3. Period has yield deposited
+ * Note: Period doesn't need to be active to distribute - matured periods can still distribute
  */
 export function useDistributionValidation(
   seriesId: string | undefined,
@@ -88,10 +88,9 @@ export function useDistributionValidation(
   let canDistribute = true;
   let errorMessage: string | undefined;
 
-  if (!isActive) {
-    canDistribute = false;
-    errorMessage = 'Period is not active';
-  } else if (!isPeriodMatured) {
+  // Period must be matured to distribute, but doesn't need to be active
+  // Matured periods can still distribute even if they're no longer active
+  if (!isPeriodMatured) {
     canDistribute = false;
     errorMessage = 'Period has not matured yet';
   } else if (!snapshotTaken) {
@@ -101,6 +100,7 @@ export function useDistributionValidation(
     canDistribute = false;
     errorMessage = 'No yield deposited for this period';
   }
+  // Note: We don't check isActive here because matured periods can still distribute
 
   return {
     canDistribute,

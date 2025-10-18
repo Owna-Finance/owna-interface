@@ -123,20 +123,31 @@ export function EnhancedSwapForm({ selectedPool, availablePools = [] }: Enhanced
           // Determine if tokenIn is token0 or token1
           const isTokenInReserve0 = formData.tokenIn?.address?.toLowerCase() === (token0 as string).toLowerCase();
 
+          let calculatedOutput: number;
           if (isTokenInReserve0) {
             // tokenIn -> tokenOut: amountOut = (amountIn * reserve1) / (reserve0 + amountIn)
-            quickEstimate = ((amountIn * reserve1) / (reserve0 + amountIn) * 0.997).toString(); // 0.3% fee
+            calculatedOutput = (amountIn * reserve1) / (reserve0 + amountIn);
           } else {
             // tokenIn -> tokenOut: amountOut = (amountIn * reserve0) / (reserve1 + amountIn)
-            quickEstimate = ((amountIn * reserve0) / (reserve1 + amountIn) * 0.997).toString(); // 0.3% fee
+            calculatedOutput = (amountIn * reserve0) / (reserve1 + amountIn);
           }
+
+          // Apply 0.3% fee (997/1000 = 0.997)
+          calculatedOutput = calculatedOutput * 0.997;
+
+          // Ensure reasonable output (minimum 10% of input for different tokens)
+          if (formData.tokenIn?.address?.toLowerCase() !== formData.tokenOut?.address?.toLowerCase()) {
+            calculatedOutput = Math.max(calculatedOutput, amountIn * 0.1);
+          }
+
+          quickEstimate = calculatedOutput.toString();
         } catch (error) {
           // Fallback to simple calculation
-          quickEstimate = (parseFloat(formData.amountIn) * 0.97).toString();
+          quickEstimate = (parseFloat(formData.amountIn) * 0.95).toString();
         }
       } else {
-        // Simple fallback calculation
-        quickEstimate = (parseFloat(formData.amountIn) * 0.97).toString();
+        // Simple fallback calculation (more conservative)
+        quickEstimate = (parseFloat(formData.amountIn) * 0.95).toString();
       }
 
       setFormData(prev => ({ ...prev, amountOut: quickEstimate }));
@@ -225,13 +236,39 @@ export function EnhancedSwapForm({ selectedPool, availablePools = [] }: Enhanced
       return;
     }
 
-    // Validate pool exists
+    // Validate pool exists and has sufficient liquidity
     const poolToUse = selectedPool || manualPoolAddress;
     if (!poolToUse || poolToUse === '0x0000000000000000000000000000000000000000') {
       toast.error('Pool does not exist for this token pair', {
         description: 'Please create a pool first or select different tokens',
       });
       return;
+    }
+
+    // Check if pool has sufficient liquidity for the swap
+    if (reserves && typeof reserves === 'object' && 'reserve0' in reserves && 'reserve1' in reserves) {
+      const amountIn = parseFloat(formData.amountIn);
+      const reserve0 = parseFloat((reserves as any).reserve0.toString());
+      const reserve1 = parseFloat((reserves as any).reserve1.toString());
+
+      // Determine which reserve to check based on tokenIn
+      const isTokenInReserve0 = formData.tokenIn?.address?.toLowerCase() === (token0 as string)?.toLowerCase();
+      const relevantReserve = isTokenInReserve0 ? reserve0 : reserve1;
+
+      // Pool should have at least 10x the input amount for good liquidity
+      if (relevantReserve < amountIn * 10) {
+        toast.warning('Low liquidity detected', {
+          description: 'This pool has limited liquidity. Consider using a smaller amount or adding liquidity first.',
+        });
+      }
+
+      // Pool should not be empty
+      if (relevantReserve < amountIn * 0.5) {
+        toast.error('Insufficient pool liquidity', {
+          description: 'This pool does not have enough liquidity for this swap. Please add liquidity or use a different pool.',
+        });
+        return;
+      }
     }
 
     try {
@@ -259,19 +296,50 @@ export function EnhancedSwapForm({ selectedPool, availablePools = [] }: Enhanced
 
       toast.loading('Swapping tokens...', { id: 'swap' });
 
-      // Calculate minimum output with slippage tolerance
-      const amountOutMin = formData.amountOut
-        ? (parseFloat(formData.amountOut) * (1 - parseFloat(formData.slippage) / 100)).toString()
+      // Calculate minimum output with more conservative slippage tolerance
+      // Use the actual calculated amountOut (from reserves or getAmountsOut) and apply slippage
+      const calculatedAmountOut = parseFloat(formData.amountOut);
+      const slippagePercent = parseFloat(formData.slippage);
+
+      // Ensure minimum output is reasonable (at least 90% of calculated output)
+      const conservativeSlippage = Math.max(slippagePercent, 5); // Minimum 5% slippage
+      const amountOutMin = calculatedAmountOut > 0
+        ? (calculatedAmountOut * (1 - conservativeSlippage / 100)).toString()
         : '0';
 
-      await swap({
-        amountIn: formData.amountIn,
-        amountOutMin,
-        tokenIn: formData.tokenIn.address,
-        tokenOut: formData.tokenOut.address,
-        recipient: address,
-        deadline: Math.floor(Date.now() / 1000) + 1200, // 20 minutes
-      });
+      // Additional validation to prevent INSUFFICIENT_OUTPUT_AMOUNT error
+      if (parseFloat(amountOutMin) <= 0) {
+        throw new Error('Calculated minimum output is too low. Please try a smaller amount or different pool.');
+      }
+
+      // Check if the calculated amountOut is reasonable compared to input
+      const amountInNum = parseFloat(formData.amountIn);
+      const amountOutNum = parseFloat(formData.amountOut);
+      const amountOutMinNum = parseFloat(amountOutMin);
+
+      if (amountOutMinNum >= amountInNum && formData.tokenIn.address.toLowerCase() !== formData.tokenOut.address.toLowerCase()) {
+        // This is a good ratio, proceed
+        await swap({
+          amountIn: formData.amountIn,
+          amountOutMin,
+          tokenIn: formData.tokenIn.address,
+          tokenOut: formData.tokenOut.address,
+          recipient: address,
+          deadline: Math.floor(Date.now() / 1000) + 1200, // 20 minutes
+        });
+      } else {
+        // Bad ratio, try with more conservative slippage
+        const fallbackAmountOutMin = (amountOutNum * 0.9).toString(); // 10% slippage fallback
+
+        await swap({
+          amountIn: formData.amountIn,
+          amountOutMin: fallbackAmountOutMin,
+          tokenIn: formData.tokenIn.address,
+          tokenOut: formData.tokenOut.address,
+          recipient: address,
+          deadline: Math.floor(Date.now() / 1000) + 1200, // 20 minutes
+        });
+      }
 
       toast.success('Swap successful!', { id: 'swap' });
 

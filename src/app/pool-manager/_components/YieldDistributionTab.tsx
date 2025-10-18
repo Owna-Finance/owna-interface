@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { useAccount } from 'wagmi';
+import { useAccount, useReadContract } from 'wagmi';
 import { useQueryClient } from '@tanstack/react-query';
-import { useDepositYield, useDistributeToAllHolders, useUserPools, useDistributionValidation } from '@/hooks';
+import { useDepositYield, useDistributeToAllHolders, useUserPools } from '@/hooks';
+import { CONTRACTS } from '@/constants/contracts/contracts';
+import { YRT_FACTORY_ABI } from '@/constants/abis/YRT_FACTORY_Abi';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -53,14 +55,32 @@ export function YieldDistributionTab() {
     periodId: ''
   });
 
-  // Validate distribution prerequisites
-  const distributionValidation = useDistributionValidation(
-    distributeForm.seriesId,
-    distributeForm.periodId
-  );
-
+  
   // USDC token address for yield deposits
-  const USDC_TOKEN = '0x7377f4b7176369366d6d484074898447896085c5' as `0x${string}`;
+  const USDC_TOKEN = CONTRACTS.USDC;
+
+  // Validate series and period existence
+  const { data: seriesInfo } = useReadContract({
+    address: CONTRACTS.YRT_FACTORY,
+    abi: YRT_FACTORY_ABI,
+    functionName: 'seriesInfo',
+    args: depositForm.seriesId && /^\d+$/.test(depositForm.seriesId) ? [BigInt(depositForm.seriesId)] : undefined,
+    query: {
+      enabled: !!depositForm.seriesId && /^\d+$/.test(depositForm.seriesId),
+    }
+  });
+
+  const { data: periodInfo } = useReadContract({
+    address: CONTRACTS.YRT_FACTORY,
+    abi: YRT_FACTORY_ABI,
+    functionName: 'periodInfo',
+    args: depositForm.seriesId && depositForm.periodId && /^\d+$/.test(depositForm.seriesId) && /^\d+$/.test(depositForm.periodId)
+      ? [BigInt(depositForm.seriesId), BigInt(depositForm.periodId)]
+      : undefined,
+    query: {
+      enabled: !!depositForm.seriesId && !!depositForm.periodId && /^\d+$/.test(depositForm.seriesId) && /^\d+$/.test(depositForm.periodId),
+    }
+  });
 
   // Check allowance for deposit yield
   const { data: yieldTokenAllowance } = useTokenAllowance({
@@ -94,17 +114,17 @@ export function YieldDistributionTab() {
       // Set auto-depositing state
       setIsAutoDepositing(true);
 
-      // Wait a moment for the approval to be reflected on-chain
+      // Wait for approval to be reflected on-chain
       setTimeout(async () => {
         // Refetch allowance to get updated value
         queryClient.invalidateQueries({
           queryKey: ['readContract']
         });
 
-        // Small delay to ensure the allowance is updated
+        // Wait longer to ensure the allowance is updated on-chain
         setTimeout(() => {
           handleDepositYield(new Event('auto-deposit') as any);
-        }, 500);
+        }, 3000); // Increased from 500ms to 3 seconds
       }, 1000);
 
     } catch (error) {
@@ -131,6 +151,103 @@ export function YieldDistributionTab() {
     }
 
     try {
+      // Additional validation for amount
+      const amountNum = parseFloat(depositForm.amount);
+      if (isNaN(amountNum) || amountNum <= 0) {
+        throw new Error('Amount must be greater than 0');
+      }
+
+      if (amountNum > 1000000) {
+        throw new Error('Amount seems too large. Please check your input.');
+      }
+
+      // Enhanced validation for seriesId and periodId
+      if (!depositForm.seriesId || depositForm.seriesId.trim() === '') {
+        throw new Error('Series ID is required');
+      }
+
+      if (!depositForm.periodId || depositForm.periodId.trim() === '') {
+        throw new Error('Period ID is required');
+      }
+
+      // Enhanced validation for seriesId and periodId (consistent with hook)
+      const seriesIdStr = depositForm.seriesId.trim();
+      const periodIdStr = depositForm.periodId.trim();
+
+      if (seriesIdStr === '') {
+        throw new Error('Series ID is required');
+      }
+
+      if (periodIdStr === '') {
+        throw new Error('Period ID is required');
+      }
+
+      // Check if inputs are valid numbers
+      if (!/^\d+$/.test(seriesIdStr)) {
+        throw new Error('Series ID must be a valid number');
+      }
+
+      if (!/^\d+$/.test(periodIdStr)) {
+        throw new Error('Period ID must be a valid number');
+      }
+
+      // Convert to BigInt with error handling (same as hook)
+      let seriesIdNum, periodIdNum;
+      try {
+        seriesIdNum = BigInt(seriesIdStr);
+        periodIdNum = BigInt(periodIdStr);
+      } catch (error) {
+        throw new Error('Invalid Series ID or Period ID format. Must be valid numbers.');
+      }
+
+      // Check for negative or zero values
+      if (seriesIdNum <= 0n || periodIdNum <= 0n) {
+        throw new Error('Series ID and Period ID must be greater than 0');
+      }
+
+      // Check for unreasonably large values
+      if (seriesIdNum > 1000000n || periodIdNum > 1000000n) {
+        throw new Error('Series ID or Period ID seems too large. Please check your input.');
+      }
+
+      // Validate series exists
+      if (!seriesInfo) {
+        throw new Error(`Series ID ${seriesIdNum} does not exist. Please select a valid series.`);
+      }
+
+      // Validate period exists
+      if (!periodInfo) {
+        throw new Error(`Period ID ${periodIdNum} does not exist for Series ${seriesIdNum}. Please check the period number.`);
+      }
+
+      // Check if period is active
+      if (periodInfo && !periodInfo.isActive) {
+        console.warn(`Warning: Period ${periodIdNum} is not active. Proceeding anyway...`);
+      }
+
+      // Log debug info (consistent with hook)
+      console.log('Deposit Yield Debug Info:', {
+        seriesId: depositForm.seriesId,
+        seriesIdNum: seriesIdNum.toString(),
+        periodId: depositForm.periodId,
+        periodIdNum: periodIdNum.toString(),
+        amount: depositForm.amount,
+        amountNum: amountNum,
+        tokenAddress: USDC_TOKEN,
+        seriesExists: !!seriesInfo,
+        periodExists: !!periodInfo,
+        periodActive: periodInfo?.isActive
+      });
+
+      // Additional safety check for timing
+      if (isAutoDeposit) {
+        // Small delay to ensure UI is updated
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      } else {
+        // Small delay for allowance processing
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+
       toast.loading('Depositing yield...', { id: 'deposit-yield' });
 
       await depositYield({
@@ -143,9 +260,24 @@ export function YieldDistributionTab() {
       toast.success('Yield deposited successfully!', { id: 'deposit-yield' });
       setDepositForm({ seriesId: '', periodId: '', amount: '' });
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to deposit yield', {
-        id: 'deposit-yield'
-      });
+      const errorMessage = error instanceof Error ? error.message : 'Failed to deposit yield';
+
+      // Check if it's an allowance error
+      if (errorMessage.includes('allowance') || errorMessage.includes('approval') || errorMessage.includes('ERC20: transfer amount exceeds allowance')) {
+        toast.error('Insufficient allowance detected', {
+          id: 'deposit-yield',
+          description: 'Please try approving the tokens again or wait a moment before retrying.',
+        });
+      } else if (errorMessage.includes('estimate') || errorMessage.includes('gas')) {
+        toast.error('Network fee estimation failed', {
+          id: 'deposit-yield',
+          description: 'This could be due to invalid Series/Period ID or insufficient token allowance. Please check your inputs and try again.',
+        });
+      } else {
+        toast.error(errorMessage, {
+          id: 'deposit-yield'
+        });
+      }
     } finally {
       // Reset auto-depositing state
       if (isAutoDeposit) {
@@ -154,6 +286,7 @@ export function YieldDistributionTab() {
     }
   };
 
+  
   const handleDistribute = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -273,11 +406,15 @@ export function YieldDistributionTab() {
                     type="number"
                     value={depositForm.periodId}
                     onChange={(e) => setDepositForm(prev => ({ ...prev, periodId: e.target.value }))}
-                    placeholder="1"
+                    placeholder="Enter period number (e.g., 1, 2, 3)"
                     min="1"
+                    max="100"
                     className="bg-[#2A2A2A]/50 border-[#3A3A3A] text-white"
-                    disabled={isDepositPending}
+                    disabled={isDepositPending || isAutoDepositing}
                   />
+                  <p className="text-xs text-gray-500">
+                    Enter the fundraising period number. Usually starts from 1.
+                  </p>
                 </div>
 
                 <div className="space-y-2">
@@ -378,49 +515,7 @@ export function YieldDistributionTab() {
                 </div>
               </div>
 
-              {/* Distribution Validation Status */}
-              {distributeForm.seriesId && distributeForm.periodId && (
-                <div className={`rounded-lg p-4 mb-6 ${
-                  distributionValidation.canDistribute
-                    ? 'bg-green-500/10 border border-green-500/20'
-                    : 'bg-yellow-500/10 border border-yellow-500/20'
-                }`}>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex items-center space-x-2">
-                      <div className={`w-2 h-2 rounded-full ${distributionValidation.isPeriodActive ? 'bg-green-400' : 'bg-red-400'}`} />
-                      <span className="text-gray-300">
-                        Period {distributionValidation.isPeriodActive ? 'Active' : 'Inactive'}
-                      </span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <div className={`w-2 h-2 rounded-full ${distributionValidation.isPeriodMatured ? 'bg-green-400' : 'bg-yellow-400'}`} />
-                      <span className="text-gray-300">
-                        Period {distributionValidation.isPeriodMatured ? 'Matured' : 'Not Matured Yet'}
-                      </span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <div className={`w-2 h-2 rounded-full ${distributionValidation.isSnapshotTaken ? 'bg-green-400' : 'bg-yellow-400'}`} />
-                      <span className="text-gray-300">
-                        Snapshot {distributionValidation.isSnapshotTaken ? 'Taken (Chainlink)' : 'Pending (Automatic via Chainlink)'}
-                      </span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <div className={`w-2 h-2 rounded-full ${distributionValidation.hasYield ? 'bg-green-400' : 'bg-red-400'}`} />
-                      <span className="text-gray-300">
-                        Yield {distributionValidation.hasYield ? 'Deposited' : 'Not Deposited'}
-                      </span>
-                    </div>
-                    {distributionValidation.errorMessage && (
-                      <div className="mt-3 pt-3 border-t border-gray-600">
-                        <p className="text-yellow-400 font-medium">
-                          ⚠️ {distributionValidation.errorMessage}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
+              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label className="text-gray-300">Property</Label>
@@ -477,22 +572,21 @@ export function YieldDistributionTab() {
                     type="number"
                     value={distributeForm.periodId}
                     onChange={(e) => setDistributeForm(prev => ({ ...prev, periodId: e.target.value }))}
-                    placeholder="1"
+                    placeholder="Enter period number (e.g., 1, 2, 3)"
                     min="1"
+                    max="100"
                     className="bg-[#2A2A2A]/50 border-[#3A3A3A] text-white"
                     disabled={isDistributePending}
                   />
+                  <p className="text-xs text-gray-500">
+                    Enter the fundraising period number to distribute yield for.
+                  </p>
                 </div>
               </div>
 
               <Button
                 type="submit"
-                disabled={
-                  isDistributePending ||
-                  !distributeForm.seriesId ||
-                  !distributeForm.periodId ||
-                  !distributionValidation.canDistribute
-                }
+                disabled={isDistributePending || !distributeForm.seriesId || !distributeForm.periodId}
                 className="w-full bg-green-600 hover:bg-green-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isDistributePending ? (
@@ -503,9 +597,7 @@ export function YieldDistributionTab() {
                 ) : (
                   <>
                     <Send className="w-4 h-4 mr-2" />
-                    {distributionValidation.canDistribute
-                      ? 'Distribute to All Holders'
-                      : (distributionValidation.errorMessage || 'Cannot Distribute')}
+                    Distribute to All Holders
                   </>
                 )}
               </Button>
