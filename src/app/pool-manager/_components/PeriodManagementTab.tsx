@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { useStartNewPeriod } from '@/hooks/useStartNewPeriod';
-import { useYRTSeries } from '@/hooks/useYRTSeries';
+import { useUserOwnedSeries } from '@/hooks';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,16 +16,14 @@ import { Calendar, Clock, CheckCircle2 } from 'lucide-react';
 export function PeriodManagementTab() {
   const { address } = useAccount();
   const { startNewPeriod, isPending, isSuccess } = useStartNewPeriod();
-  const { allSeriesIds, isLoadingIds, useSeriesInfo, useSeriesSlug } = useYRTSeries();
+
+  // Fetch only series owned by connected wallet
+  const { ownedSeries, isLoading: isLoadingSeries, error: seriesError } = useUserOwnedSeries();
 
   const [formData, setFormData] = useState({
     seriesId: '',
     durationDays: '30'
   });
-
-  // Note: We'll load series info on-demand when user selects, or use a simplified approach
-  // For now, just use allSeriesIds directly
-  const seriesList = (allSeriesIds as bigint[] | undefined) || [];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,25 +81,39 @@ export function PeriodManagementTab() {
                 <Select
                   value={formData.seriesId}
                   onValueChange={(value) => setFormData(prev => ({ ...prev, seriesId: value }))}
-                  disabled={isPending || seriesList.length === 0}
+                  disabled={isPending || isLoadingSeries || ownedSeries.length === 0}
                 >
                   <SelectTrigger className="bg-[#2A2A2A]/50 border-[#3A3A3A] text-white">
-                    <SelectValue placeholder="Choose a property..." />
+                    <SelectValue placeholder={
+                      isLoadingSeries
+                        ? "Loading your properties..."
+                        : ownedSeries.length === 0
+                          ? "No properties owned"
+                          : "Choose a property..."
+                    } />
                   </SelectTrigger>
                   <SelectContent className="bg-[#2A2A2A] border-[#3A3A3A]">
-                    {seriesList.map((seriesId: bigint) => (
+                    {ownedSeries.map((series) => (
                       <SelectItem
-                        key={seriesId.toString()}
-                        value={seriesId.toString()}
+                        key={series.seriesId.toString()}
+                        value={series.seriesId.toString()}
                         className="text-white hover:bg-[#3A3A3A]"
                       >
-                        YRT Series #{seriesId.toString()}
+                        <div className="flex flex-col">
+                          <span className="font-medium">{series.propertyName}</span>
+                          <span className="text-xs text-gray-400">Series #{series.seriesId.toString()}</span>
+                        </div>
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                {seriesList.length === 0 && !isLoadingIds && (
-                  <p className="text-xs text-gray-500">No YRT series available. Create a property first.</p>
+                {!isLoadingSeries && ownedSeries.length === 0 && (
+                  <p className="text-xs text-red-400">
+                    You don't own any properties. Create a property first in the Add Property page.
+                  </p>
+                )}
+                {seriesError && (
+                  <p className="text-xs text-red-400">Error loading properties: {seriesError}</p>
                 )}
               </div>
 

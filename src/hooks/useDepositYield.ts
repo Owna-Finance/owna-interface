@@ -50,6 +50,10 @@ export function useDepositYield() {
 
   const approveToken = async (params: ApprovalParams) => {
     try {
+      if (!params.amount || parseFloat(params.amount) <= 0) {
+        throw new Error('Invalid amount for approval');
+      }
+
       const amountWei = parseUnits(params.amount, 18);
 
       return writeContract({
@@ -59,13 +63,23 @@ export function useDepositYield() {
         args: [CONTRACTS.YRT_FACTORY, amountWei],
       });
     } catch (error) {
-      console.error('Error approving token:', error);
-      throw new Error('Error approving token. Please try again.');
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('Failed to approve token. Please try again.');
     }
   };
 
   const depositYield = async (params: DepositYieldParams) => {
     try {
+      if (!params.seriesId || !params.periodId || !params.amount) {
+        throw new Error('All fields are required');
+      }
+
+      if (parseFloat(params.amount) <= 0) {
+        throw new Error('Amount must be greater than 0');
+      }
+
       const amountWei = parseUnits(params.amount, 18);
 
       return writeContract({
@@ -73,14 +87,16 @@ export function useDepositYield() {
         abi: YRT_FACTORY_ABI,
         functionName: 'depositYield',
         args: [
-          params.seriesId,
-          params.periodId,
+          BigInt(params.seriesId),
+          BigInt(params.periodId),
           amountWei,
         ],
       });
     } catch (error) {
-      console.error('Error depositing yield:', error);
-      throw new Error('Error depositing yield. Please check your input values.');
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('Failed to deposit yield. Please check your inputs.');
     }
   };
 

@@ -17,18 +17,29 @@ export function useDistributeToAllHolders() {
 
   const distributeToAllHolders = async (params: DistributeToAllHoldersParams) => {
     try {
+      // Validate inputs
+      if (!params.seriesId || !params.periodId) {
+        throw new Error('Series ID and Period ID are required');
+      }
+
+      const seriesIdBigInt = BigInt(params.seriesId);
+      const periodIdBigInt = BigInt(params.periodId);
+
+      if (seriesIdBigInt <= 0 || periodIdBigInt <= 0) {
+        throw new Error('Series ID and Period ID must be greater than 0');
+      }
+
       return writeContract({
         address: CONTRACTS.AUTO_DISTRIBUTOR as `0x${string}`,
         abi: AUTO_DISTRIBUTOR_ABI,
         functionName: 'distributeToAllHolders',
-        args: [
-          BigInt(params.seriesId),
-          BigInt(params.periodId),
-        ],
+        args: [seriesIdBigInt, periodIdBigInt],
       });
     } catch (error) {
-      console.error('Error distributing to all holders:', error);
-      throw new Error('Error distributing to all holders. Please check your input values.');
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('Failed to distribute yield. Please ensure snapshot is taken and yield is deposited.');
     }
   };
 

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
-import { useDepositYield, useDistributeToAllHolders, useYRTSeries } from '@/hooks';
+import { useDepositYield, useDistributeToAllHolders, useUserOwnedSeries, useDistributionValidation } from '@/hooks';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,7 +22,9 @@ export function YieldDistributionTab() {
     checkNeedsApproval
   } = useDepositYield();
   const { distributeToAllHolders, isLoading: isDistributePending } = useDistributeToAllHolders();
-  const { allSeriesIds, isLoadingIds, useSeriesInfo, useSeriesSlug } = useYRTSeries();
+
+  // Fetch only series owned by connected wallet
+  const { ownedSeries, isLoading: isLoadingSeries } = useUserOwnedSeries();
 
   const [activeAction, setActiveAction] = useState<'deposit' | 'distribute'>('deposit');
   const [isApproving, setIsApproving] = useState(false);
@@ -38,8 +40,11 @@ export function YieldDistributionTab() {
     periodId: ''
   });
 
-  // Use allSeriesIds directly - no need to call hooks in loops
-  const seriesList = (allSeriesIds as bigint[] | undefined) || [];
+  // Validate distribution prerequisites
+  const distributionValidation = useDistributionValidation(
+    distributeForm.seriesId,
+    distributeForm.periodId
+  );
 
   // USDC token address for yield deposits
   const USDC_TOKEN = '0x7377f4b7176369366d6d484074898447896085c5' as `0x${string}`;
@@ -177,19 +182,25 @@ export function YieldDistributionTab() {
                   <Select
                     value={depositForm.seriesId}
                     onValueChange={(value) => setDepositForm(prev => ({ ...prev, seriesId: value }))}
-                    disabled={isDepositPending}
+                    disabled={isDepositPending || isLoadingSeries || ownedSeries.length === 0}
                   >
                     <SelectTrigger className="bg-[#2A2A2A]/50 border-[#3A3A3A] text-white">
-                      <SelectValue placeholder="Select property..." />
+                      <SelectValue placeholder={
+                        isLoadingSeries
+                          ? "Loading..."
+                          : ownedSeries.length === 0
+                            ? "No properties owned"
+                            : "Select property..."
+                      } />
                     </SelectTrigger>
                     <SelectContent className="bg-[#2A2A2A] border-[#3A3A3A]">
-                      {seriesList.map((seriesId) => (
+                      {ownedSeries.map((series) => (
                         <SelectItem
-                          key={seriesId.toString()}
-                          value={seriesId.toString()}
+                          key={series.seriesId.toString()}
+                          value={series.seriesId.toString()}
                           className="text-white hover:bg-[#3A3A3A]"
                         >
-                          YRT Series #{seriesId.toString()}
+                          {series.propertyName} (Series #{series.seriesId.toString()})
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -297,25 +308,74 @@ export function YieldDistributionTab() {
                 </div>
               </div>
 
+              {/* Distribution Validation Status */}
+              {distributeForm.seriesId && distributeForm.periodId && (
+                <div className={`rounded-lg p-4 mb-6 ${
+                  distributionValidation.canDistribute
+                    ? 'bg-green-500/10 border border-green-500/20'
+                    : 'bg-yellow-500/10 border border-yellow-500/20'
+                }`}>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-center space-x-2">
+                      <div className={`w-2 h-2 rounded-full ${distributionValidation.isPeriodActive ? 'bg-green-400' : 'bg-red-400'}`} />
+                      <span className="text-gray-300">
+                        Period {distributionValidation.isPeriodActive ? 'Active' : 'Inactive'}
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className={`w-2 h-2 rounded-full ${distributionValidation.isPeriodMatured ? 'bg-green-400' : 'bg-yellow-400'}`} />
+                      <span className="text-gray-300">
+                        Period {distributionValidation.isPeriodMatured ? 'Matured' : 'Not Matured Yet'}
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className={`w-2 h-2 rounded-full ${distributionValidation.isSnapshotTaken ? 'bg-green-400' : 'bg-yellow-400'}`} />
+                      <span className="text-gray-300">
+                        Snapshot {distributionValidation.isSnapshotTaken ? 'Taken (Chainlink)' : 'Pending (Automatic via Chainlink)'}
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className={`w-2 h-2 rounded-full ${distributionValidation.hasYield ? 'bg-green-400' : 'bg-red-400'}`} />
+                      <span className="text-gray-300">
+                        Yield {distributionValidation.hasYield ? 'Deposited' : 'Not Deposited'}
+                      </span>
+                    </div>
+                    {distributionValidation.errorMessage && (
+                      <div className="mt-3 pt-3 border-t border-gray-600">
+                        <p className="text-yellow-400 font-medium">
+                          ⚠️ {distributionValidation.errorMessage}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label className="text-gray-300">Property</Label>
                   <Select
                     value={distributeForm.seriesId}
                     onValueChange={(value) => setDistributeForm(prev => ({ ...prev, seriesId: value }))}
-                    disabled={isDistributePending}
+                    disabled={isDistributePending || isLoadingSeries || ownedSeries.length === 0}
                   >
                     <SelectTrigger className="bg-[#2A2A2A]/50 border-[#3A3A3A] text-white">
-                      <SelectValue placeholder="Select property..." />
+                      <SelectValue placeholder={
+                        isLoadingSeries
+                          ? "Loading..."
+                          : ownedSeries.length === 0
+                            ? "No properties owned"
+                            : "Select property..."
+                      } />
                     </SelectTrigger>
                     <SelectContent className="bg-[#2A2A2A] border-[#3A3A3A]">
-                      {seriesList.map((seriesId) => (
+                      {ownedSeries.map((series) => (
                         <SelectItem
-                          key={seriesId.toString()}
-                          value={seriesId.toString()}
+                          key={series.seriesId.toString()}
+                          value={series.seriesId.toString()}
                           className="text-white hover:bg-[#3A3A3A]"
                         >
-                          YRT Series #{seriesId.toString()}
+                          {series.propertyName} (Series #{series.seriesId.toString()})
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -338,8 +398,13 @@ export function YieldDistributionTab() {
 
               <Button
                 type="submit"
-                disabled={isDistributePending || !distributeForm.seriesId || !distributeForm.periodId}
-                className="w-full bg-green-600 hover:bg-green-700 text-white"
+                disabled={
+                  isDistributePending ||
+                  !distributeForm.seriesId ||
+                  !distributeForm.periodId ||
+                  !distributionValidation.canDistribute
+                }
+                className="w-full bg-green-600 hover:bg-green-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isDistributePending ? (
                   <>
@@ -349,7 +414,9 @@ export function YieldDistributionTab() {
                 ) : (
                   <>
                     <Send className="w-4 h-4 mr-2" />
-                    Distribute to All Holders
+                    {distributionValidation.canDistribute
+                      ? 'Distribute to All Holders'
+                      : (distributionValidation.errorMessage || 'Cannot Distribute')}
                   </>
                 )}
               </Button>

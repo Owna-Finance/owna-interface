@@ -4,7 +4,9 @@ export { useYRTForm } from './useYRTForm';
 export { useStartNewPeriod } from './useStartNewPeriod';
 export { useDepositYield } from './useDepositYield';
 export { useDistributeToAllHolders } from './useDistributeToAllHolders';
+export { useDistributionValidation, type DistributionValidation } from './useDistributionValidation';
 export { useYRTSeries } from './useYRTSeries';
+export { useUserOwnedSeries, type UserOwnedSeriesInfo } from './useUserOwnedSeries';
 export {
   usePeriodInfo,
   useAllPeriodsInfo,
