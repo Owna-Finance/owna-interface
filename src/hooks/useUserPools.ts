@@ -98,7 +98,7 @@ export function useUserPools() {
         const totalPools = Number(poolsLength);
 
         // Step 2: Batch fetch all pool addresses using multicall
-        const poolAddressContracts = Array.from({ length: Math.min(totalPools, 50) }, (_, i) => ({
+        const poolAddressContracts = Array.from({ length: totalPools }, (_, i) => ({
           address: CONTRACTS.DEX_FACTORY,
           abi: DEX_FACTORY_ABI,
           functionName: 'allPools' as const,

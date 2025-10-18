@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useAccount } from 'wagmi';
 import { useStartNewPeriod } from '@/hooks/useStartNewPeriod';
-import { useUserOwnedSeries } from '@/hooks';
+import { useUserPools } from '@/hooks/useUserPools';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,16 +18,17 @@ export function PeriodManagementTab() {
   const { address } = useAccount();
   const { startNewPeriod, isPending, isSuccess } = useStartNewPeriod();
 
-  // Fetch only series owned by connected wallet (currently unused)
-  // const { ownedSeries, isLoading: isLoadingSeries, error: seriesError } = useUserOwnedSeries();
+  // Fetch YRT series from user pools (more reliable approach)
+  const { pools, isLoading: isLoadingPools, error: poolsError } = useUserPools();
 
-  // Temporary mock data with proper series IDs for smart contract
-  const mockProperties = [
-    { seriesId: '1', propertyName: 'Sudirman Residence Pool', tokenPair: 'USDC/YRT-SDR' },
-    { seriesId: '2', propertyName: 'Sudirman Residence Pool', tokenPair: 'YRT-SDR/USDC' },
-    { seriesId: '3', propertyName: 'Sudirman Residence Pool', tokenPair: 'YRT-SDR/USDC' },
-    { seriesId: '4', propertyName: 'Sudirman Residence Pool', tokenPair: 'YRT-SDR/USDC' }
-  ];
+  // Extract YRT series from pools
+  const yrtSeries = useMemo(() => {
+    if (!pools) return [];
+    return pools.filter(pool => pool.isYRTPool);
+  }, [pools]);
+
+  const isLoadingSeries = isLoadingPools;
+  const seriesError = poolsError;
 
   const [formData, setFormData] = useState({
     seriesId: '',
@@ -96,29 +97,45 @@ export function PeriodManagementTab() {
                     <SelectValue placeholder="Choose a property..." />
                   </SelectTrigger>
                   <SelectContent className="bg-[#2A2A2A] border-[#3A3A3A]">
-                    {mockProperties.map((property) => (
-                      <SelectItem
-                        key={property.seriesId}
-                        value={property.seriesId}
-                        className="text-white hover:bg-[#3A3A3A] py-3"
-                      >
-                        <div className="flex items-center space-x-3">
-                          <div className="w-6 h-6 bg-[#3A3A3A] rounded-full flex items-center justify-center flex-shrink-0">
-                            <Image 
-                              src="/Images/Logo/logo_YRT.jpg" 
-                              alt="YRT Logo" 
-                              width={16} 
-                              height={16} 
-                              className="rounded-full"
-                            />
+                    {isLoadingSeries ? (
+                      <div className="p-4 text-center text-gray-400">
+                        Loading your properties...
+                      </div>
+                    ) : seriesError ? (
+                      <div className="p-4 text-center text-red-400">
+                        Error loading properties
+                      </div>
+                    ) : yrtSeries.length === 0 ? (
+                      <div className="p-4 text-center text-gray-400">
+                        No YRT properties found
+                      </div>
+                    ) : (
+                      yrtSeries.map((pool) => (
+                        <SelectItem
+                          key={pool.poolAddress}
+                          value={pool.seriesId?.toString() || ''}
+                          className="text-white hover:bg-[#3A3A3A] py-3"
+                        >
+                          <div className="flex items-center space-x-3">
+                            <div className="w-6 h-6 bg-[#3A3A3A] rounded-full flex items-center justify-center flex-shrink-0">
+                              <Image
+                                src="/Images/Logo/logo_YRT.jpg"
+                                alt="YRT Logo"
+                                width={16}
+                                height={16}
+                                className="rounded-full"
+                              />
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="font-medium">{pool.propertyName}</span>
+                              <span className="text-xs text-gray-400">
+                                Series #{pool.seriesId?.toString() || 'N/A'} • {pool.token0Symbol}/{pool.token1Symbol}
+                              </span>
+                            </div>
                           </div>
-                          <div className="flex flex-col">
-                            <span className="font-medium">{property.propertyName}</span>
-                            <span className="text-xs text-gray-400">Series #{property.seriesId} • {property.tokenPair}</span>
-                          </div>
-                        </div>
-                      </SelectItem>
-                    ))}
+                        </SelectItem>
+                      ))
+                    )}
                   </SelectContent>
                 </Select>
               </div>
