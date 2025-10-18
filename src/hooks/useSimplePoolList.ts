@@ -1,8 +1,11 @@
-import { useReadContract } from 'wagmi';
+import { useReadContract, usePublicClient } from 'wagmi';
+import { useState, useEffect } from 'react';
 import { CONTRACTS } from '@/constants/contracts/contracts';
 import { DEX_FACTORY_ABI } from '@/constants/abis/DEX_FACTORY_ABI';
 
 export function useSimplePoolList() {
+  const publicClient = usePublicClient();
+
   // Get the total number of pools from the factory
   const factoryLength = useReadContract({
     address: CONTRACTS.DEX_FACTORY as `0x${string}`,
@@ -13,37 +16,63 @@ export function useSimplePoolList() {
     },
   });
 
-  // Create an array to hold all pool queries
-  const poolQueries = [];
-  const maxPools = factoryLength.data ? Number(factoryLength.data) : 0;
+  const [pools, setPools] = useState<`0x${string}`[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isError, setIsError] = useState(false);
 
-  // Dynamically create queries for all pools (up to 50 for performance reasons)
-  const poolsToFetch = Math.min(maxPools, 50);
+  useEffect(() => {
+    async function fetchPools() {
+      if (!factoryLength.data || Number(factoryLength.data) === 0 || !publicClient) {
+        setPools([]);
+        setIsLoading(false);
+        return;
+      }
 
-  for (let i = 0; i < poolsToFetch; i++) {
-    const poolQuery = useReadContract({
-      address: CONTRACTS.DEX_FACTORY as `0x${string}`,
-      abi: DEX_FACTORY_ABI,
-      functionName: 'allPools',
-      args: [BigInt(i)],
-      query: {
-        enabled: factoryLength.data !== undefined && factoryLength.data !== null && i < Number(factoryLength.data),
-      },
-    });
-    poolQueries.push(poolQuery);
-  }
+      try {
+        setIsLoading(true);
+        setIsError(false);
 
-  const pools = poolQueries
-    .filter(query => query.data !== undefined && query.data !== null)
-    .map(query => query.data as `0x${string}`);
+        const maxPools = Number(factoryLength.data);
+        // Limit to 50 pools for performance reasons
+        const poolsToFetch = Math.min(maxPools, 50);
 
-  const isLoading = poolQueries.some(query => query.isLoading) || factoryLength.isLoading;
-  const isError = poolQueries.some(query => query.isError) || factoryLength.isError;
+        // Use multicall to fetch all pools at once
+        const poolContracts = Array.from({ length: poolsToFetch }, (_, i) => ({
+          address: CONTRACTS.DEX_FACTORY as `0x${string}`,
+          abi: DEX_FACTORY_ABI,
+          functionName: 'allPools' as const,
+          args: [BigInt(i)],
+        }));
+
+        const results = await publicClient.multicall({
+          contracts: poolContracts as any,
+          allowFailure: true,
+        });
+
+        const validPools = results
+          .filter((result): result is { status: 'success'; result: `0x${string}` } =>
+            result.status === 'success' && typeof result.result === 'string'
+          )
+          .map(result => result.result);
+
+        setPools(validPools);
+      } catch (error) {
+        console.error('Error fetching pools:', error);
+        setIsError(true);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    if (factoryLength.data !== undefined && !factoryLength.isLoading) {
+      fetchPools();
+    }
+  }, [factoryLength.data, factoryLength.isLoading, publicClient]);
 
   return {
     pools,
-    isLoading,
-    isError,
-    totalPools: maxPools,
+    isLoading: isLoading || factoryLength.isLoading,
+    isError: isError || factoryLength.isError,
+    totalPools: factoryLength.data ? Number(factoryLength.data) : 0,
   };
 }

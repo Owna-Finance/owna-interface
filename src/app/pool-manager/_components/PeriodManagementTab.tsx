@@ -53,7 +53,7 @@ export function PeriodManagementTab() {
 
       await startNewPeriod({
         seriesId: formData.seriesId,
-        durationInSeconds: BigInt(formData.durationSeconds)
+        durationInSeconds: parseInt(formData.durationSeconds)
       });
 
       toast.success('New period started successfully!', { id: 'start-period' });

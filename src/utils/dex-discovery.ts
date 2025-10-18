@@ -44,6 +44,7 @@ export function usePoolInfo(tokenA: `0x${string}`, tokenB: `0x${string}`) {
 /**
  * Hook to get amounts out for a swap
  * This calculates expected output amounts through DEX Router
+ * Optimized with faster refresh and better error handling
  */
 export function useGetAmountsOut(amountIn: string, path: `0x${string}`[]) {
   const { parseUnits } = require('viem');
@@ -57,7 +58,11 @@ export function useGetAmountsOut(amountIn: string, path: `0x${string}`[]) {
       path
     ],
     query: {
-      enabled: !!amountIn && !!path && path.length >= 2 && amountIn !== '0',
+      enabled: !!amountIn && !!path && path.length >= 2 && amountIn !== '0' && amountIn !== '0.0',
+      refetchInterval: 30000, // 30 seconds cache (reduced for better UX)
+      refetchIntervalInBackground: false,
+      retry: 2, // Limit retries to avoid hanging
+      retryDelay: 1000, // 1 second retry delay
     }
   });
 }

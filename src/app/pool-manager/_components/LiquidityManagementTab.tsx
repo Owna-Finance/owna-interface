@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useAccount } from 'wagmi';
 import { useAddLiquidity } from '@/hooks/useAddLiquidity';
 import { useUserPools } from '@/hooks/useUserPools';
+import { useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,16 +18,83 @@ import Image from 'next/image';
 
 export function LiquidityManagementTab() {
   const { address } = useAccount();
-  const { addLiquidity, approveToken } = useAddLiquidity();
+  const { addLiquidity, approveToken, useTokenAllowance, checkNeedsApproval } = useAddLiquidity();
   const { pools, isLoading: poolsLoading } = useUserPools();
+  const queryClient = useQueryClient();
 
   const [selectedPool, setSelectedPool] = useState('');
   const [amountA, setAmountA] = useState('');
   const [amountB, setAmountB] = useState('');
   const [isApproving, setIsApproving] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
+  const [approvalStep, setApprovalStep] = useState<'none' | 'tokenA' | 'tokenB' | 'complete'>('none');
 
   const currentPool = pools.find(p => p.poolAddress === selectedPool);
+
+  // Check token allowances
+  const { data: tokenAAllowance } = useTokenAllowance({
+    tokenAddress: currentPool?.token0 as `0x${string}`,
+    amount: amountA || '0',
+    userAddress: address as `0x${string}`,
+  });
+
+  const { data: tokenBAllowance } = useTokenAllowance({
+    tokenAddress: currentPool?.token1 as `0x${string}`,
+    amount: amountB || '0',
+    userAddress: address as `0x${string}`,
+  });
+
+  // Check if approvals are needed
+  const needsTokenAApproval = currentPool && amountA && address
+    ? checkNeedsApproval(tokenAAllowance as bigint, amountA)
+    : false;
+
+  const needsTokenBApproval = currentPool && amountB && address
+    ? checkNeedsApproval(tokenBAllowance as bigint, amountB)
+    : false;
+
+  const needsAnyApproval = needsTokenAApproval || needsTokenBApproval;
+
+  // Auto-calculate amountB based on pool ratio when amountA changes
+  const calculateAmountB = (amountAValue: string) => {
+    if (!currentPool || !amountAValue || parseFloat(amountAValue) <= 0) return '';
+
+    const amountANum = parseFloat(amountAValue);
+    const reserve0 = parseFloat(formatUnits(currentPool.reserve0, 18));
+    const reserve1 = parseFloat(formatUnits(currentPool.reserve1, 18));
+
+    if (reserve0 > 0 && reserve1 > 0) {
+      // Calculate equivalent amountB based on pool ratio
+      const equivalentAmountB = (amountANum * reserve1) / reserve0;
+      return equivalentAmountB.toFixed(6);
+    }
+
+    return '';
+  };
+
+  // Auto-update amountB when amountA changes (and vice versa)
+  const handleAmountAChange = (value: string) => {
+    setAmountA(value);
+    const calculatedB = calculateAmountB(value);
+    if (calculatedB) {
+      setAmountB(calculatedB);
+    }
+  };
+
+  const handleAmountBChange = (value: string) => {
+    setAmountB(value);
+    if (!currentPool || !value || parseFloat(value) <= 0) return;
+
+    const amountBNum = parseFloat(value);
+    const reserve0 = parseFloat(formatUnits(currentPool.reserve0, 18));
+    const reserve1 = parseFloat(formatUnits(currentPool.reserve1, 18));
+
+    if (reserve0 > 0 && reserve1 > 0) {
+      // Calculate equivalent amountA based on pool ratio
+      const equivalentAmountA = (amountBNum * reserve0) / reserve1;
+      setAmountA(equivalentAmountA.toFixed(6));
+    }
+  };
 
   const handleAddLiquidity = async () => {
     if (!address || !selectedPool || !amountA || !amountB || !currentPool) {
@@ -34,27 +102,80 @@ export function LiquidityManagementTab() {
       return;
     }
 
+    // Validate amounts
+    if (parseFloat(amountA) <= 0 || parseFloat(amountB) <= 0) {
+      toast.error('Amounts must be greater than 0');
+      return;
+    }
+
     try {
-      setIsApproving(true);
-      toast.loading('Approving tokens...', { id: 'add-liquidity' });
+      // Step 1: Approve tokens if needed (one by one for proper fee estimation)
+      if (needsAnyApproval) {
+        setIsApproving(true);
 
-      // Approve tokens first
-      await approveToken({
-        tokenAddress: currentPool.token0,
-        amount: amountA,
-        userAddress: address
-      });
-      await approveToken({
-        tokenAddress: currentPool.token1,
-        amount: amountB,
-        userAddress: address
-      });
+        // Approve Token A first (if needed)
+        if (needsTokenAApproval) {
+          setApprovalStep('tokenA');
+          toast.loading(`Approving ${currentPool.token0Symbol}...`, { id: 'add-liquidity' });
 
+          try {
+            await approveToken({
+              tokenAddress: currentPool.token0,
+              amount: amountA,
+              userAddress: address
+            });
+
+            toast.success(`${currentPool.token0Symbol} approved!`, { id: 'add-liquidity' });
+
+            // Refetch allowance to get updated value
+            queryClient.invalidateQueries({
+              queryKey: ['readContract']
+            });
+
+            // Wait for approval to be processed
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+          } catch (error) {
+            throw new Error(`Failed to approve ${currentPool.token0Symbol}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+          }
+        }
+
+        // Approve Token B second (if needed)
+        if (needsTokenBApproval) {
+          setApprovalStep('tokenB');
+          toast.loading(`Approving ${currentPool.token1Symbol}...`, { id: 'add-liquidity' });
+
+          try {
+            await approveToken({
+              tokenAddress: currentPool.token1,
+              amount: amountB,
+              userAddress: address
+            });
+
+            toast.success(`${currentPool.token1Symbol} approved!`, { id: 'add-liquidity' });
+
+            // Refetch allowance to get updated value
+            queryClient.invalidateQueries({
+              queryKey: ['readContract']
+            });
+
+            // Wait for approval to be processed
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+          } catch (error) {
+            throw new Error(`Failed to approve ${currentPool.token1Symbol}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+          }
+        }
+
+        setApprovalStep('complete');
+        toast.success('All tokens approved! Adding liquidity...', { id: 'add-liquidity' });
+      }
+
+      // Step 2: Add liquidity
       setIsApproving(false);
       setIsAdding(true);
-      toast.loading('Adding liquidity...', { id: 'add-liquidity' });
+      toast.loading('Adding liquidity to pool...', { id: 'add-liquidity' });
 
-      // Add liquidity
       await addLiquidity({
         tokenA: currentPool.token0,
         tokenB: currentPool.token1,
@@ -63,23 +184,36 @@ export function LiquidityManagementTab() {
         amountAMin: (parseFloat(amountA) * 0.95).toString(),
         amountBMin: (parseFloat(amountB) * 0.95).toString(),
         to: address,
-        deadline: '20',
+        deadline: (Math.floor(Date.now() / 1000) + 1200).toString(), // 20 minutes in seconds
         propertyName: currentPool.propertyName,
         propertyOwner: address
       });
 
       toast.success('Liquidity added successfully!', { id: 'add-liquidity' });
 
+      // Reset form
       setAmountA('');
       setAmountB('');
       setSelectedPool('');
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to add liquidity', {
-        id: 'add-liquidity'
-      });
+      const errorMessage = error instanceof Error ? error.message : 'Failed to add liquidity';
+
+      // Check if it's an approval error
+      if (errorMessage.includes('allowance') || errorMessage.includes('approval')) {
+        toast.error('Token approval failed', {
+          id: 'add-liquidity',
+          description: 'Please check your wallet and try again',
+        });
+      } else {
+        toast.error('Failed to add liquidity', {
+          id: 'add-liquidity',
+          description: errorMessage,
+        });
+      }
     } finally {
       setIsApproving(false);
       setIsAdding(false);
+      setApprovalStep('none');
     }
   };
 
@@ -154,7 +288,7 @@ export function LiquidityManagementTab() {
                       id="amountA"
                       type="number"
                       value={amountA}
-                      onChange={(e) => setAmountA(e.target.value)}
+                      onChange={(e) => handleAmountAChange(e.target.value)}
                       placeholder="0.0"
                       min="0"
                       step="0.01"
@@ -187,7 +321,7 @@ export function LiquidityManagementTab() {
                       id="amountB"
                       type="number"
                       value={amountB}
-                      onChange={(e) => setAmountB(e.target.value)}
+                      onChange={(e) => handleAmountBChange(e.target.value)}
                       placeholder="0.0"
                       min="0"
                       step="0.01"
@@ -203,6 +337,41 @@ export function LiquidityManagementTab() {
                   </p>
                 </div>
               </div>
+
+              {/* Approval Status */}
+              {needsAnyApproval && (
+                <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
+                  <div className="flex items-start space-x-3">
+                    <Info className="w-5 h-5 text-yellow-400 mt-0.5" />
+                    <div className="flex-1 space-y-2 text-sm">
+                      <p className="text-yellow-400 font-medium">
+                        {isApproving ? 'Approving Tokens...' : 'Approvals Required'}
+                      </p>
+                      <div className="space-y-1">
+                        {needsTokenAApproval && (
+                          <p className={`${isApproving && approvalStep === 'tokenA' ? 'text-yellow-300 font-medium' : 'text-gray-400'} ${isApproving && approvalStep !== 'tokenA' && approvalStep !== 'none' ? 'line-through' : ''}`}>
+                            {isApproving && approvalStep === 'tokenA' ? '→ ' : '• '} Approve {currentPool.token0Symbol}
+                          </p>
+                        )}
+                        {needsTokenBApproval && (
+                          <p className={`${isApproving && approvalStep === 'tokenB' ? 'text-yellow-300 font-medium' : 'text-gray-400'} ${isApproving && approvalStep === 'complete' ? 'line-through' : ''}`}>
+                            {isApproving && approvalStep === 'tokenB' ? '→ ' : '• '} Approve {currentPool.token1Symbol}
+                          </p>
+                        )}
+                        <p className="text-gray-400">
+                          {isApproving && approvalStep === 'complete' ? '✓ ' : ''}Add Liquidity
+                        </p>
+                      </div>
+                      <p className="text-gray-400 text-xs">
+                        {isApproving
+                          ? 'Please confirm each transaction in your wallet. Network fees will be estimated per transaction.'
+                          : 'Each token approval requires a separate transaction with its own network fee.'
+                        }
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Info Panel */}
               <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
@@ -236,10 +405,28 @@ export function LiquidityManagementTab() {
                 disabled={isLoading || !amountA || !amountB}
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium"
               >
-                {isLoading ? (
+                {isApproving && approvalStep === 'tokenA' ? (
                   <>
                     <LoadingSpinner size="sm" className="mr-2" />
-                    {isApproving ? 'Approving Tokens...' : 'Adding Liquidity...'}
+                    Approving {currentPool?.token0Symbol}...
+                  </>
+                ) : isApproving && approvalStep === 'tokenB' ? (
+                  <>
+                    <LoadingSpinner size="sm" className="mr-2" />
+                    Approving {currentPool?.token1Symbol}...
+                  </>
+                ) : isAdding ? (
+                  <>
+                    <LoadingSpinner size="sm" className="mr-2" />
+                    Adding Liquidity...
+                  </>
+                ) : needsAnyApproval ? (
+                  <>
+                    <Droplets className="w-4 h-4 mr-2" />
+                    {needsTokenAApproval && needsTokenBApproval
+                      ? 'Approve Both Tokens & Add Liquidity'
+                      : `Approve ${needsTokenAApproval ? currentPool?.token0Symbol : currentPool?.token1Symbol} & Add Liquidity`
+                    }
                   </>
                 ) : (
                   <>

@@ -8,6 +8,7 @@ import { CONTRACTS } from '@/constants/contracts/contracts';
 import { toast } from 'sonner';
 import { formatAmount } from '@coinbase/onchainkit/token';
 import { useAccount } from 'wagmi';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface EnhancedSwapFormProps {
   selectedPool?: `0x${string}`;
@@ -24,6 +25,7 @@ interface SwapFormData {
 
 export function EnhancedSwapForm({ selectedPool, availablePools = [] }: EnhancedSwapFormProps) {
   const { address } = useAccount();
+  const queryClient = useQueryClient();
   const {
     swap,
     isLoading,
@@ -104,28 +106,68 @@ export function EnhancedSwapForm({ selectedPool, availablePools = [] }: Enhanced
     }
   }, [selectedPool, token0Info, token1Info, token0, token1, availablePools]);
 
-  // Calculate output amount when input changes
+  // Calculate output amount when input changes - with fast fallback
   useEffect(() => {
     if (formData.amountIn && formData.tokenIn && formData.tokenOut && formData.tokenIn.value !== formData.tokenOut.value) {
       setIsCalculating(true);
+
+      // Fast calculation using pool reserves if available
+      let quickEstimate: string;
+
+      if (reserves && typeof reserves === 'object' && 'reserve0' in reserves && 'reserve1' in reserves && token0 && token1) {
+        try {
+          const amountIn = parseFloat(formData.amountIn);
+          const reserve0 = parseFloat((reserves as any).reserve0.toString());
+          const reserve1 = parseFloat((reserves as any).reserve1.toString());
+
+          // Determine if tokenIn is token0 or token1
+          const isTokenInReserve0 = formData.tokenIn?.address?.toLowerCase() === (token0 as string).toLowerCase();
+
+          if (isTokenInReserve0) {
+            // tokenIn -> tokenOut: amountOut = (amountIn * reserve1) / (reserve0 + amountIn)
+            quickEstimate = ((amountIn * reserve1) / (reserve0 + amountIn) * 0.997).toString(); // 0.3% fee
+          } else {
+            // tokenIn -> tokenOut: amountOut = (amountIn * reserve0) / (reserve1 + amountIn)
+            quickEstimate = ((amountIn * reserve0) / (reserve1 + amountIn) * 0.997).toString(); // 0.3% fee
+          }
+        } catch (error) {
+          // Fallback to simple calculation
+          quickEstimate = (parseFloat(formData.amountIn) * 0.97).toString();
+        }
+      } else {
+        // Simple fallback calculation
+        quickEstimate = (parseFloat(formData.amountIn) * 0.97).toString();
+      }
+
+      setFormData(prev => ({ ...prev, amountOut: quickEstimate }));
+
+      // Set a timeout to stop calculating state after a short time
+      const timeoutId = setTimeout(() => {
+        setIsCalculating(false);
+      }, 1000); // Reduced to 1 second
+
+      return () => clearTimeout(timeoutId);
     } else {
       setFormData(prev => ({ ...prev, amountOut: '' }));
+      setIsCalculating(false);
     }
-  }, [formData.amountIn, formData.tokenIn, formData.tokenOut]);
+  }, [formData.amountIn, formData.tokenIn, formData.tokenOut, reserves, token0, token1]);
 
-  // Update output amount when getAmountsOut result changes
+  // Update output amount when getAmountsOut result changes - with error handling
   useEffect(() => {
     if (!isLoadingAmountsOut && amountsOutResult && formData.amountIn && formData.tokenIn && formData.tokenOut && formData.tokenIn.value !== formData.tokenOut.value) {
-      if (amountsOutResult && typeof amountsOutResult === 'object' && 'amountsOut' in amountsOutResult && Array.isArray(amountsOutResult.amountsOut) && amountsOutResult.amountsOut.length > 0) {
-        // Convert from BigInt to string with proper decimal handling
-        const outputAmount = amountsOutResult.amountsOut[amountsOutResult.amountsOut.length - 1].toString();
-        setFormData(prev => ({ ...prev, amountOut: outputAmount }));
-      } else {
-        // Fallback to simple calculation if DEX call fails
-        const mockOutput = (parseFloat(formData.amountIn) * 0.95).toString();
-        setFormData(prev => ({ ...prev, amountOut: mockOutput }));
+      try {
+        if (amountsOutResult && typeof amountsOutResult === 'object' && 'amountsOut' in amountsOutResult && Array.isArray(amountsOutResult.amountsOut) && amountsOutResult.amountsOut.length > 0) {
+          // Convert from BigInt to string with proper decimal handling
+          const outputAmount = amountsOutResult.amountsOut[amountsOutResult.amountsOut.length - 1].toString();
+          setFormData(prev => ({ ...prev, amountOut: outputAmount }));
+          setIsCalculating(false);
+        }
+      } catch (error) {
+        console.error('Error calculating amounts out:', error);
+        // Keep the quick estimate if DEX call fails
+        setIsCalculating(false);
       }
-      setIsCalculating(false);
     }
   }, [amountsOutResult, isLoadingAmountsOut, formData.amountIn, formData.tokenIn, formData.tokenOut]);
 
@@ -193,6 +235,28 @@ export function EnhancedSwapForm({ selectedPool, availablePools = [] }: Enhanced
     }
 
     try {
+      // Check if approval is needed
+      if (needsApproval) {
+        toast.loading('Approving token for swap...', { id: 'approval' });
+        setIsApproving(true);
+
+        await approveToken({
+          tokenAddress: formData.tokenIn.address as `0x${string}`,
+          amount: formData.amountIn,
+          userAddress: address,
+        });
+
+        toast.success('Token approved! Executing swap...', { id: 'approval' });
+
+        // Refetch allowance to get updated value
+        queryClient.invalidateQueries({
+          queryKey: ['readContract']
+        });
+
+        // Small delay to ensure approval is processed
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+
       toast.loading('Swapping tokens...', { id: 'swap' });
 
       // Calculate minimum output with slippage tolerance
@@ -218,10 +282,22 @@ export function EnhancedSwapForm({ selectedPool, availablePools = [] }: Enhanced
         amountOut: '',
       }));
     } catch (error) {
-      toast.error('Swap failed', {
-        id: 'swap',
-        description: error instanceof Error ? error.message : 'Unknown error',
-      });
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+
+      // Check if it's an approval error
+      if (errorMessage.includes('allowance') || errorMessage.includes('approval')) {
+        toast.error('Approval failed', {
+          id: 'approval',
+          description: 'Please check your wallet and try again',
+        });
+      } else {
+        toast.error('Swap failed', {
+          id: 'swap',
+          description: errorMessage,
+        });
+      }
+    } finally {
+      setIsApproving(false);
     }
   };
 
@@ -347,40 +423,45 @@ export function EnhancedSwapForm({ selectedPool, availablePools = [] }: Enhanced
           </div>
         )}
 
-        {/* Approval/Swap Button */}
-        {needsApproval ? (
-          <Button
-            onClick={handleApprove}
-            disabled={!isFormValid || isApproving || isCalculating}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-4 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isApproving ? (
-              <>
-                <div className="w-4 h-4 border-2 border-gray-200 border-t-white rounded-full animate-spin mr-2"></div>
-                Approving {formData.tokenIn?.label}...
-              </>
-            ) : (
-              <>
-                <CheckCircle className="w-4 h-4 mr-2" />
-                Approve {formData.tokenIn?.label}
-              </>
-            )}
-          </Button>
-        ) : (
-          <Button
-            onClick={handleSwap}
-            disabled={!isFormValid || isLoading || isCalculating || !address}
-            className="w-full bg-white hover:bg-gray-200 text-black font-medium py-4 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isLoading ? (
-              <>
-                <div className="w-4 h-4 border-2 border-gray-400 border-t-black rounded-full animate-spin mr-2"></div>
-                Swapping...
-              </>
-            ) : (
-              'Swap'
-            )}
-          </Button>
+        {/* Unified Approve & Swap Button */}
+        <Button
+          onClick={handleSwap}
+          disabled={!isFormValid || isLoading || isApproving || isCalculating || !address}
+          className="w-full bg-white hover:bg-gray-200 text-black font-medium py-4 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isApproving ? (
+            <>
+              <div className="w-4 h-4 border-2 border-gray-400 border-t-black rounded-full animate-spin mr-2"></div>
+              Approving {formData.tokenIn?.label}...
+            </>
+          ) : isLoading ? (
+            <>
+              <div className="w-4 h-4 border-2 border-gray-400 border-t-black rounded-full animate-spin mr-2"></div>
+              Swapping...
+            </>
+          ) : needsApproval ? (
+            <>
+              <CheckCircle className="w-4 h-4 mr-2" />
+              Approve {formData.tokenIn?.label} & Swap
+            </>
+          ) : (
+            'Swap'
+          )}
+        </Button>
+
+        {/* Approval Status */}
+        {needsApproval && (
+          <div className="mt-3 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+            <div className="flex items-start space-x-2">
+              <Info className="w-4 h-4 text-yellow-400 mt-0.5 flex-shrink-0" />
+              <div className="text-sm">
+                <p className="text-yellow-400 font-medium">Approval Required</p>
+                <p className="text-gray-400 text-xs mt-1">
+                  First approval transaction will be executed, then swap will proceed automatically.
+                </p>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Transaction Status with OnchainKit */}

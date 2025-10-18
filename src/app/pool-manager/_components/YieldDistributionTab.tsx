@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useAccount } from 'wagmi';
+import { useQueryClient } from '@tanstack/react-query';
 import { useDepositYield, useDistributeToAllHolders, useUserPools, useDistributionValidation } from '@/hooks';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,6 +16,7 @@ import Image from 'next/image';
 
 export function YieldDistributionTab() {
   const { address } = useAccount();
+  const queryClient = useQueryClient();
   const {
     depositYield,
     isPending: isDepositPending,
@@ -38,6 +40,7 @@ export function YieldDistributionTab() {
 
   const [activeAction, setActiveAction] = useState<'deposit' | 'distribute'>('deposit');
   const [isApproving, setIsApproving] = useState(false);
+  const [isAutoDepositing, setIsAutoDepositing] = useState(false);
 
   const [depositForm, setDepositForm] = useState({
     seriesId: '',
@@ -86,7 +89,24 @@ export function YieldDistributionTab() {
         userAddress: address,
       });
 
-      toast.success('USDC approved successfully!', { id: 'approve-yield' });
+      toast.success('USDC approved successfully! Proceeding with deposit...', { id: 'approve-yield' });
+
+      // Set auto-depositing state
+      setIsAutoDepositing(true);
+
+      // Wait a moment for the approval to be reflected on-chain
+      setTimeout(async () => {
+        // Refetch allowance to get updated value
+        queryClient.invalidateQueries({
+          queryKey: ['readContract']
+        });
+
+        // Small delay to ensure the allowance is updated
+        setTimeout(() => {
+          handleDepositYield(new Event('auto-deposit') as any);
+        }, 500);
+      }, 1000);
+
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to approve USDC', {
         id: 'approve-yield'
@@ -97,9 +117,15 @@ export function YieldDistributionTab() {
   };
 
   const handleDepositYield = async (e: React.FormEvent) => {
-    e.preventDefault();
+    // Prevent default only if it's a form submission
+    if (e && e.preventDefault) {
+      e.preventDefault();
+    }
 
-    if (!address || !depositForm.seriesId || !depositForm.periodId || !depositForm.amount) {
+    // Skip validation for auto-deposit (from approve)
+    const isAutoDeposit = e && (e as any).type === 'auto-deposit';
+
+    if (!isAutoDeposit && (!address || !depositForm.seriesId || !depositForm.periodId || !depositForm.amount)) {
       toast.error('Please fill in all fields');
       return;
     }
@@ -120,6 +146,11 @@ export function YieldDistributionTab() {
       toast.error(error instanceof Error ? error.message : 'Failed to deposit yield', {
         id: 'deposit-yield'
       });
+    } finally {
+      // Reset auto-depositing state
+      if (isAutoDeposit) {
+        setIsAutoDepositing(false);
+      }
     }
   };
 
@@ -269,10 +300,15 @@ export function YieldDistributionTab() {
                 <Button
                   type="button"
                   onClick={handleApproveYield}
-                  disabled={isApproving || !depositForm.amount}
+                  disabled={isApproving || isAutoDepositing || !depositForm.amount}
                   className="w-full bg-green-600 hover:bg-green-700 text-white"
                 >
-                  {isApproving ? (
+                  {isAutoDepositing ? (
+                    <>
+                      <LoadingSpinner size="sm" className="mr-2" />
+                      Approving & Auto-Depositing...
+                    </>
+                  ) : isApproving ? (
                     <>
                       <LoadingSpinner size="sm" className="mr-2" />
                       Approving USDC...
@@ -287,10 +323,15 @@ export function YieldDistributionTab() {
               ) : (
                 <Button
                   type="submit"
-                  disabled={isDepositPending || !depositForm.seriesId || !depositForm.periodId || !depositForm.amount}
+                  disabled={isDepositPending || isAutoDepositing || !depositForm.seriesId || !depositForm.periodId || !depositForm.amount}
                   className="w-full bg-blue-600 hover:bg-blue-700 text-white"
                 >
-                  {isDepositPending ? (
+                  {isAutoDepositing ? (
+                    <>
+                      <LoadingSpinner size="sm" className="mr-2" />
+                      Auto-Depositing...
+                    </>
+                  ) : isDepositPending ? (
                     <>
                       <LoadingSpinner size="sm" className="mr-2" />
                       Depositing...

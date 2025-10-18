@@ -1,5 +1,6 @@
-import { useReadContract } from 'wagmi';
+import { useReadContract, usePublicClient } from 'wagmi';
 import { formatUnits } from 'viem';
+import { useState, useEffect } from 'react';
 import { CONTRACTS } from '@/constants/contracts/contracts';
 import { DEX_FACTORY_ABI } from '@/constants/abis/DEX_FACTORY_ABI';
 import { DEX_ROUTER_ABI } from '@/constants/abis/DEX_ROUTER_ABI';
@@ -81,48 +82,68 @@ export function useGetPool(tokenA: `0x${string}` | undefined, tokenB: `0x${strin
   });
 }
 
-// Get pool at specific index
-export function usePoolAtIndex(index: number) {
-  const result = useReadContract({
-    address: CONTRACTS.DEX_FACTORY as `0x${string}`,
-    abi: DEX_FACTORY_ABI,
-    functionName: 'allPools',
-    args: [BigInt(index)],
-    query: {
-      enabled: index >= 0,
-    },
-  });
-
-    return result;
-}
-
-// Comprehensive hook for fetching all pool data
+// Comprehensive hook for fetching all pool data using multicall
 export function useLiquidityPoolsData() {
+  const publicClient = usePublicClient();
   const { data: poolsLength, isLoading: isLoadingLength, error: lengthError } = useAllPools();
+  const [pools, setPools] = useState<`0x${string}`[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isError, setIsError] = useState(false);
 
-  // Create a dynamic number of pool queries based on actual pool count
-  // Limit to 20 pools for performance reasons
-  const maxPools = poolsLength ? Math.min(Number(poolsLength), 20) : 0;
+  useEffect(() => {
+    async function fetchPools() {
+      if (!poolsLength || Number(poolsLength) === 0 || !publicClient) {
+        setPools([]);
+        setIsLoading(false);
+        return;
+      }
 
-  // Create array of pool indices to fetch
-  const poolIndices = Array.from({ length: maxPools }, (_, i) => i);
+      try {
+        setIsLoading(true);
+        setIsError(false);
 
-  // Create hooks for each pool index using a map approach
-  const poolQueries = poolIndices.map(index => usePoolAtIndex(index));
+        // Limit to 20 pools for performance reasons
+        const maxPools = Math.min(Number(poolsLength), 20);
 
-  const isLoading = poolQueries.some(query => query.isLoading) || isLoadingLength;
-  const isError = poolQueries.some(query => query.isError) || !!lengthError;
+        // Use multicall to fetch all pools at once
+        const poolContracts = Array.from({ length: maxPools }, (_, i) => ({
+          address: CONTRACTS.DEX_FACTORY as `0x${string}`,
+          abi: DEX_FACTORY_ABI,
+          functionName: 'allPools' as const,
+          args: [BigInt(i)],
+        }));
 
-  const pools = poolQueries
-    .filter(query => query.data !== undefined)
-    .map(query => query.data as `0x${string}`);
+        const results = await publicClient.multicall({
+          contracts: poolContracts as any,
+          allowFailure: true,
+        });
+
+        const validPools = results
+          .filter((result): result is { status: 'success'; result: `0x${string}` } =>
+            result.status === 'success' && typeof result.result === 'string'
+          )
+          .map(result => result.result);
+
+        setPools(validPools);
+      } catch (error) {
+        console.error('Error fetching pools:', error);
+        setIsError(true);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    if (poolsLength !== undefined && !isLoadingLength) {
+      fetchPools();
+    }
+  }, [poolsLength, isLoadingLength, publicClient]);
 
   return {
     pools,
-    isLoading,
-    isError,
+    isLoading: isLoading || isLoadingLength,
+    isError: isError || !!lengthError,
     poolsLength: poolsLength ? Number(poolsLength) : 0,
-    maxPoolsFetched: maxPools,
+    maxPoolsFetched: pools.length,
   };
 }
 
