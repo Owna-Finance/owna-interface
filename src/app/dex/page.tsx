@@ -7,7 +7,7 @@ import { useLiquidityPoolsData } from '@/hooks';
 
 export default function DEXPage() {
   const [selectedPool, setSelectedPool] = useState<`0x${string}` | undefined>();
-  const { pools } = useLiquidityPoolsData();
+  const { pools, poolsLength } = useLiquidityPoolsData();
 
   const handlePoolSelect = (poolAddress: `0x${string}`) => {
     setSelectedPool(poolAddress);
@@ -53,7 +53,7 @@ export default function DEXPage() {
               <div className="space-y-3">
                 <div className="flex justify-between">
                   <span className="text-gray-400">Total Pools</span>
-                  <span className="text-white font-medium">{pools?.length || 0}</span>
+                  <span className="text-white font-medium">{poolsLength || 0}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-400">Total TVL</span>

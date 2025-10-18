@@ -13,7 +13,7 @@ export function useSimplePoolList() {
     },
   });
 
-  // Then check if we can read the factory length to verify contract is accessible
+  // Get the total number of pools from the factory
   const factoryLength = useReadContract({
     address: CONTRACTS.DEX_FACTORY as `0x${string}`,
     abi: DEX_FACTORY_ABI,
@@ -23,47 +23,37 @@ export function useSimplePoolList() {
     },
   });
 
-  // Try to get first few pools directly only if we have factory length
-  const pool0 = useReadContract({
-    address: CONTRACTS.DEX_FACTORY as `0x${string}`,
-    abi: DEX_FACTORY_ABI,
-    functionName: 'allPools',
-    args: [BigInt(0)],
-    query: {
-      enabled: factoryLength.data !== undefined && factoryLength.data !== null && Number(factoryLength.data) > 0,
-    },
-  });
+  // Create an array to hold all pool queries
+  const poolQueries = [];
+  const maxPools = factoryLength.data ? Number(factoryLength.data) : 0;
 
-  const pool1 = useReadContract({
-    address: CONTRACTS.DEX_FACTORY as `0x${string}`,
-    abi: DEX_FACTORY_ABI,
-    functionName: 'allPools',
-    args: [BigInt(1)],
-    query: {
-      enabled: factoryLength.data !== undefined && factoryLength.data !== null && Number(factoryLength.data) > 1,
-    },
-  });
+  // Dynamically create queries for all pools (up to 50 for performance reasons)
+  const poolsToFetch = Math.min(maxPools, 50);
 
-  const pool2 = useReadContract({
-    address: CONTRACTS.DEX_FACTORY as `0x${string}`,
-    abi: DEX_FACTORY_ABI,
-    functionName: 'allPools',
-    args: [BigInt(2)],
-    query: {
-      enabled: factoryLength.data !== undefined && factoryLength.data !== null && Number(factoryLength.data) > 2,
-    },
-  });
+  for (let i = 0; i < poolsToFetch; i++) {
+    const poolQuery = useReadContract({
+      address: CONTRACTS.DEX_FACTORY as `0x${string}`,
+      abi: DEX_FACTORY_ABI,
+      functionName: 'allPools',
+      args: [BigInt(i)],
+      query: {
+        enabled: factoryLength.data !== undefined && factoryLength.data !== null && i < Number(factoryLength.data),
+      },
+    });
+    poolQueries.push(poolQuery);
+  }
 
-  const pools = [pool0, pool1, pool2]
-    .filter(query => query.data !== undefined)
+  const pools = poolQueries
+    .filter(query => query.data !== undefined && query.data !== null)
     .map(query => query.data as `0x${string}`);
 
-  const isLoading = pool0.isLoading || pool1.isLoading || pool2.isLoading;
-  const isError = pool0.isError || pool1.isError || pool2.isError;
+  const isLoading = poolQueries.some(query => query.isLoading) || factoryLength.isLoading;
+  const isError = poolQueries.some(query => query.isError) || factoryLength.isError;
 
   return {
     pools,
     isLoading,
     isError,
+    totalPools: maxPools,
   };
 }

@@ -100,29 +100,20 @@ export function usePoolAtIndex(index: number) {
 export function useLiquidityPoolsData() {
   const { data: poolsLength, isLoading: isLoadingLength, error: lengthError } = useAllPools();
 
-  // Fixed hooks for first 10 pools (to avoid hooks order violation)
-  const pool0 = usePoolAtIndex(0);
-  const pool1 = usePoolAtIndex(1);
-  const pool2 = usePoolAtIndex(2);
-  const pool3 = usePoolAtIndex(3);
-  const pool4 = usePoolAtIndex(4);
-  const pool5 = usePoolAtIndex(5);
-  const pool6 = usePoolAtIndex(6);
-  const pool7 = usePoolAtIndex(7);
-  const pool8 = usePoolAtIndex(8);
-  const pool9 = usePoolAtIndex(9);
+  // Create a dynamic number of pool queries based on actual pool count
+  // Limit to 20 pools for performance reasons
+  const maxPools = poolsLength ? Math.min(Number(poolsLength), 20) : 0;
 
-  // Fixed array of hook results
-  const poolQueries = [pool0, pool1, pool2, pool3, pool4, pool5, pool6, pool7, pool8, pool9];
+  // Create array of pool indices to fetch
+  const poolIndices = Array.from({ length: maxPools }, (_, i) => i);
 
-  // Only use pools up to the actual length
-  const actualLength = poolsLength ? Math.min(Number(poolsLength), 10) : 0;
+  // Create hooks for each pool index using a map approach
+  const poolQueries = poolIndices.map(index => usePoolAtIndex(index));
 
-  const isLoading = poolQueries.slice(0, actualLength).some(query => query.isLoading) || isLoadingLength;
-  const isError = poolQueries.slice(0, actualLength).some(query => query.isError) || !!lengthError;
+  const isLoading = poolQueries.some(query => query.isLoading) || isLoadingLength;
+  const isError = poolQueries.some(query => query.isError) || !!lengthError;
 
   const pools = poolQueries
-    .slice(0, actualLength)
     .filter(query => query.data !== undefined)
     .map(query => query.data as `0x${string}`);
 
@@ -131,6 +122,7 @@ export function useLiquidityPoolsData() {
     isLoading,
     isError,
     poolsLength: poolsLength ? Number(poolsLength) : 0,
+    maxPoolsFetched: maxPools,
   };
 }
 
