@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowUpDown, Settings, Info } from 'lucide-react';
+import { ArrowUpDown, Settings, Info, CheckCircle } from 'lucide-react';
 import { EnhancedTokenInput, TokenOption } from './EnhancedTokenInput';
 import { useSwap, usePoolDetails, useTokenInfo } from '@/hooks';
 import { useGetAmountsOut, usePoolInfo } from '@/utils/dex-discovery';
 import { CONTRACTS } from '@/constants/contracts/contracts';
 import { toast } from 'sonner';
 import { formatAmount } from '@coinbase/onchainkit/token';
+import { useAccount } from 'wagmi';
 
 interface EnhancedSwapFormProps {
   selectedPool?: `0x${string}`;
@@ -22,13 +23,23 @@ interface SwapFormData {
 }
 
 export function EnhancedSwapForm({ selectedPool, availablePools = [] }: EnhancedSwapFormProps) {
-  const { swap, isLoading, hash, error } = useSwap();
+  const { address } = useAccount();
+  const {
+    swap,
+    isLoading,
+    hash,
+    error,
+    approveToken,
+    useTokenAllowance,
+    checkNeedsApproval
+  } = useSwap();
   const { reserves, token0, token1 } = usePoolDetails(selectedPool);
   const token0Info = useTokenInfo(token0 as `0x${string}`);
   const token1Info = useTokenInfo(token1 as `0x${string}`);
 
   const [showSettings, setShowSettings] = useState(false);
   const [isCalculating, setIsCalculating] = useState(false);
+  const [isApproving, setIsApproving] = useState(false);
 
   // Default token options
   const defaultUSDC: TokenOption = {
@@ -118,6 +129,44 @@ export function EnhancedSwapForm({ selectedPool, availablePools = [] }: Enhanced
     }
   }, [amountsOutResult, isLoadingAmountsOut, formData.amountIn, formData.tokenIn, formData.tokenOut]);
 
+  // Check allowance for tokenIn
+  const { data: tokenInAllowance } = useTokenAllowance({
+    tokenAddress: formData.tokenIn?.address as `0x${string}`,
+    amount: formData.amountIn || '0',
+    userAddress: address as `0x${string}`,
+  });
+
+  const needsApproval = formData.tokenIn?.address && formData.amountIn && address
+    ? checkNeedsApproval(tokenInAllowance as bigint, formData.amountIn)
+    : false;
+
+  const handleApprove = async () => {
+    if (!formData.tokenIn?.address || !formData.amountIn || !address) {
+      toast.error('Missing approval parameters');
+      return;
+    }
+
+    try {
+      setIsApproving(true);
+      toast.loading('Approving token...', { id: 'token-approval' });
+
+      await approveToken({
+        tokenAddress: formData.tokenIn.address,
+        amount: formData.amountIn,
+        userAddress: address,
+      });
+
+      toast.success('Token approved successfully!', { id: 'token-approval' });
+    } catch (error) {
+      toast.error('Approval failed', {
+        id: 'token-approval',
+        description: error instanceof Error ? error.message : 'Unknown error',
+      });
+    } finally {
+      setIsApproving(false);
+    }
+  };
+
   const handleSwap = async () => {
     if (!formData.amountIn || !formData.tokenIn || !formData.tokenOut || formData.tokenIn.value === formData.tokenOut.value) {
       toast.error('Invalid swap parameters');
@@ -126,6 +175,11 @@ export function EnhancedSwapForm({ selectedPool, availablePools = [] }: Enhanced
 
     if (!formData.tokenIn.address || !formData.tokenOut.address) {
       toast.error('Invalid token addresses');
+      return;
+    }
+
+    if (!address) {
+      toast.error('Please connect your wallet');
       return;
     }
 
@@ -139,6 +193,8 @@ export function EnhancedSwapForm({ selectedPool, availablePools = [] }: Enhanced
     }
 
     try {
+      toast.loading('Swapping tokens...', { id: 'swap' });
+
       // Calculate minimum output with slippage tolerance
       const amountOutMin = formData.amountOut
         ? (parseFloat(formData.amountOut) * (1 - parseFloat(formData.slippage) / 100)).toString()
@@ -149,12 +205,21 @@ export function EnhancedSwapForm({ selectedPool, availablePools = [] }: Enhanced
         amountOutMin,
         tokenIn: formData.tokenIn.address,
         tokenOut: formData.tokenOut.address,
-        recipient: '0x0000000000000000000000000000000000000000', // TODO: Get actual user address
+        recipient: address,
         deadline: Math.floor(Date.now() / 1000) + 1200, // 20 minutes
       });
+
+      toast.success('Swap successful!', { id: 'swap' });
+
+      // Reset form
+      setFormData(prev => ({
+        ...prev,
+        amountIn: '',
+        amountOut: '',
+      }));
     } catch (error) {
-      console.error('Swap error:', error);
       toast.error('Swap failed', {
+        id: 'swap',
         description: error instanceof Error ? error.message : 'Unknown error',
       });
     }
@@ -282,21 +347,41 @@ export function EnhancedSwapForm({ selectedPool, availablePools = [] }: Enhanced
           </div>
         )}
 
-        {/* Swap Button */}
-        <Button
-          onClick={handleSwap}
-          disabled={!isFormValid || isLoading || isCalculating}
-          className="w-full bg-white hover:bg-gray-200 text-black font-medium py-4 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isLoading ? (
-            <>
-              <div className="w-4 h-4 border-2 border-gray-400 border-t-black rounded-full animate-spin mr-2"></div>
-              Swapping...
-            </>
-          ) : (
-            'Swap'
-          )}
-        </Button>
+        {/* Approval/Swap Button */}
+        {needsApproval ? (
+          <Button
+            onClick={handleApprove}
+            disabled={!isFormValid || isApproving || isCalculating}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-4 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isApproving ? (
+              <>
+                <div className="w-4 h-4 border-2 border-gray-200 border-t-white rounded-full animate-spin mr-2"></div>
+                Approving {formData.tokenIn?.label}...
+              </>
+            ) : (
+              <>
+                <CheckCircle className="w-4 h-4 mr-2" />
+                Approve {formData.tokenIn?.label}
+              </>
+            )}
+          </Button>
+        ) : (
+          <Button
+            onClick={handleSwap}
+            disabled={!isFormValid || isLoading || isCalculating || !address}
+            className="w-full bg-white hover:bg-gray-200 text-black font-medium py-4 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isLoading ? (
+              <>
+                <div className="w-4 h-4 border-2 border-gray-400 border-t-black rounded-full animate-spin mr-2"></div>
+                Swapping...
+              </>
+            ) : (
+              'Swap'
+            )}
+          </Button>
+        )}
 
         {/* Transaction Status with OnchainKit */}
         {(hash || error) && (

@@ -68,8 +68,8 @@ export function useSnapshotInfo(tokenAddress: `0x${string}`, periodId: bigint | 
   const { data: snapshotTaken } = useReadContract({
     address: tokenAddress,
     abi: YRT_TOKEN_ABI,
-    functionName: 'isSnapshotTakenForPeriod',
-    args: [BigInt(periodId)],
+    functionName: 'isSnapshotTakenForPeriod' as any,
+    args: [BigInt(periodId)] as any,
     query: {
       enabled: !!tokenAddress && !!periodId,
     }
@@ -78,8 +78,8 @@ export function useSnapshotInfo(tokenAddress: `0x${string}`, periodId: bigint | 
   const { data: totalSupply } = useReadContract({
     address: tokenAddress,
     abi: YRT_TOKEN_ABI,
-    functionName: 'getSnapshotTotalSupplyForPeriod',
-    args: [BigInt(periodId)],
+    functionName: 'getSnapshotTotalSupplyForPeriod' as any,
+    args: [BigInt(periodId)] as any,
     query: {
       enabled: !!tokenAddress && !!periodId,
     }
@@ -88,8 +88,8 @@ export function useSnapshotInfo(tokenAddress: `0x${string}`, periodId: bigint | 
   const { data: snapshotTimestamp } = useReadContract({
     address: tokenAddress,
     abi: YRT_TOKEN_ABI,
-    functionName: 'getSnapshotBalanceForPeriod',
-    args: [BigInt(periodId), tokenAddress], // Use contract address to get timestamp
+    functionName: 'getSnapshotBalanceForPeriod' as any,
+    args: [BigInt(periodId), tokenAddress] as any, // Use contract address to get timestamp
     query: {
       enabled: !!tokenAddress && !!periodId,
     }
@@ -98,8 +98,8 @@ export function useSnapshotInfo(tokenAddress: `0x${string}`, periodId: bigint | 
   const { data: maturityDate } = useReadContract({
     address: tokenAddress,
     abi: YRT_TOKEN_ABI,
-    functionName: 'isPeriodMatured',
-    args: [BigInt(periodId)],
+    functionName: 'isPeriodMatured' as any,
+    args: [BigInt(periodId)] as any,
     query: {
       enabled: !!tokenAddress && !!periodId,
     }
@@ -108,10 +108,10 @@ export function useSnapshotInfo(tokenAddress: `0x${string}`, periodId: bigint | 
   const { data: snapshotHolders } = useReadContract({
     address: tokenAddress,
     abi: YRT_TOKEN_ABI,
-    functionName: 'getSnapshotHoldersForPeriod',
-    args: [BigInt(periodId)],
+    functionName: 'getSnapshotHoldersForPeriod' as any,
+    args: [BigInt(periodId)] as any,
     query: {
-      enabled: !!tokenAddress && !!periodId && snapshotTaken,
+      enabled: !!tokenAddress && !!periodId && !!snapshotTaken,
     }
   });
 
@@ -139,8 +139,8 @@ export function useUserSnapshotBalance(tokenAddress: `0x${string}`, periodId: bi
   const { data: userBalance } = useReadContract({
     address: tokenAddress,
     abi: YRT_TOKEN_ABI,
-    functionName: 'getSnapshotBalanceForPeriod',
-    args: [BigInt(periodId), userAddress],
+    functionName: 'getSnapshotBalanceForPeriod' as any,
+    args: [BigInt(periodId), userAddress] as any,
     query: {
       enabled: !!tokenAddress && !!periodId && !!userAddress,
     }
@@ -149,8 +149,8 @@ export function useUserSnapshotBalance(tokenAddress: `0x${string}`, periodId: bi
   const { data: totalSupply } = useReadContract({
     address: tokenAddress,
     abi: YRT_TOKEN_ABI,
-    functionName: 'getSnapshotTotalSupplyForPeriod',
-    args: [BigInt(periodId)],
+    functionName: 'getSnapshotTotalSupplyForPeriod' as any,
+    args: [BigInt(periodId)] as any,
     query: {
       enabled: !!tokenAddress && !!periodId,
     }
@@ -159,16 +159,16 @@ export function useUserSnapshotBalance(tokenAddress: `0x${string}`, periodId: bi
   const { data: snapshotTaken } = useReadContract({
     address: tokenAddress,
     abi: YRT_TOKEN_ABI,
-    functionName: 'isSnapshotTakenForPeriod',
-    args: [BigInt(periodId)],
+    functionName: 'isSnapshotTakenForPeriod' as any,
+    args: [BigInt(periodId)] as any,
     query: {
       enabled: !!tokenAddress && !!periodId,
     }
   });
 
   // Calculate user's percentage of total supply
-  const userPercentage = userBalance && totalSupply && totalSupply > 0n
-    ? Number((userBalance * BigInt(10000)) / totalSupply) / 100 // 2 decimal places
+  const userPercentage = userBalance && totalSupply && BigInt(totalSupply as bigint) > BigInt(0)
+    ? Number((BigInt(userBalance as bigint) * BigInt(10000)) / BigInt(totalSupply as bigint)) / 100 // 2 decimal places
     : 0;
 
   const formattedData: UserSnapshotBalance | null = snapshotTaken ? {
@@ -176,7 +176,7 @@ export function useUserSnapshotBalance(tokenAddress: `0x${string}`, periodId: bi
     balance: userBalance as bigint || BigInt(0),
     totalSupply: totalSupply as bigint || BigInt(0),
     percentage: userPercentage,
-    isEligible: Boolean(userBalance && userBalance > 0n),
+    isEligible: Boolean(userBalance && BigInt(userBalance as bigint) > BigInt(0)),
   } : null;
 
   return {
@@ -193,7 +193,7 @@ export function useTokenHolders(tokenAddress: `0x${string}`) {
   const { data: holders } = useReadContract({
     address: tokenAddress,
     abi: YRT_TOKEN_ABI,
-    functionName: 'getAllHolders',
+    functionName: 'getAllHolders' as any,
     query: {
       enabled: !!tokenAddress,
     }
@@ -202,14 +202,14 @@ export function useTokenHolders(tokenAddress: `0x${string}`) {
   const { data: holdersCount } = useReadContract({
     address: tokenAddress,
     abi: YRT_TOKEN_ABI,
-    functionName: 'getHoldersCount',
+    functionName: 'getHoldersCount' as any,
     query: {
       enabled: !!tokenAddress,
     }
   });
 
   return {
-    holders: holders as `0x${string}`[] || [],
+    holders: (holders as unknown as `0x${string}`[]) || [],
     holdersCount: Number(holdersCount) || 0,
     isLoading: !holders && !holdersCount,
   };
@@ -221,7 +221,7 @@ export function usePeriodSnapshots(tokenAddress: `0x${string}`, periodIds: (bigi
     return useSnapshotInfo(tokenAddress, periodId);
   });
 
-  const isLoading = snapshotsData.some(data => data.isLoading);
+  const isLoading = snapshotsData.some(data => !data.formattedData);
   const formattedSnapshots = snapshotsData.map(data => data.formattedData).filter(Boolean) as SnapshotInfo[];
 
   // Calculate stats
@@ -249,9 +249,9 @@ export function useUserSnapshotHistory(tokenAddress: `0x${string}`, periodIds: (
 
   // Calculate stats
   const totalEligiblePeriods = formattedHistory.filter(h => h.isEligible).length;
-  const totalBalanceAcrossPeriods = formattedHistory.reduce((sum, h) => sum + h.balance, 0n);
-  const averageBalance = totalEligiblePeriods > 0 ? totalBalanceAcrossPeriods / BigInt(totalEligiblePeriods) : 0n;
-  const highestBalance = formattedHistory.reduce((max, h) => h.balance > max ? h.balance : max, 0n);
+  const totalBalanceAcrossPeriods = formattedHistory.reduce((sum, h) => sum + h.balance, BigInt(0));
+  const averageBalance = totalEligiblePeriods > 0 ? totalBalanceAcrossPeriods / BigInt(totalEligiblePeriods) : BigInt(0);
+  const highestBalance = formattedHistory.reduce((max, h) => h.balance > max ? h.balance : max, BigInt(0));
 
   return {
     history: formattedHistory,
@@ -286,19 +286,19 @@ export function useCanTriggerSnapshot(seriesId: bigint | number, periodId: bigin
   });
 
   const { data: snapshotTaken } = useReadContract({
-    address: seriesInfo?.tokenAddress as `0x${string}`,
+    address: (seriesInfo as any)?.tokenAddress as `0x${string}`,
     abi: YRT_TOKEN_ABI,
-    functionName: 'isSnapshotTakenForPeriod',
-    args: [BigInt(periodId)],
+    functionName: 'isSnapshotTakenForPeriod' as any,
+    args: [BigInt(periodId)] as any,
     query: {
-      enabled: !!seriesInfo?.tokenAddress && !!periodId,
+      enabled: !!(seriesInfo as any)?.tokenAddress && !!periodId,
     }
   });
 
   const now = BigInt(Math.floor(Date.now() / 1000));
-  const isMatured = periodInfo ? now >= periodInfo.maturityDate : false;
-  const hasYield = periodInfo ? periodInfo.totalYield > 0n : false;
-  const isActive = periodInfo?.isActive || false;
+  const isMatured = periodInfo ? now >= (periodInfo as any).maturityDate : false;
+  const hasYield = periodInfo ? (periodInfo as any).totalYield > BigInt(0) : false;
+  const isActive = (periodInfo as any)?.isActive || false;
 
   const canTrigger = isActive && isMatured && hasYield && !Boolean(snapshotTaken);
 
@@ -307,8 +307,8 @@ export function useCanTriggerSnapshot(seriesId: bigint | number, periodId: bigin
     isMatured,
     hasYield,
     snapshotTaken: Boolean(snapshotTaken),
-    maturityDate: periodInfo?.maturityDate,
-    totalYield: periodInfo?.totalYield,
+    maturityDate: (periodInfo as any)?.maturityDate,
+    totalYield: (periodInfo as any)?.totalYield,
   };
 }
 
@@ -327,7 +327,7 @@ export const formatSnapshotTimestamp = (timestamp: bigint): string => {
 };
 
 export const calculateYieldAmount = (userBalance: bigint, totalYield: bigint, totalSupply: bigint): bigint => {
-  if (totalSupply === 0n) return 0n;
+  if (totalSupply === BigInt(0)) return BigInt(0);
   return (userBalance * totalYield) / totalSupply;
 };
 

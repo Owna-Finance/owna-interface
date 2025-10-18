@@ -160,12 +160,8 @@ export function useSecondaryMarket() {
         error.code === 4001
       ) {
         errorMessage = "User cancelled signing";
-        console.log("User cancelled signing");
       } else if (error instanceof Error) {
         errorMessage = error.message;
-        console.error("Signing failed:", error);
-      } else {
-        console.error("Signing failed:", error);
       }
 
       setError(errorMessage);
@@ -184,12 +180,6 @@ export function useSecondaryMarket() {
     setError(null);
 
     try {
-      console.log("Verifying order signature...", {
-        endpoint: `${apiBaseUrl}/orders/verify`,
-        orderSalt: unsignedTypedData.message.salt,
-        signatureLength: signature.length,
-      });
-
       const response = await fetch(`${apiBaseUrl}/orders/verify`, {
         method: "POST",
         headers: {
@@ -209,12 +199,10 @@ export function useSecondaryMarket() {
       }
 
       const result = await response.json();
-      console.log("✅ Order verification result:", result);
       return result; // Returns: true if valid
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Failed to verify order";
-      console.error("Order verification failed:", errorMessage);
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
@@ -235,7 +223,6 @@ export function useSecondaryMarket() {
       if (query.limit) params.append("limit", query.limit.toString());
 
       const url = `${apiBaseUrl}/orders?${params.toString()}`;
-      console.log("Fetching orders from:", url);
 
       const response = await fetch(url, {
         method: "GET",
@@ -326,19 +313,15 @@ export function useSecondaryMarket() {
       setError(null);
 
       // Step 1: Create order
-      console.log("Creating order...");
       const unsignedTypedData = await createOrder(params);
 
       // Step 2: Sign order
-      console.log("Requesting signature from user...");
       const signature = await signOrder(unsignedTypedData);
 
       // Step 3: Verify signature
-      console.log("Verifying signature...");
       const isValid = await verifyOrder(unsignedTypedData, signature);
 
       if (isValid) {
-        console.log("✅ Order created and verified successfully!");
         return {
           success: true,
           orderId: unsignedTypedData.message.salt,
@@ -351,7 +334,6 @@ export function useSecondaryMarket() {
         error instanceof Error
           ? error.message
           : "Failed to create and verify order";
-      console.error("Error in createAndVerifyOrder:", errorMessage);
       return {
         success: false,
         error: errorMessage,

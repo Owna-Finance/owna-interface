@@ -19,14 +19,6 @@ export function trackCTAClick(ctaId: string, ctaText: string, href: string) {
       }
     })
   }
-  
-  console.log('CTA Click Tracked:', {
-    ctaId,
-    ctaText,
-    href,
-    section: store.ui.currentSection,
-    totalClicks: store.analytics.ctaClicks[ctaId] || 1
-  })
 }
 
 export function trackSectionView(sectionId: string) {

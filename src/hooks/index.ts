@@ -32,6 +32,7 @@ export {
   type LiquidityPool,
   type PoolSummary
 } from './useLiquidityPools';
+export { useUserPools, type UserPoolData } from './useUserPools';
 export type { CreateYRTParams } from './useCreateYRT';
 export type { YRTFormData, YRTSampleData } from './useYRTForm';
 export type { StartNewPeriodParams } from './useStartNewPeriod';

@@ -129,7 +129,6 @@ export function useSwap() {
         args: [CONTRACTS.DEX_ROUTER as `0x${string}`, amountWei],
       });
     } catch (error) {
-      console.error('Error approving token:', error);
       throw new Error('Error approving token. Please try again.');
     }
   };
@@ -146,7 +145,6 @@ export function useSwap() {
         args: [CONTRACTS.DEX_ROUTER as `0x${string}`, amountWei],
       });
     } catch (error) {
-      console.error('Error approving YRT:', error);
       throw new Error('Error approving YRT. Please try again.');
     }
   };
@@ -163,7 +161,6 @@ export function useSwap() {
         args: [CONTRACTS.DEX_ROUTER as `0x${string}`, amountWei],
       });
     } catch (error) {
-      console.error('Error approving USDC:', error);
       throw new Error('Error approving mock USDC (18 decimals). Please try again.');
     }
   };
@@ -188,7 +185,6 @@ export function useSwap() {
         ],
       });
     } catch (error) {
-      console.error('Error swapping tokens:', error);
       throw new Error('Error swapping tokens. Please check your input values.');
     }
   };
@@ -233,14 +229,6 @@ export function useSwap() {
       const amountOutMinWei = parseAndValidateAmount(params.amountOutMin);
       const deadlineTimestamp = BigInt(params.deadline);
 
-      console.log('🔄 Starting swap transaction (18 decimals):', {
-        amountIn: formatTokenAmount(params.amountIn),
-        amountOutMin: formatTokenAmount(params.amountOutMin),
-        tokenIn: params.tokenIn,
-        tokenOut: params.tokenOut,
-        recipient: params.recipient,
-      });
-
       return writeContract({
         address: CONTRACTS.DEX_ROUTER as `0x${string}`,
         abi: DEX_ROUTER_ABI,
@@ -254,7 +242,6 @@ export function useSwap() {
         ],
       });
     } catch (error) {
-      console.error('Error swapping tokens:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       throw new Error(`Swap failed: ${errorMessage}`);
     }

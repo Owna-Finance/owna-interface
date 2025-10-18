@@ -23,32 +23,9 @@ export function PeriodManagementTab() {
     durationDays: '30'
   });
 
-  const [seriesList, setSeriesList] = useState<any[]>([]);
-
-  useEffect(() => {
-    if (allSeriesIds && !isLoadingIds) {
-      loadAllSeries();
-    }
-  }, [allSeriesIds, isLoadingIds]);
-
-  const loadAllSeries = async () => {
-    if (!allSeriesIds || !Array.isArray(allSeriesIds)) return;
-
-    const series = [];
-    for (const seriesId of allSeriesIds) {
-      const infoHook = useSeriesInfo(seriesId);
-      const slugHook = useSeriesSlug(seriesId);
-
-      if (infoHook.data && slugHook.data) {
-        series.push({
-          id: seriesId,
-          info: infoHook.data,
-          slug: slugHook.data,
-        });
-      }
-    }
-    setSeriesList(series);
-  };
+  // Note: We'll load series info on-demand when user selects, or use a simplified approach
+  // For now, just use allSeriesIds directly
+  const seriesList = (allSeriesIds as bigint[] | undefined) || [];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,19 +89,19 @@ export function PeriodManagementTab() {
                     <SelectValue placeholder="Choose a property..." />
                   </SelectTrigger>
                   <SelectContent className="bg-[#2A2A2A] border-[#3A3A3A]">
-                    {seriesList.map((series) => (
+                    {seriesList.map((seriesId: bigint) => (
                       <SelectItem
-                        key={series.id.toString()}
-                        value={series.id.toString()}
+                        key={seriesId.toString()}
+                        value={seriesId.toString()}
                         className="text-white hover:bg-[#3A3A3A]"
                       >
-                        {series.slug} - {series.info.propertyName}
+                        YRT Series #{seriesId.toString()}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
                 {seriesList.length === 0 && !isLoadingIds && (
-                  <p className="text-xs text-gray-500">No properties available. Create one first.</p>
+                  <p className="text-xs text-gray-500">No YRT series available. Create a property first.</p>
                 )}
               </div>
 

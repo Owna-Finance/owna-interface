@@ -111,15 +111,11 @@ export function useAllPools() {
         setIsLoading(true);
         setError(null);
 
-        const poolCount = Number(poolsLength);
-        console.log(`Fetching ${poolCount} pools from factory...`);
-
         // For now, return empty array until pools are created
         // In production, you would fetch pool addresses here
         setPools([]);
 
       } catch (err) {
-        console.error('Error fetching pools:', err);
         setError('Failed to load pools');
       } finally {
         setIsLoading(false);

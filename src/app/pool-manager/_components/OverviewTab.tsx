@@ -1,56 +1,58 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useMemo } from 'react';
 import { useAccount } from 'wagmi';
-import { useAllPools } from '@/hooks/useAllPools';
-import { useYRTSeries } from '@/hooks/useYRTSeries';
+import { useUserPools } from '@/hooks/useUserPools';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { TrendingUp, Droplets, DollarSign, BarChart3 } from 'lucide-react';
+import { TrendingUp, Droplets, DollarSign, BarChart3, ExternalLink } from 'lucide-react';
+import { formatUnits } from 'viem';
 
 export function OverviewTab() {
   const { address } = useAccount();
-  const { pools, isLoading: poolsLoading } = useAllPools();
-  const { allSeriesIds, isLoadingIds } = useYRTSeries();
+  const { pools, isLoading, error } = useUserPools();
 
-  const [userPools, setUserPools] = useState<any[]>([]);
-  const [stats, setStats] = useState({
-    totalPools: 0,
-    totalTVL: 0,
-    totalYield: 0,
-    avgAPY: 0
-  });
-
-  useEffect(() => {
-    if (pools.length > 0 && address) {
-      const yrtPools = pools.filter(pool => pool.isYRTPool);
-      const poolsWithPropertyNames = yrtPools.map(pool => ({
-        ...pool,
-        displayName: pool.propertyName || `${pool.token0Symbol}/${pool.token1Symbol}`,
-        displayDescription: pool.propertyName
-          ? `${pool.token0Symbol}/${pool.token1Symbol}`
-          : `Pool ${pool.address.slice(0, 6)}...${pool.address.slice(-4)}`
-      }));
-
-      setUserPools(poolsWithPropertyNames);
-
-      // Calculate stats (mock for now)
-      setStats({
-        totalPools: poolsWithPropertyNames.length,
-        totalTVL: poolsWithPropertyNames.reduce((acc, pool) => {
-          return acc + (parseFloat(pool.reserve0 || '0') + parseFloat(pool.reserve1 || '0'));
-        }, 0),
-        totalYield: 2450,
-        avgAPY: 18.5
-      });
+  // Calculate stats from user pools
+  const stats = useMemo(() => {
+    if (!pools || pools.length === 0) {
+      return {
+        totalPools: 0,
+        totalTVL: 0,
+        totalYield: 0,
+        avgAPY: 0
+      };
     }
-  }, [pools, address]);
 
-  if (poolsLoading || isLoadingIds) {
+    const totalTVL = pools.reduce((acc, pool) => {
+      const reserve0Value = parseFloat(formatUnits(pool.reserve0, 18));
+      const reserve1Value = parseFloat(formatUnits(pool.reserve1, 18));
+      return acc + reserve0Value + reserve1Value;
+    }, 0);
+
+    return {
+      totalPools: pools.length,
+      totalTVL,
+      totalYield: 0, // TODO: Calculate from yield distribution events
+      avgAPY: 18.5 // TODO: Calculate based on actual yield data
+    };
+  }, [pools]);
+
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <LoadingSpinner size="lg" text="Loading pool overview..." />
+        <LoadingSpinner size="lg" text="Loading your pools..." />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <p className="text-red-400 mb-2">Error loading pools</p>
+          <p className="text-gray-500 text-sm">{error}</p>
+        </div>
       </div>
     );
   }
@@ -121,29 +123,29 @@ export function OverviewTab() {
         <CardHeader>
           <CardTitle className="text-white">Your Liquidity Pools</CardTitle>
           <CardDescription className="text-gray-400">
-            Properties with active DEX liquidity pools
+            DEX pools where you are the property owner
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {userPools.length === 0 ? (
+          {pools.length === 0 ? (
             <div className="text-center py-12">
               <Droplets className="w-16 h-16 text-gray-600 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-white mb-2">No Pools Found</h3>
               <p className="text-gray-400 mb-6">
-                Create a property and add liquidity to get started
+                You don't own any liquidity pools yet. Create a YRT series and add liquidity to the DEX.
               </p>
               <Button
                 onClick={() => window.location.href = '/add-property'}
                 className="bg-blue-600 hover:bg-blue-700 text-white"
               >
-                Create Property
+                Create YRT Series
               </Button>
             </div>
           ) : (
             <div className="space-y-4">
-              {userPools.map((pool, index) => (
+              {pools.map((pool) => (
                 <div
-                  key={index}
+                  key={pool.poolAddress}
                   className="bg-[#2A2A2A]/30 border border-[#3A3A3A] rounded-xl p-5 hover:bg-[#2A2A2A]/50 transition-colors"
                 >
                   <div className="flex items-center justify-between">
@@ -153,9 +155,11 @@ export function OverviewTab() {
                       </div>
                       <div>
                         <h3 className="text-lg font-semibold text-white">
-                          {pool.displayName}
+                          {pool.propertyName}
                         </h3>
-                        <p className="text-sm text-gray-400">{pool.displayDescription}</p>
+                        <p className="text-sm text-gray-400">
+                          {pool.token0Symbol} / {pool.token1Symbol}
+                        </p>
                       </div>
                     </div>
 
@@ -163,44 +167,62 @@ export function OverviewTab() {
                       <div className="text-right">
                         <p className="text-xs text-gray-500">TVL</p>
                         <p className="text-lg font-semibold text-white">
-                          ${((parseFloat(pool.reserve0 || '0') + parseFloat(pool.reserve1 || '0'))).toFixed(0)}
+                          ${parseFloat(pool.tvl).toLocaleString('en-US', { maximumFractionDigits: 2 })}
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="text-xs text-gray-500">APY</p>
-                        <p className="text-lg font-semibold text-green-400">12.5%</p>
+                        <p className="text-xs text-gray-500">Price</p>
+                        <p className="text-lg font-semibold text-white">
+                          ${parseFloat(pool.price).toFixed(4)}
+                        </p>
                       </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="border-[#3A3A3A] text-white hover:bg-[#3A3A3A]"
+                      <a
+                        href={`https://sepolia.basescan.org/address/${pool.poolAddress}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2 hover:bg-[#3A3A3A] rounded-lg transition-colors"
                       >
-                        Manage
-                      </Button>
+                        <ExternalLink className="w-4 h-4 text-gray-400" />
+                      </a>
                     </div>
                   </div>
 
                   {/* Pool Details */}
-                  <div className="mt-4 pt-4 border-t border-[#3A3A3A] grid grid-cols-3 gap-4">
+                  <div className="mt-4 pt-4 border-t border-[#3A3A3A] grid grid-cols-4 gap-4">
                     <div>
                       <p className="text-xs text-gray-500 mb-1">Reserve {pool.token0Symbol}</p>
                       <p className="text-sm font-medium text-gray-300">
-                        {parseFloat(pool.reserve0 || '0').toFixed(2)}
+                        {parseFloat(formatUnits(pool.reserve0, 18)).toFixed(2)}
                       </p>
                     </div>
                     <div>
                       <p className="text-xs text-gray-500 mb-1">Reserve {pool.token1Symbol}</p>
                       <p className="text-sm font-medium text-gray-300">
-                        {parseFloat(pool.reserve1 || '0').toFixed(2)}
+                        {parseFloat(formatUnits(pool.reserve1, 18)).toFixed(2)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Swap Fee</p>
+                      <p className="text-sm font-medium text-gray-300">
+                        {(Number(pool.swapFee) / 100).toFixed(2)}%
                       </p>
                     </div>
                     <div>
                       <p className="text-xs text-gray-500 mb-1">Pool Address</p>
                       <p className="text-sm font-mono text-gray-300">
-                        {pool.address.slice(0, 6)}...{pool.address.slice(-4)}
+                        {pool.poolAddress.slice(0, 6)}...{pool.poolAddress.slice(-4)}
                       </p>
                     </div>
                   </div>
+
+                  {/* YRT Series Badge */}
+                  {pool.isYRTPool && pool.seriesId && (
+                    <div className="mt-3">
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                        YRT Series #{pool.seriesId.toString()}
+                      </span>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

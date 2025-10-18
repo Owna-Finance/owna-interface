@@ -24,7 +24,6 @@ export default function MarketPage() {
       setTotalPages(ordersResponse.meta.totalPages);
       setTotalOrders(ordersResponse.meta.total);
     } catch (error) {
-      console.error('Failed to refresh orders:', error);
       setOrders([]);
       setTotalPages(1);
       setTotalOrders(0);
@@ -47,15 +46,7 @@ export default function MarketPage() {
         setOrders(ordersResponse.data);
         setTotalPages(ordersResponse.meta.totalPages);
         setTotalOrders(ordersResponse.meta.total);
-        
-        console.log('Orders loaded:', {
-          total: ordersResponse.meta.total,
-          page: ordersResponse.meta.page,
-          totalPages: ordersResponse.meta.totalPages,
-          ordersCount: ordersResponse.data.length
-        });
       } catch (error) {
-        console.error('Failed to load orders:', error);
         setOrders([]);
         setTotalPages(1);
         setTotalOrders(0);

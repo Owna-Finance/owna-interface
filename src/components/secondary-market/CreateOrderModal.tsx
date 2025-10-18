@@ -65,7 +65,6 @@ export function CreateOrderModal({
         approvalStep === "approving"
       ) {
         setApprovalStep("approved");
-        console.log("Token approval confirmed! Creating order...");
 
         try {
           // Step 2: Create and verify order after approval is confirmed
@@ -89,12 +88,10 @@ export function CreateOrderModal({
               onClose();
             }, 2000);
           } else {
-            console.error("Order creation failed:", result.error);
             setApprovalStep("idle");
             setPendingOrderParams(null);
           }
         } catch (error) {
-          console.error("Error after approval:", error);
           setApprovalStep("idle");
           setPendingOrderParams(null);
         }
@@ -108,7 +105,6 @@ export function CreateOrderModal({
   // Handle approval error
   useEffect(() => {
     if (approvalError) {
-      console.error("Approval error:", approvalError);
       alert(`Token approval failed: ${approvalError.message}`);
       setApprovalStep("idle");
       setPendingOrderParams(null);
@@ -181,12 +177,6 @@ export function CreateOrderModal({
       setApprovalStep("approving");
 
       // Step 1: Approve token to SecondaryMarket contract
-      console.log(
-        "Approving token:",
-        tokenToApprove,
-        "amount:",
-        amountToApprove.toString()
-      );
       writeContract({
         address: tokenToApprove,
         abi: erc20Abi,
@@ -194,7 +184,6 @@ export function CreateOrderModal({
         args: [CONTRACTS.SECONDARY_MARKET, amountToApprove],
       });
     } catch (error) {
-      console.error("Error creating order:", error);
       setApprovalStep("idle");
       setPendingOrderParams(null);
     }

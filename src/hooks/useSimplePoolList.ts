@@ -23,22 +23,6 @@ export function useSimplePoolList() {
     },
   });
 
-  // Debug logs
-  console.log('useSimplePoolList Debug - Updated');
-  console.log('CONTRACTS.DEX_FACTORY:', CONTRACTS.DEX_FACTORY);
-  console.log('feeRecipient (basic test):', {
-    data: feeRecipient.data,
-    isLoading: feeRecipient.isLoading,
-    isError: feeRecipient.isError,
-    error: feeRecipient.error?.message
-  });
-  console.log('factoryLength:', {
-    data: factoryLength.data?.toString(),
-    isLoading: factoryLength.isLoading,
-    isError: factoryLength.isError,
-    error: factoryLength.error?.message
-  });
-
   // Try to get first few pools directly only if we have factory length
   const pool0 = useReadContract({
     address: CONTRACTS.DEX_FACTORY as `0x${string}`,
@@ -70,20 +54,12 @@ export function useSimplePoolList() {
     },
   });
 
-  // Debug logs
-  console.log('useSimplePoolList Debug - Pool Data:');
-  console.log('pool0:', { data: pool0.data, isLoading: pool0.isLoading, isError: pool0.isError, error: pool0.error?.message });
-  console.log('pool1:', { data: pool1.data, isLoading: pool1.isLoading, isError: pool1.isError, error: pool1.error?.message });
-  console.log('pool2:', { data: pool2.data, isLoading: pool2.isLoading, isError: pool2.isError, error: pool2.error?.message });
-
   const pools = [pool0, pool1, pool2]
     .filter(query => query.data !== undefined)
     .map(query => query.data as `0x${string}`);
 
   const isLoading = pool0.isLoading || pool1.isLoading || pool2.isLoading;
   const isError = pool0.isError || pool1.isError || pool2.isError;
-
-  console.log('useSimplePoolList Result:', { pools, isLoading, isError });
 
   return {
     pools,

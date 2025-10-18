@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAccount } from 'wagmi';
 import { useAddLiquidity } from '@/hooks/useAddLiquidity';
-import { useAllPools } from '@/hooks/useAllPools';
+import { useUserPools } from '@/hooks/useUserPools';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,12 +11,13 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { Droplets, Plus, ArrowRight, Info } from 'lucide-react';
+import { Droplets, Plus, Info } from 'lucide-react';
+import { formatUnits } from 'viem';
 
 export function LiquidityManagementTab() {
   const { address } = useAccount();
   const { addLiquidity, approveToken } = useAddLiquidity();
-  const { pools, isLoading: poolsLoading } = useAllPools();
+  const { pools, isLoading: poolsLoading } = useUserPools();
 
   const [selectedPool, setSelectedPool] = useState('');
   const [amountA, setAmountA] = useState('');
@@ -24,19 +25,10 @@ export function LiquidityManagementTab() {
   const [isApproving, setIsApproving] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
 
-  const [userPools, setUserPools] = useState<any[]>([]);
-
-  useEffect(() => {
-    if (pools.length > 0) {
-      const yrtPools = pools.filter(pool => pool.isYRTPool);
-      setUserPools(yrtPools);
-    }
-  }, [pools]);
-
-  const currentPool = userPools.find(p => p.address === selectedPool);
+  const currentPool = pools.find(p => p.poolAddress === selectedPool);
 
   const handleAddLiquidity = async () => {
-    if (!address || !selectedPool || !amountA || !amountB) {
+    if (!address || !selectedPool || !amountA || !amountB || !currentPool) {
       toast.error('Please fill in all fields');
       return;
     }
@@ -47,12 +39,12 @@ export function LiquidityManagementTab() {
 
       // Approve tokens first
       await approveToken({
-        tokenAddress: currentPool.token0Address,
+        tokenAddress: currentPool.token0,
         amount: amountA,
         userAddress: address
       });
       await approveToken({
-        tokenAddress: currentPool.token1Address,
+        tokenAddress: currentPool.token1,
         amount: amountB,
         userAddress: address
       });
@@ -63,15 +55,15 @@ export function LiquidityManagementTab() {
 
       // Add liquidity
       await addLiquidity({
-        tokenA: currentPool.token0Address,
-        tokenB: currentPool.token1Address,
+        tokenA: currentPool.token0,
+        tokenB: currentPool.token1,
         amountADesired: amountA,
         amountBDesired: amountB,
         amountAMin: (parseFloat(amountA) * 0.95).toString(),
         amountBMin: (parseFloat(amountB) * 0.95).toString(),
         to: address,
         deadline: '20',
-        propertyName: currentPool.propertyName || '',
+        propertyName: currentPool.propertyName,
         propertyOwner: address
       });
 
@@ -114,25 +106,25 @@ export function LiquidityManagementTab() {
             <Select
               value={selectedPool}
               onValueChange={setSelectedPool}
-              disabled={isLoading || userPools.length === 0}
+              disabled={isLoading || pools.length === 0}
             >
               <SelectTrigger className="bg-[#2A2A2A]/50 border-[#3A3A3A] text-white">
                 <SelectValue placeholder="Choose a pool..." />
               </SelectTrigger>
               <SelectContent className="bg-[#2A2A2A] border-[#3A3A3A]">
-                {userPools.map((pool) => (
+                {pools.map((pool) => (
                   <SelectItem
-                    key={pool.address}
-                    value={pool.address}
+                    key={pool.poolAddress}
+                    value={pool.poolAddress}
                     className="text-white hover:bg-[#3A3A3A]"
                   >
-                    {pool.propertyName || `${pool.token0Symbol}/${pool.token1Symbol}`}
+                    {pool.propertyName} ({pool.token0Symbol}/{pool.token1Symbol})
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            {userPools.length === 0 && (
-              <p className="text-xs text-gray-500">No pools available. Create a property first.</p>
+            {pools.length === 0 && (
+              <p className="text-xs text-gray-500">No pools found. Create a YRT series and add liquidity first.</p>
             )}
           </div>
 
@@ -162,7 +154,7 @@ export function LiquidityManagementTab() {
                     </div>
                   </div>
                   <p className="text-xs text-gray-500">
-                    Available: {parseFloat(currentPool.reserve0 || '0').toFixed(2)} {currentPool.token0Symbol}
+                    Pool reserve: {parseFloat(formatUnits(currentPool.reserve0, 18)).toFixed(2)} {currentPool.token0Symbol}
                   </p>
                 </div>
 
@@ -195,7 +187,7 @@ export function LiquidityManagementTab() {
                     </div>
                   </div>
                   <p className="text-xs text-gray-500">
-                    Available: {parseFloat(currentPool.reserve1 || '0').toFixed(2)} {currentPool.token1Symbol}
+                    Pool reserve: {parseFloat(formatUnits(currentPool.reserve1, 18)).toFixed(2)} {currentPool.token1Symbol}
                   </p>
                 </div>
               </div>
@@ -209,7 +201,9 @@ export function LiquidityManagementTab() {
                       <span className="text-gray-400">Current Pool Ratio</span>
                       <span className="text-white font-medium">
                         1 {currentPool.token0Symbol} = {
-                          (parseFloat(currentPool.reserve1) / parseFloat(currentPool.reserve0)).toFixed(4)
+                          currentPool.reserve0 > BigInt(0)
+                            ? (parseFloat(formatUnits(currentPool.reserve1, 18)) / parseFloat(formatUnits(currentPool.reserve0, 18))).toFixed(4)
+                            : '0.0000'
                         } {currentPool.token1Symbol}
                       </span>
                     </div>
