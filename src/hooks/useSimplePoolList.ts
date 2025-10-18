@@ -3,16 +3,6 @@ import { CONTRACTS } from '@/constants/contracts/contracts';
 import { DEX_FACTORY_ABI } from '@/constants/abis/DEX_FACTORY_ABI';
 
 export function useSimplePoolList() {
-  // First, try to read feeRecipient to test basic contract connectivity
-  const feeRecipient = useReadContract({
-    address: CONTRACTS.DEX_FACTORY as `0x${string}`,
-    abi: DEX_FACTORY_ABI,
-    functionName: 'feeRecipient',
-    query: {
-      enabled: true,
-    },
-  });
-
   // Get the total number of pools from the factory
   const factoryLength = useReadContract({
     address: CONTRACTS.DEX_FACTORY as `0x${string}`,
