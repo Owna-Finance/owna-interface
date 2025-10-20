@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Kantumruy_Pro } from "next/font/google";
 import { OnchainKitProviders } from "@/providers/onchainkit-provider";
+import { WalletProvider } from "@/components/providers/WalletProvider";
 import { Toaster } from "@/components/ui/sonner";
 import "@coinbase/onchainkit/styles.css";
 import "./globals.css";
@@ -94,7 +95,13 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
               (function () {
-                const suppressPatterns = [/AnalyticsSDKApiError/, /Failed to fetch/];
+                const suppressPatterns = [
+                  /AnalyticsSDKApiError/,
+                  /Failed to fetch/,
+                  /MetaMaskSDK/,
+                  /Cannot read properties of undefined \(reading 'on'\)/,
+                  /metaMaskSDK/i
+                ];
 
                 window.addEventListener('error', function (event) {
                   const message = event?.error?.message || '';
@@ -115,6 +122,11 @@ export default function RootLayout({
                   }
                   return undefined;
                 });
+
+                // Prevent MetaMask SDK initialization errors during SSR
+                if (typeof window !== 'undefined' && window.ethereum === undefined) {
+                  console.warn('MetaMask not detected - wallet functionality will be limited');
+                }
 
                 if ('${process.env.NODE_ENV}' !== 'production' && typeof window.fetch === 'function') {
                   const originalFetch = window.fetch;
@@ -137,8 +149,10 @@ export default function RootLayout({
         style={{ overscrollBehavior: 'none' }}
       >
         <OnchainKitProviders>
-          {children}
-          <Toaster position="bottom-right" />
+          <WalletProvider>
+            {children}
+            <Toaster position="bottom-right" />
+          </WalletProvider>
         </OnchainKitProviders>
       </body>
     </html>
