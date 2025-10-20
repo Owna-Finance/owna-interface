@@ -55,9 +55,103 @@ export function YieldDistributionTab() {
     periodId: ''
   });
 
+  // Type definitions for period data
+  interface PeriodInfo {
+    maturityDate: bigint;
+    startedAt: bigint;
+    totalYield: bigint;
+    yieldClaimed: bigint;
+    isActive: boolean;
+  }
+
+  // Helper function to format period info
+  const formatPeriodInfo = (periodInfo: PeriodInfo) => {
+    if (!periodInfo) return null;
+
+    const maturityDate = new Date(Number(periodInfo.maturityDate) * 1000);
+    const totalYield = Number(periodInfo.totalYield) / 1e18;
+    const isMatured = Date.now() >= Number(periodInfo.maturityDate) * 1000;
+    const isActive = periodInfo.isActive;
+
+    return {
+      maturityDate,
+      totalYield,
+      isMatured,
+      isActive
+    };
+  };
+
   
   // USDC token address for yield deposits
   const USDC_TOKEN = CONTRACTS.USDC;
+
+  // Fetch periods for selected series (for deposit)
+  const { data: depositPeriods, isLoading: isLoadingDepositPeriods } = useReadContract({
+    address: CONTRACTS.YRT_FACTORY,
+    abi: [
+      // Temporarily add the new function ABI here until we update the main ABI file
+      {
+        "inputs": [{"internalType": "uint256", "name": "_seriesId", "type": "uint256"}],
+        "name": "getActivePeriodsBySeriesId",
+        "outputs": [
+          {"internalType": "uint256[]", "name": "activePeriodIds", "type": "uint256[]"},
+          {
+            "components": [
+              {"internalType": "uint96", "name": "maturityDate", "type": "uint96"},
+              {"internalType": "uint96", "name": "startedAt", "type": "uint96"},
+              {"internalType": "uint128", "name": "totalYield", "type": "uint128"},
+              {"internalType": "uint128", "name": "yieldClaimed", "type": "uint128"},
+              {"internalType": "bool", "name": "isActive", "type": "bool"}
+            ],
+            "internalType": "struct YRTFactory.PeriodInfo[]",
+            "name": "activePeriodInfos",
+            "type": "tuple[]"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      }
+    ],
+    functionName: 'getActivePeriodsBySeriesId',
+    args: depositForm.seriesId && /^\d+$/.test(depositForm.seriesId) ? [BigInt(depositForm.seriesId)] : undefined,
+    query: {
+      enabled: !!depositForm.seriesId && /^\d+$/.test(depositForm.seriesId),
+    }
+  });
+
+  // Fetch periods for selected series (for distribute)
+  const { data: distributePeriods, isLoading: isLoadingDistributePeriods } = useReadContract({
+    address: CONTRACTS.YRT_FACTORY,
+    abi: [
+      // Temporarily add the new function ABI here
+      {
+        "inputs": [{"internalType": "uint256", "name": "_seriesId", "type": "uint256"}],
+        "name": "getReadyPeriodsBySeriesId",
+        "outputs": [
+          {"internalType": "uint256[]", "name": "readyPeriodIds", "type": "uint256[]"},
+          {
+            "components": [
+              {"internalType": "uint96", "name": "maturityDate", "type": "uint96"},
+              {"internalType": "uint96", "name": "startedAt", "type": "uint96"},
+              {"internalType": "uint128", "name": "totalYield", "type": "uint128"},
+              {"internalType": "uint128", "name": "yieldClaimed", "type": "uint128"},
+              {"internalType": "bool", "name": "isActive", "type": "bool"}
+            ],
+            "internalType": "struct YRTFactory.PeriodInfo[]",
+            "name": "readyPeriodInfos",
+            "type": "tuple[]"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      }
+    ],
+    functionName: 'getReadyPeriodsBySeriesId',
+    args: distributeForm.seriesId && /^\d+$/.test(distributeForm.seriesId) ? [BigInt(distributeForm.seriesId)] : undefined,
+    query: {
+      enabled: !!distributeForm.seriesId && /^\d+$/.test(distributeForm.seriesId),
+    }
+  });
 
   // Validate series and period existence
   const { data: seriesInfo } = useReadContract({
@@ -167,7 +261,7 @@ export function YieldDistributionTab() {
       }
 
       if (!depositForm.periodId || depositForm.periodId.trim() === '') {
-        throw new Error('Period ID is required');
+        throw new Error('Please select a period from the dropdown');
       }
 
       // Enhanced validation for seriesId and periodId (consistent with hook)
@@ -175,20 +269,20 @@ export function YieldDistributionTab() {
       const periodIdStr = depositForm.periodId.trim();
 
       if (seriesIdStr === '') {
-        throw new Error('Series ID is required');
+        throw new Error('Please select a property first');
       }
 
       if (periodIdStr === '') {
-        throw new Error('Period ID is required');
+        throw new Error('Please select a period from the dropdown');
       }
 
       // Check if inputs are valid numbers
       if (!/^\d+$/.test(seriesIdStr)) {
-        throw new Error('Series ID must be a valid number');
+        throw new Error('Invalid property selection');
       }
 
       if (!/^\d+$/.test(periodIdStr)) {
-        throw new Error('Period ID must be a valid number');
+        throw new Error('Invalid period selection');
       }
 
       // Convert to BigInt with error handling (same as hook)
@@ -197,17 +291,12 @@ export function YieldDistributionTab() {
         seriesIdNum = BigInt(seriesIdStr);
         periodIdNum = BigInt(periodIdStr);
       } catch (error) {
-        throw new Error('Invalid Series ID or Period ID format. Must be valid numbers.');
+        throw new Error('Invalid selection. Please try selecting again.');
       }
 
       // Check for negative or zero values
-      if (seriesIdNum <= 0n || periodIdNum <= 0n) {
-        throw new Error('Series ID and Period ID must be greater than 0');
-      }
-
-      // Check for unreasonably large values
-      if (seriesIdNum > 1000000n || periodIdNum > 1000000n) {
-        throw new Error('Series ID or Period ID seems too large. Please check your input.');
+      if (seriesIdNum <= BigInt(0) || periodIdNum <= BigInt(0)) {
+        throw new Error('Invalid selection detected');
       }
 
       // Validate series exists
@@ -221,7 +310,7 @@ export function YieldDistributionTab() {
       }
 
       // Check if period is active
-      if (periodInfo && !periodInfo.isActive) {
+      if (periodInfo && typeof periodInfo === 'object' && periodInfo !== null && 'isActive' in periodInfo && !periodInfo.isActive) {
         console.warn(`Warning: Period ${periodIdNum} is not active. Proceeding anyway...`);
       }
 
@@ -236,7 +325,7 @@ export function YieldDistributionTab() {
         tokenAddress: USDC_TOKEN,
         seriesExists: !!seriesInfo,
         periodExists: !!periodInfo,
-        periodActive: periodInfo?.isActive
+        periodActive: periodInfo && typeof periodInfo === 'object' && periodInfo !== null && 'isActive' in periodInfo ? periodInfo.isActive : undefined
       });
 
       // Additional safety check for timing
@@ -291,7 +380,7 @@ export function YieldDistributionTab() {
     e.preventDefault();
 
     if (!address || !distributeForm.seriesId || !distributeForm.periodId) {
-      toast.error('Please fill in all fields');
+      toast.error('Please select both property and period');
       return;
     }
 
@@ -401,19 +490,65 @@ export function YieldDistributionTab() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-gray-300">Period ID</Label>
-                  <Input
-                    type="number"
+                  <Label className="text-gray-300">Period</Label>
+                  <Select
                     value={depositForm.periodId}
-                    onChange={(e) => setDepositForm(prev => ({ ...prev, periodId: e.target.value }))}
-                    placeholder="Enter period number (e.g., 1, 2, 3)"
-                    min="1"
-                    max="100"
-                    className="bg-[#2A2A2A]/50 border-[#3A3A3A] text-white"
-                    disabled={isDepositPending || isAutoDepositing}
-                  />
+                    onValueChange={(value) => setDepositForm(prev => ({ ...prev, periodId: value }))}
+                    disabled={isDepositPending || isAutoDepositing || !depositForm.seriesId || isLoadingDepositPeriods}
+                  >
+                    <SelectTrigger className="bg-[#2A2A2A]/50 border-[#3A3A3A] text-white">
+                      <SelectValue placeholder={isLoadingDepositPeriods ? "Loading periods..." : "Select period..."} />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#2A2A2A] border-[#3A3A3A] max-h-60">
+                      {isLoadingDepositPeriods ? (
+                        <div className="p-4 text-center text-gray-400">
+                          Loading periods...
+                        </div>
+                      ) : depositPeriods && depositPeriods[0] && depositPeriods[0].length > 0 ? (
+                        depositPeriods[0].map((periodId: bigint, index: number) => {
+                          const periodInfo = depositPeriods[1]?.[index] as PeriodInfo;
+                          if (!periodInfo) return null;
+
+                          const maturityDate = new Date(Number(periodInfo.maturityDate) * 1000);
+                          const totalYield = Number(periodInfo.totalYield) / 1e18; // Convert from wei
+                          const isActive = periodInfo.isActive;
+
+                          return (
+                            <SelectItem
+                              key={periodId.toString()}
+                              value={periodId.toString()}
+                              className="text-white hover:bg-[#3A3A3A] py-3"
+                            >
+                              <div className="flex flex-col space-y-1">
+                                <div className="flex items-center justify-between">
+                                  <span className="font-medium">Period {periodId.toString()}</span>
+                                  <span className={`text-xs px-2 py-1 rounded ${
+                                    isActive ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400'
+                                  }`}>
+                                    {isActive ? 'Active' : 'Inactive'}
+                                  </span>
+                                </div>
+                                <div className="text-xs text-gray-400">
+                                  Matures: {maturityDate.toLocaleDateString()}
+                                  {totalYield > 0 && (
+                                    <span className="ml-2 text-blue-400">
+                                      Yield: {totalYield.toFixed(2)} USDC
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </SelectItem>
+                          );
+                        })
+                      ) : (
+                        <div className="p-4 text-center text-gray-400">
+                          {depositForm.seriesId ? 'No active periods found' : 'Select a property first'}
+                        </div>
+                      )}
+                    </SelectContent>
+                  </Select>
                   <p className="text-xs text-gray-500">
-                    Enter the fundraising period number. Usually starts from 1.
+                    Only periods with yield deposits are shown. Select the period you want to deposit yield to.
                   </p>
                 </div>
 
@@ -567,19 +702,86 @@ export function YieldDistributionTab() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-gray-300">Period ID</Label>
-                  <Input
-                    type="number"
+                  <Label className="text-gray-300">Period</Label>
+                  <Select
                     value={distributeForm.periodId}
-                    onChange={(e) => setDistributeForm(prev => ({ ...prev, periodId: e.target.value }))}
-                    placeholder="Enter period number (e.g., 1, 2, 3)"
-                    min="1"
-                    max="100"
-                    className="bg-[#2A2A2A]/50 border-[#3A3A3A] text-white"
-                    disabled={isDistributePending}
-                  />
+                    onValueChange={(value) => setDistributeForm(prev => ({ ...prev, periodId: value }))}
+                    disabled={isDistributePending || !distributeForm.seriesId || isLoadingDistributePeriods}
+                  >
+                    <SelectTrigger className="bg-[#2A2A2A]/50 border-[#3A3A3A] text-white">
+                      <SelectValue placeholder={isLoadingDistributePeriods ? "Loading periods..." : "Select period..."} />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#2A2A2A] border-[#3A3A3A] max-h-60">
+                      {isLoadingDistributePeriods ? (
+                        <div className="p-4 text-center text-gray-400">
+                          Loading periods...
+                        </div>
+                      ) : distributePeriods && distributePeriods[0] && distributePeriods[0].length > 0 ? (
+                        distributePeriods[0].map((periodId: bigint, index: number) => {
+                          const periodInfo = distributePeriods[1]?.[index] as PeriodInfo;
+                          if (!periodInfo) return null;
+
+                          const maturityDate = new Date(Number(periodInfo.maturityDate) * 1000);
+                          const totalYield = Number(periodInfo.totalYield) / 1e18; // Convert from wei
+                          const isMatured = Date.now() >= Number(periodInfo.maturityDate) * 1000;
+                          const isActive = periodInfo.isActive;
+
+                          return (
+                            <SelectItem
+                              key={periodId.toString()}
+                              value={periodId.toString()}
+                              className="text-white hover:bg-[#3A3A3A] py-3"
+                            >
+                              <div className="flex flex-col space-y-1">
+                                <div className="flex items-center justify-between">
+                                  <span className="font-medium">Period {periodId.toString()}</span>
+                                  <div className="flex items-center space-x-2">
+                                    <span className={`text-xs px-2 py-1 rounded ${
+                                      isMatured ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'
+                                    }`}>
+                                      {isMatured ? 'Ready' : 'Pending'}
+                                    </span>
+                                    {!isActive && (
+                                      <span className="text-xs px-2 py-1 rounded bg-gray-500/20 text-gray-400">
+                                        Inactive
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="text-xs text-gray-400">
+                                  Maturity: {maturityDate.toLocaleDateString()}
+                                  {totalYield > 0 && (
+                                    <span className="ml-2 text-blue-400">
+                                      Available: {totalYield.toFixed(2)} USDC
+                                    </span>
+                                  )}
+                                </div>
+                                {isMatured && isActive && (
+                                  <div className="text-xs text-green-400">
+                                    ✓ Ready for distribution
+                                  </div>
+                                )}
+                                {!isMatured && (
+                                  <div className="text-xs text-yellow-400">
+                                    ⏳ Waiting for maturity date
+                                  </div>
+                                )}
+                              </div>
+                            </SelectItem>
+                          );
+                        })
+                      ) : (
+                        <div className="p-4 text-center text-gray-400">
+                          {distributeForm.seriesId ?
+                            'No periods ready for distribution'
+                            : 'Select a property first'
+                          }
+                        </div>
+                      )}
+                    </SelectContent>
+                  </Select>
                   <p className="text-xs text-gray-500">
-                    Enter the fundraising period number to distribute yield for.
+                    Only matured periods with yield are shown. These are ready for distribution to holders.
                   </p>
                 </div>
               </div>

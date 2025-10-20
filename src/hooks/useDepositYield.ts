@@ -110,12 +110,12 @@ export function useDepositYield() {
       }
 
       // Check for negative or zero values
-      if (seriesIdBigInt <= 0n || periodIdBigInt <= 0n) {
+      if (seriesIdBigInt <= BigInt(0) || periodIdBigInt <= BigInt(0)) {
         throw new Error('Series ID and Period ID must be greater than 0');
       }
 
       // Check for unreasonably large values
-      if (seriesIdBigInt > 1000000n || periodIdBigInt > 1000000n) {
+      if (seriesIdBigInt > BigInt(1000000) || periodIdBigInt > BigInt(1000000)) {
         throw new Error('Series ID or Period ID seems too large. Please check your input.');
       }
 
