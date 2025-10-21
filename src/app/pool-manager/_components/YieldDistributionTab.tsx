@@ -31,10 +31,11 @@ export function YieldDistributionTab() {
   // Fetch YRT series from user pools (more reliable approach)
   const { pools, isLoading: isLoadingPools, error: poolsError } = useUserPools();
 
-  // Extract YRT series from pools
+  // Extract YRT series from pools - show ALL pools for property selection
   const yrtSeries = useMemo(() => {
     if (!pools) return [];
-    return pools.filter(pool => pool.isYRTPool);
+    // Show all pools, not just YRT pools
+    return pools;
   }, [pools]);
 
   const isLoadingSeries = isLoadingPools;
@@ -45,13 +46,13 @@ export function YieldDistributionTab() {
   const [isAutoDepositing, setIsAutoDepositing] = useState(false);
 
   const [depositForm, setDepositForm] = useState({
-    seriesId: '',
+    poolAddress: '',
     periodId: '',
     amount: ''
   });
 
   const [distributeForm, setDistributeForm] = useState({
-    seriesId: '',
+    poolAddress: '',
     periodId: ''
   });
 
@@ -85,6 +86,10 @@ export function YieldDistributionTab() {
   // USDC token address for yield deposits
   const USDC_TOKEN = CONTRACTS.USDC;
 
+  // Get series ID from selected pool for deposit
+  const selectedDepositPool = yrtSeries.find(pool => pool.poolAddress === depositForm.poolAddress);
+  const depositSeriesId = selectedDepositPool?.seriesId?.toString() || '';
+
   // Fetch periods for selected series (for deposit)
   const { data: depositPeriods, isLoading: isLoadingDepositPeriods } = useReadContract({
     address: CONTRACTS.YRT_FACTORY,
@@ -113,11 +118,15 @@ export function YieldDistributionTab() {
       }
     ],
     functionName: 'getActivePeriodsBySeriesId',
-    args: depositForm.seriesId && /^\d+$/.test(depositForm.seriesId) ? [BigInt(depositForm.seriesId)] : undefined,
+    args: depositSeriesId && /^\d+$/.test(depositSeriesId) ? [BigInt(depositSeriesId)] : undefined,
     query: {
-      enabled: !!depositForm.seriesId && /^\d+$/.test(depositForm.seriesId),
+      enabled: !!depositSeriesId && /^\d+$/.test(depositSeriesId),
     }
   });
+
+  // Get series ID from selected pool for distribute
+  const selectedDistributePool = yrtSeries.find(pool => pool.poolAddress === distributeForm.poolAddress);
+  const distributeSeriesId = selectedDistributePool?.seriesId?.toString() || '';
 
   // Fetch periods for selected series (for distribute)
   const { data: distributePeriods, isLoading: isLoadingDistributePeriods } = useReadContract({
@@ -147,9 +156,9 @@ export function YieldDistributionTab() {
       }
     ],
     functionName: 'getReadyPeriodsBySeriesId',
-    args: distributeForm.seriesId && /^\d+$/.test(distributeForm.seriesId) ? [BigInt(distributeForm.seriesId)] : undefined,
+    args: distributeSeriesId && /^\d+$/.test(distributeSeriesId) ? [BigInt(distributeSeriesId)] : undefined,
     query: {
-      enabled: !!distributeForm.seriesId && /^\d+$/.test(distributeForm.seriesId),
+      enabled: !!distributeSeriesId && /^\d+$/.test(distributeSeriesId),
     }
   });
 
@@ -158,9 +167,9 @@ export function YieldDistributionTab() {
     address: CONTRACTS.YRT_FACTORY,
     abi: YRT_FACTORY_ABI,
     functionName: 'seriesInfo',
-    args: depositForm.seriesId && /^\d+$/.test(depositForm.seriesId) ? [BigInt(depositForm.seriesId)] : undefined,
+    args: depositSeriesId && /^\d+$/.test(depositSeriesId) ? [BigInt(depositSeriesId)] : undefined,
     query: {
-      enabled: !!depositForm.seriesId && /^\d+$/.test(depositForm.seriesId),
+      enabled: !!depositSeriesId && /^\d+$/.test(depositSeriesId),
     }
   });
 
@@ -168,11 +177,11 @@ export function YieldDistributionTab() {
     address: CONTRACTS.YRT_FACTORY,
     abi: YRT_FACTORY_ABI,
     functionName: 'periodInfo',
-    args: depositForm.seriesId && depositForm.periodId && /^\d+$/.test(depositForm.seriesId) && /^\d+$/.test(depositForm.periodId)
-      ? [BigInt(depositForm.seriesId), BigInt(depositForm.periodId)]
+    args: depositSeriesId && depositForm.periodId && /^\d+$/.test(depositSeriesId) && /^\d+$/.test(depositForm.periodId)
+      ? [BigInt(depositSeriesId), BigInt(depositForm.periodId)]
       : undefined,
     query: {
-      enabled: !!depositForm.seriesId && !!depositForm.periodId && /^\d+$/.test(depositForm.seriesId) && /^\d+$/.test(depositForm.periodId),
+      enabled: !!depositSeriesId && !!depositForm.periodId && /^\d+$/.test(depositSeriesId) && /^\d+$/.test(depositForm.periodId),
     }
   });
 
@@ -239,7 +248,7 @@ export function YieldDistributionTab() {
     // Skip validation for auto-deposit (from approve)
     const isAutoDeposit = e && (e as any).type === 'auto-deposit';
 
-    if (!isAutoDeposit && (!address || !depositForm.seriesId || !depositForm.periodId || !depositForm.amount)) {
+    if (!isAutoDeposit && (!address || !depositForm.poolAddress || !depositForm.periodId || !depositForm.amount)) {
       toast.error('Please fill in all fields');
       return;
     }
@@ -255,32 +264,28 @@ export function YieldDistributionTab() {
         throw new Error('Amount seems too large. Please check your input.');
       }
 
-      // Enhanced validation for seriesId and periodId
-      if (!depositForm.seriesId || depositForm.seriesId.trim() === '') {
-        throw new Error('Series ID is required');
+      // Enhanced validation for poolAddress and periodId
+      if (!depositForm.poolAddress || depositForm.poolAddress.trim() === '') {
+        throw new Error('Please select a property first');
       }
 
       if (!depositForm.periodId || depositForm.periodId.trim() === '') {
         throw new Error('Please select a period from the dropdown');
       }
 
-      // Enhanced validation for seriesId and periodId (consistent with hook)
-      const seriesIdStr = depositForm.seriesId.trim();
-      const periodIdStr = depositForm.periodId.trim();
-
-      if (seriesIdStr === '') {
-        throw new Error('Please select a property first');
+      // Get series ID from selected pool
+      if (!selectedDepositPool || !selectedDepositPool.seriesId) {
+        throw new Error('Selected property is not a valid YRT series');
       }
+
+      // Enhanced validation for periodId (consistent with hook)
+      const periodIdStr = depositForm.periodId.trim();
 
       if (periodIdStr === '') {
         throw new Error('Please select a period from the dropdown');
       }
 
-      // Check if inputs are valid numbers
-      if (!/^\d+$/.test(seriesIdStr)) {
-        throw new Error('Invalid property selection');
-      }
-
+      // Check if period ID is valid number
       if (!/^\d+$/.test(periodIdStr)) {
         throw new Error('Invalid period selection');
       }
@@ -288,7 +293,7 @@ export function YieldDistributionTab() {
       // Convert to BigInt with error handling (same as hook)
       let seriesIdNum, periodIdNum;
       try {
-        seriesIdNum = BigInt(seriesIdStr);
+        seriesIdNum = selectedDepositPool.seriesId;
         periodIdNum = BigInt(periodIdStr);
       } catch (error) {
         throw new Error('Invalid selection. Please try selecting again.');
@@ -316,8 +321,9 @@ export function YieldDistributionTab() {
 
       // Log debug info (consistent with hook)
       console.log('Deposit Yield Debug Info:', {
-        seriesId: depositForm.seriesId,
-        seriesIdNum: seriesIdNum.toString(),
+        poolAddress: depositForm.poolAddress,
+        propertyName: selectedDepositPool.propertyName,
+        seriesId: seriesIdNum.toString(),
         periodId: depositForm.periodId,
         periodIdNum: periodIdNum.toString(),
         amount: depositForm.amount,
@@ -340,14 +346,14 @@ export function YieldDistributionTab() {
       toast.loading('Depositing yield...', { id: 'deposit-yield' });
 
       await depositYield({
-        seriesId: depositForm.seriesId,
+        seriesId: seriesIdNum.toString(),
         periodId: depositForm.periodId,
         amount: depositForm.amount,
         tokenAddress: USDC_TOKEN
       });
 
       toast.success('Yield deposited successfully!', { id: 'deposit-yield' });
-      setDepositForm({ seriesId: '', periodId: '', amount: '' });
+      setDepositForm({ poolAddress: '', periodId: '', amount: '' });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to deposit yield';
 
@@ -379,8 +385,14 @@ export function YieldDistributionTab() {
   const handleDistribute = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!address || !distributeForm.seriesId || !distributeForm.periodId) {
+    if (!address || !distributeForm.poolAddress || !distributeForm.periodId) {
       toast.error('Please select both property and period');
+      return;
+    }
+
+    // Get series ID from selected pool
+    if (!selectedDistributePool || !selectedDistributePool.seriesId) {
+      toast.error('Selected property is not a valid YRT series');
       return;
     }
 
@@ -388,12 +400,12 @@ export function YieldDistributionTab() {
       toast.loading('Distributing yield to all holders...', { id: 'distribute-yield' });
 
       await distributeToAllHolders({
-        seriesId: distributeForm.seriesId,
+        seriesId: selectedDistributePool.seriesId.toString(),
         periodId: distributeForm.periodId
       });
 
       toast.success('Yield distributed successfully!', { id: 'distribute-yield' });
-      setDistributeForm({ seriesId: '', periodId: '' });
+      setDistributeForm({ poolAddress: '', periodId: '' });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to distribute yield', {
         id: 'distribute-yield'
@@ -443,8 +455,8 @@ export function YieldDistributionTab() {
                 <div className="space-y-2">
                   <Label className="text-gray-300">Property</Label>
                   <Select
-                    value={depositForm.seriesId}
-                    onValueChange={(value) => setDepositForm(prev => ({ ...prev, seriesId: value }))}
+                    value={depositForm.poolAddress}
+                    onValueChange={(value) => setDepositForm(prev => ({ ...prev, poolAddress: value }))}
                     disabled={isDepositPending}
                   >
                     <SelectTrigger className="bg-[#2A2A2A]/50 border-[#3A3A3A] text-white">
@@ -467,7 +479,7 @@ export function YieldDistributionTab() {
                         yrtSeries.map((pool) => (
                           <SelectItem
                             key={pool.poolAddress}
-                            value={pool.seriesId?.toString() || ''}
+                            value={pool.poolAddress}
                             className="text-white hover:bg-[#3A3A3A] py-3"
                           >
                             <div className="flex items-center space-x-3">
@@ -480,7 +492,12 @@ export function YieldDistributionTab() {
                                   className="rounded-full"
                                 />
                               </div>
-                              <span>{pool.propertyName} (Series #{pool.seriesId?.toString() || 'N/A'})</span>
+                              <div className="flex flex-col">
+                                <span className="font-medium">{pool.propertyName}</span>
+                                <span className="text-xs text-gray-400">
+                                  {pool.isYRTPool && pool.seriesId ? `Series #${pool.seriesId.toString()} • ` : ''}{pool.token0Symbol}/{pool.token1Symbol}
+                                </span>
+                              </div>
                             </div>
                           </SelectItem>
                         ))
@@ -494,7 +511,7 @@ export function YieldDistributionTab() {
                   <Select
                     value={depositForm.periodId}
                     onValueChange={(value) => setDepositForm(prev => ({ ...prev, periodId: value }))}
-                    disabled={isDepositPending || isAutoDepositing || !depositForm.seriesId || isLoadingDepositPeriods}
+                    disabled={isDepositPending || isAutoDepositing || !depositForm.poolAddress || isLoadingDepositPeriods}
                   >
                     <SelectTrigger className="bg-[#2A2A2A]/50 border-[#3A3A3A] text-white">
                       <SelectValue placeholder={isLoadingDepositPeriods ? "Loading periods..." : "Select period..."} />
@@ -542,7 +559,7 @@ export function YieldDistributionTab() {
                         })
                       ) : (
                         <div className="p-4 text-center text-gray-400">
-                          {depositForm.seriesId ? 'No active periods found' : 'Select a property first'}
+                          {depositForm.poolAddress ? 'No active periods found' : 'Select a property first'}
                         </div>
                       )}
                     </SelectContent>
@@ -595,7 +612,7 @@ export function YieldDistributionTab() {
               ) : (
                 <Button
                   type="submit"
-                  disabled={isDepositPending || isAutoDepositing || !depositForm.seriesId || !depositForm.periodId || !depositForm.amount}
+                  disabled={isDepositPending || isAutoDepositing || !depositForm.poolAddress || !depositForm.periodId || !depositForm.amount}
                   className="w-full bg-blue-600 hover:bg-blue-700 text-white"
                 >
                   {isAutoDepositing ? (
@@ -655,8 +672,8 @@ export function YieldDistributionTab() {
                 <div className="space-y-2">
                   <Label className="text-gray-300">Property</Label>
                   <Select
-                    value={distributeForm.seriesId}
-                    onValueChange={(value) => setDistributeForm(prev => ({ ...prev, seriesId: value }))}
+                    value={distributeForm.poolAddress}
+                    onValueChange={(value) => setDistributeForm(prev => ({ ...prev, poolAddress: value }))}
                     disabled={isDistributePending}
                   >
                     <SelectTrigger className="bg-[#2A2A2A]/50 border-[#3A3A3A] text-white">
@@ -679,7 +696,7 @@ export function YieldDistributionTab() {
                         yrtSeries.map((pool) => (
                           <SelectItem
                             key={pool.poolAddress}
-                            value={pool.seriesId?.toString() || ''}
+                            value={pool.poolAddress}
                             className="text-white hover:bg-[#3A3A3A] py-3"
                           >
                             <div className="flex items-center space-x-3">
@@ -692,7 +709,12 @@ export function YieldDistributionTab() {
                                   className="rounded-full"
                                 />
                               </div>
-                              <span>{pool.propertyName} (Series #{pool.seriesId?.toString() || 'N/A'})</span>
+                              <div className="flex flex-col">
+                                <span className="font-medium">{pool.propertyName}</span>
+                                <span className="text-xs text-gray-400">
+                                  {pool.isYRTPool && pool.seriesId ? `Series #${pool.seriesId.toString()} • ` : ''}{pool.token0Symbol}/{pool.token1Symbol}
+                                </span>
+                              </div>
                             </div>
                           </SelectItem>
                         ))
@@ -706,7 +728,7 @@ export function YieldDistributionTab() {
                   <Select
                     value={distributeForm.periodId}
                     onValueChange={(value) => setDistributeForm(prev => ({ ...prev, periodId: value }))}
-                    disabled={isDistributePending || !distributeForm.seriesId || isLoadingDistributePeriods}
+                    disabled={isDistributePending || !distributeForm.poolAddress || isLoadingDistributePeriods}
                   >
                     <SelectTrigger className="bg-[#2A2A2A]/50 border-[#3A3A3A] text-white">
                       <SelectValue placeholder={isLoadingDistributePeriods ? "Loading periods..." : "Select period..."} />
@@ -772,7 +794,7 @@ export function YieldDistributionTab() {
                         })
                       ) : (
                         <div className="p-4 text-center text-gray-400">
-                          {distributeForm.seriesId ?
+                          {distributeForm.poolAddress ?
                             'No periods ready for distribution'
                             : 'Select a property first'
                           }
@@ -788,7 +810,7 @@ export function YieldDistributionTab() {
 
               <Button
                 type="submit"
-                disabled={isDistributePending || !distributeForm.seriesId || !distributeForm.periodId}
+                disabled={isDistributePending || !distributeForm.poolAddress || !distributeForm.periodId}
                 className="w-full bg-green-600 hover:bg-green-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isDistributePending ? (
