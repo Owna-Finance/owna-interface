@@ -6,7 +6,13 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf .next out",
+    "deploy:prod": "vercel --prod",
+    "deploy:preview": "vercel",
+    "build:analyze": "ANALYZE=true npm run build",
+    "install:vercel": "pnpm add -g vercel"
   },
   "dependencies": {
     "@coinbase/onchainkit": "^1.1.1",

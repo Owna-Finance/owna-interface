@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Kantumruy_Pro } from "next/font/google";
 import { OnchainKitProviders } from "@/providers/onchainkit-provider";
 import { WalletProvider } from "@/components/providers/WalletProvider";
+import { NetworkSwitch } from "@/components/network/NetworkSwitch";
 import { Toaster } from "@/components/ui/sonner";
 import "@coinbase/onchainkit/styles.css";
 import "./globals.css";
@@ -151,6 +152,7 @@ export default function RootLayout({
         <OnchainKitProviders>
           <WalletProvider>
             {children}
+            <NetworkSwitch />
             <Toaster position="bottom-right" />
           </WalletProvider>
         </OnchainKitProviders>

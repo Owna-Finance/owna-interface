@@ -20,6 +20,9 @@ export const config = createConfig({
     storage: cookieStorage,
   }),
   ssr: true,
+  batch: {
+    multicall: true,
+  },
   transports: {
     [CHAIN.id]: http(), // ✅ Only Base Sepolia RPC
   },

@@ -3,13 +3,15 @@
 import { useState } from 'react';
 import { useConnect, useAccount, useDisconnect } from 'wagmi';
 import { Button } from '@/components/ui/button';
-import { Wallet, Shield, Zap, LogOut, CheckCircle, Copy, ExternalLink, X, ChevronDown } from 'lucide-react';
+import { Wallet, Shield, Zap, LogOut, CheckCircle, Copy, ExternalLink, X, ChevronDown, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { NetworkStatus } from '@/components/network/NetworkSwitch';
+import { CHAIN, NETWORK_INFO } from '@/constants/chain';
 
 export function WalletComponents() {
   const [showWalletModal, setShowWalletModal] = useState(false);
   const [showAccountMenu, setShowAccountMenu] = useState(false);
-  const { address, isConnected } = useAccount();
+  const { address, isConnected, chainId } = useAccount();
   const { disconnect } = useDisconnect();
   const { connectors, connect, isPending } = useConnect();
 
@@ -62,27 +64,41 @@ export function WalletComponents() {
     }
   };
 
+  // Check if on correct network
+  const isCorrectNetwork = chainId === CHAIN.id;
+  const statusIcon = isCorrectNetwork ?
+    <CheckCircle className="w-5 h-5 text-green-400" /> :
+    <AlertCircle className="w-5 h-5 text-red-400" />;
+
   // If wallet is connected, show account button
   if (isConnected && address) {
     return (
       <div className="relative">
-        <Button
-          onClick={() => setShowAccountMenu(!showAccountMenu)}
-          className="
-            bg-gradient-to-r from-green-500/20 to-emerald-500/20
-            hover:from-green-500/30 hover:to-emerald-500/30
-            text-white font-semibold
-            px-6 py-3 rounded-xl
-            border border-green-500/50
-            shadow-lg hover:shadow-xl
-            transition-all duration-300
-            flex items-center space-x-2
-          "
-        >
-          <CheckCircle className="w-5 h-5 text-green-400" />
-          <span>{formatAddress(address)}</span>
-          <ChevronDown className="w-4 h-4 opacity-60" />
-        </Button>
+        <div className="flex items-center space-x-2">
+          {/* Network Status */}
+          <NetworkStatus />
+
+          {/* Account Button */}
+          <Button
+            onClick={() => setShowAccountMenu(!showAccountMenu)}
+            className={`
+              ${isCorrectNetwork
+                ? 'bg-gradient-to-r from-green-500/20 to-emerald-500/20 hover:from-green-500/30 hover:to-emerald-500/30 border-green-500/50'
+                : 'bg-gradient-to-r from-red-500/20 to-orange-500/20 hover:from-red-500/30 hover:to-orange-500/30 border-red-500/50'
+              }
+              text-white font-semibold
+              px-6 py-3 rounded-xl
+              border
+              shadow-lg hover:shadow-xl
+              transition-all duration-300
+              flex items-center space-x-2
+            `}
+          >
+            {statusIcon}
+            <span>{formatAddress(address)}</span>
+            <ChevronDown className="w-4 h-4 opacity-60" />
+          </Button>
+        </div>
 
         {/* Account Dropdown Menu */}
         {showAccountMenu && (
@@ -94,6 +110,18 @@ export function WalletComponents() {
             />
             {/* Menu */}
             <div className="absolute right-0 mt-2 w-64 bg-[#1A1A1A] border border-[#2A2A2A] rounded-xl shadow-xl z-50 overflow-hidden">
+              {/* Network Status */}
+              <div className={`px-4 py-3 border-b border-[#2A2A2A] ${isCorrectNetwork ? 'bg-green-500/5' : 'bg-red-500/5'}`}>
+                <p className="text-gray-400 text-xs">Network Status</p>
+                <div className="flex items-center justify-between mt-1">
+                  <p className={`text-sm font-medium ${isCorrectNetwork ? 'text-green-400' : 'text-red-400'}`}>
+                    {isCorrectNetwork ? NETWORK_INFO.name : `Wrong Network (Chain ${chainId})`}
+                  </p>
+                  {statusIcon}
+                </div>
+              </div>
+
+              {/* Account Info */}
               <div className="px-4 py-3 border-b border-[#2A2A2A]">
                 <p className="text-gray-400 text-xs">Connected Account</p>
                 <p className="text-white text-sm font-mono mt-1">{formatAddress(address)}</p>

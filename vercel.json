@@ -1,22 +1,36 @@
 {
   "buildCommand": "npm run build",
   "outputDirectory": ".next",
-  "installCommand": "npm install",
+  "installCommand": "pnpm install --frozen-lockfile",
   "framework": "nextjs",
   "regions": ["sin1"],
   "functions": {
     "src/app/**/*.{js,ts,jsx,tsx}": {
-      "maxDuration": 30
+      "maxDuration": 60
     }
   },
   "env": {
-    "NEXT_PUBLIC_ONCHAINKIT_API_KEY": "@onchainkit-api-key",
-    "NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID": "@wallet-connect-project-id"
+    "NEXT_PUBLIC_ONCHAINKIT_API_KEY": "tsHsL4xXDAQKH68bktLy1CJ57XLclCbA",
+    "NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID": "6721e82ac454e916acc25c075f9263b4",
+    "NEXT_PUBLIC_YRT_FACTORY_ADDRESS": "0x55D6DA78bf5FFc9d32D54dCB259E83aF466A2C73",
+    "NEXT_PUBLIC_AUTO_DISTRIBUTOR_ADDRESS": "0x42C8c58dd12890AF6C0A23C222375f9D0CBb8FA2",
+    "NEXT_PUBLIC_DEX_ROUTER_ADDRESS": "0x5b93C4A81534C170cfdC228b3dc0047694AdF8a5",
+    "NEXT_PUBLIC_DEX_FACTORY_ADDRESS": "0xeDbe28c77C9f4509d50FA2C4CDA247fd96A7A69b",
+    "NEXT_PUBLIC_USDC_ADDRESS": "0x1771B7f93FD4d06a6c0402F76D8cE64B95fcC906",
+    "NEXT_PUBLIC_IDRX_ADDRESS": "0xD0Eae13E9bC49Ed4D3385832f9a07bAcD8C27532",
+    "NEXT_PUBLIC_OWNA_ENDPOINT_API": "https://owna-backend-secondary-market-production.up.railway.app"
   },
   "build": {
     "env": {
-      "NEXT_PUBLIC_ONCHAINKIT_API_KEY": "@onchainkit-api-key",
-      "NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID": "@wallet-connect-project-id"
+      "NEXT_PUBLIC_ONCHAINKIT_API_KEY": "tsHsL4xXDAQKH68bktLy1CJ57XLclCbA",
+      "NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID": "6721e82ac454e916acc25c075f9263b4",
+      "NEXT_PUBLIC_YRT_FACTORY_ADDRESS": "0x55D6DA78bf5FFc9d32D54dCB259E83aF466A2C73",
+      "NEXT_PUBLIC_AUTO_DISTRIBUTOR_ADDRESS": "0x42C8c58dd12890AF6C0A23C222375f9D0CBb8FA2",
+      "NEXT_PUBLIC_DEX_ROUTER_ADDRESS": "0x5b93C4A81534C170cfdC228b3dc0047694AdF8a5",
+      "NEXT_PUBLIC_DEX_FACTORY_ADDRESS": "0xeDbe28c77C9f4509d50FA2C4CDA247fd96A7A69b",
+      "NEXT_PUBLIC_USDC_ADDRESS": "0x1771B7f93FD4d06a6c0402F76D8cE64B95fcC906",
+      "NEXT_PUBLIC_IDRX_ADDRESS": "0xD0Eae13E9bC49Ed4D3385832f9a07bAcD8C27532",
+      "NEXT_PUBLIC_OWNA_ENDPOINT_API": "https://owna-backend-secondary-market-production.up.railway.app"
     }
   },
   "headers": [
@@ -36,6 +50,12 @@
           "value": "strict-origin-when-cross-origin"
         }
       ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/$1"
     }
   ]
 }
