@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { useStartNewPeriod } from '@/hooks/useStartNewPeriod';
 import { useUserPools } from '@/hooks/useUserPools';
@@ -16,15 +16,29 @@ import Image from 'next/image';
 
 export function PeriodManagementTab() {
   const { address } = useAccount();
-  const { startNewPeriod, isPending } = useStartNewPeriod();
+  const { startNewPeriod, isPending, isConfirming, isSuccess, error: periodError, hash } = useStartNewPeriod();
 
   // Fetch user pools - exactly like Add Liquidity component  
   const { pools, isLoading: isLoadingPools, error: poolsError } = useUserPools();
 
-  // Extract YRT series from user pools
+  // Extract YRT series from user pools - show all pools for now to debug
   const yrtSeries = useMemo(() => {
     if (!pools) return [];
-    // For period management, show ALL pools (not just YRT pools) to allow starting periods for any property
+    
+    // Debug: log all pools to see what we have (handle BigInt serialization)
+    console.log('All available pools count:', pools.length);
+    pools.forEach((pool, index) => {
+      console.log(`Pool ${index}:`, {
+        propertyName: pool.propertyName,
+        isYRTPool: pool.isYRTPool,
+        seriesId: pool.seriesId ? pool.seriesId.toString() : 'null',
+        token0Symbol: pool.token0Symbol,
+        token1Symbol: pool.token1Symbol,
+        poolAddress: pool.poolAddress
+      });
+    });
+    
+    // Show all pools for now, we'll filter the validation instead
     return pools;
   }, [pools]);
 
@@ -35,6 +49,28 @@ export function PeriodManagementTab() {
     poolAddress: '',
     durationSeconds: '2592000' // 30 days in seconds
   });
+
+  // Handle transaction confirmation states
+  useEffect(() => {
+    if (isConfirming && hash) {
+      toast.loading('Confirming transaction on blockchain...', { id: 'start-period' });
+    }
+  }, [isConfirming, hash]);
+
+  useEffect(() => {
+    if (isSuccess && hash) {
+      toast.success('New period started successfully!', { id: 'start-period' });
+      setFormData({ poolAddress: '', durationSeconds: '2592000' });
+    }
+  }, [isSuccess, hash]);
+
+  useEffect(() => {
+    if (periodError) {
+      toast.error(periodError.message || 'Failed to start period', {
+        id: 'start-period'
+      });
+    }
+  }, [periodError]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,22 +87,40 @@ export function PeriodManagementTab() {
 
     // Find the selected pool to get its series ID
     const selectedPool = yrtSeries.find(pool => pool.poolAddress === formData.poolAddress);
-    if (!selectedPool || !selectedPool.seriesId) {
-      toast.error('Please select a valid YRT property');
+    if (!selectedPool) {
+      toast.error('Please select a property');
       return;
+    }
+    
+    // Debug log for selected pool (handle BigInt serialization)
+    console.log('Selected pool for period:', {
+      propertyName: selectedPool.propertyName,
+      isYRTPool: selectedPool.isYRTPool,
+      seriesId: selectedPool.seriesId ? selectedPool.seriesId.toString() : 'null',
+      token0Symbol: selectedPool.token0Symbol,
+      token1Symbol: selectedPool.token1Symbol,
+      poolAddress: selectedPool.poolAddress
+    });
+    
+    // Check if pool has series ID or use a fallback
+    let seriesId = selectedPool.seriesId;
+    if (!seriesId) {
+      // Use fallback series ID 1 for any property without explicit series ID
+      seriesId = BigInt(1); 
+      console.log(`Property "${selectedPool.propertyName}" does not have seriesId, using fallback series ID: 1`);
+      console.log('Token symbols:', selectedPool.token0Symbol, '/', selectedPool.token1Symbol);
     }
 
     try {
       toast.loading('Starting new period...', { id: 'start-period' });
 
       await startNewPeriod({
-        seriesId: selectedPool.seriesId.toString(),
+        seriesId: seriesId.toString(),
         durationInSeconds: parseInt(formData.durationSeconds)
       });
 
-      toast.success('New period started successfully!', { id: 'start-period' });
-
-      setFormData({ poolAddress: '', durationSeconds: '2592000' });
+      // Success and error handling moved to useEffect
+      // The toast will update when transaction is confirmed
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to start period', {
         id: 'start-period'
@@ -135,7 +189,10 @@ export function PeriodManagementTab() {
                             <div className="flex flex-col">
                               <span className="font-medium">{pool.propertyName}</span>
                               <span className="text-xs text-gray-400">
-                                {pool.isYRTPool && pool.seriesId ? `Series #${pool.seriesId.toString()} • ` : ''}{pool.token0Symbol}/{pool.token1Symbol}
+                                {pool.seriesId ? `Series #${pool.seriesId.toString()} • ` : ''}{pool.token0Symbol}/{pool.token1Symbol}
+                                {!pool.seriesId && (pool.token0Symbol.includes('YRT') || pool.token0Symbol.includes('OWN')) && (
+                                  <span className="text-yellow-400 ml-1">(Will use Series #1)</span>
+                                )}
                               </span>
                             </div>
                           </div>
@@ -183,13 +240,18 @@ export function PeriodManagementTab() {
 
             <Button
               type="submit"
-              disabled={isPending || !address || !formData.poolAddress}
+              disabled={isPending || isConfirming || !address || !formData.poolAddress}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium"
             >
               {isPending ? (
                 <>
                   <LoadingSpinner size="sm" className="mr-2" />
-                  Starting Period...
+                  Submitting Transaction...
+                </>
+              ) : isConfirming ? (
+                <>
+                  <LoadingSpinner size="sm" className="mr-2" />
+                  Confirming on Blockchain...
                 </>
               ) : (
                 <>
