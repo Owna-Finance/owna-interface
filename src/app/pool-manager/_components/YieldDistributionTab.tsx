@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useAccount, useReadContract } from 'wagmi';
 import { useQueryClient } from '@tanstack/react-query';
 import { useDepositYield, useDistributeToAllHolders, useUserPools } from '@/hooks';
+import { usePeriodInfo } from '@/hooks/usePeriodInfo';
 import { CONTRACTS } from '@/constants/contracts/contracts';
 import { YRT_FACTORY_ABI } from '@/constants/abis/YRT_FACTORY_Abi';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,6 +16,113 @@ import { toast } from 'sonner';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Gift, Send, AlertCircle } from 'lucide-react';
 import Image from 'next/image';
+
+// Enhanced Period Item Component
+function EnhancedPeriodItem({ 
+  periodId, 
+  seriesId, 
+  basicPeriodInfo, 
+  type = 'deposit' 
+}: { 
+  periodId: bigint; 
+  seriesId: string; 
+  basicPeriodInfo: any;
+  type?: 'deposit' | 'distribute';
+}) {
+  // Get detailed period info using the hook
+  const { data: detailedPeriodInfo } = usePeriodInfo(
+    seriesId ? BigInt(seriesId) : BigInt(0), 
+    periodId
+  );
+
+  // Use basic info as fallback, detailed info if available
+  const periodInfo = detailedPeriodInfo || basicPeriodInfo;
+  
+  if (!periodInfo) return null;
+
+  // Handle BigInt dates properly
+  const maturityTimestamp = typeof periodInfo.maturityDate === 'bigint' 
+    ? Number(periodInfo.maturityDate) 
+    : Number(periodInfo.maturityDate || 0);
+  const startedTimestamp = typeof periodInfo.startedAt === 'bigint' 
+    ? Number(periodInfo.startedAt) 
+    : Number(periodInfo.startedAt || 0);
+  
+  const maturityDate = new Date(maturityTimestamp * 1000);
+  const startedAt = new Date(startedTimestamp * 1000);
+  const totalYield = Number(periodInfo.totalYield || 0) / 1e18;
+  const yieldClaimed = Number(periodInfo.yieldClaimed || 0) / 1e18;
+  const isActive = periodInfo.isActive;
+  const isMatured = Date.now() >= maturityTimestamp * 1000;
+  const timeRemaining = Math.max(0, Math.ceil((maturityTimestamp * 1000 - Date.now()) / (24 * 60 * 60 * 1000)));
+  const yieldProgress = totalYield > 0 ? (yieldClaimed / totalYield) * 100 : 0;
+
+  // Check if dates are valid
+  const isValidMaturityDate = !isNaN(maturityDate.getTime()) && maturityTimestamp > 0;
+  const isValidStartDate = !isNaN(startedAt.getTime()) && startedTimestamp > 0;
+
+  return (
+    <div className="flex flex-col space-y-1.5 w-full min-w-0">
+      <div className="flex items-center justify-between gap-2 min-w-0">
+        <span className="font-medium text-sm truncate">Period {periodId.toString()}</span>
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          <span className={`text-xs px-1.5 py-0.5 rounded whitespace-nowrap ${
+            isActive ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400'
+          }`}>
+            {isActive ? 'Active' : 'Inactive'}
+          </span>
+          {type === 'distribute' && (
+            <span className={`text-xs px-1.5 py-0.5 rounded whitespace-nowrap ${
+              isMatured ? 'bg-blue-500/20 text-blue-400' : 'bg-yellow-500/20 text-yellow-400'
+            }`}>
+              {isMatured ? 'Ready' : 'Pending'}
+            </span>
+          )}
+        </div>
+      </div>
+      
+      <div className="text-xs text-gray-400 space-y-0.5 min-w-0">
+        <div className="flex justify-between items-center gap-2 min-w-0">
+          <span className="flex-shrink-0 text-xs">Started:</span>
+          <span className="text-right truncate text-xs">
+            {isValidStartDate ? startedAt.toLocaleDateString() : 'Not started'}
+          </span>
+        </div>
+        <div className="flex justify-between items-center gap-2 min-w-0">
+          <span className="flex-shrink-0 text-xs">Matures:</span>
+          <span className="text-right truncate text-xs">
+            {isValidMaturityDate ? maturityDate.toLocaleDateString() : 'No maturity date'}
+          </span>
+        </div>
+        {isValidMaturityDate && !isMatured && timeRemaining > 0 && (
+          <div className="flex justify-between items-center gap-2 min-w-0">
+            <span className="flex-shrink-0 text-xs">Time left:</span>
+            <span className="text-yellow-400 text-right text-xs">{timeRemaining} days</span>
+          </div>
+        )}
+        {totalYield > 0 && (
+          <div className="flex justify-between items-center gap-2 min-w-0">
+            <span className="flex-shrink-0 text-xs">Total Yield:</span>
+            <span className="text-blue-400 text-right text-xs truncate">{totalYield.toFixed(2)} USDC</span>
+          </div>
+        )}
+        {yieldClaimed > 0 && (
+          <div className="flex justify-between items-center gap-2 min-w-0">
+            <span className="flex-shrink-0 text-xs">Claimed:</span>
+            <span className="text-green-400 text-right text-xs truncate">
+              {yieldClaimed.toFixed(2)} USDC ({yieldProgress.toFixed(1)}%)
+            </span>
+          </div>
+        )}
+        {isValidMaturityDate && isMatured && isActive && type === 'distribute' && (
+          <div className="text-green-400 text-xs font-medium mt-1">
+            ✓ Ready for distribution
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export function YieldDistributionTab() {
   const { address } = useAccount();
@@ -65,22 +173,6 @@ export function YieldDistributionTab() {
     isActive: boolean;
   }
 
-  // Helper function to format period info
-  const formatPeriodInfo = (periodInfo: PeriodInfo) => {
-    if (!periodInfo) return null;
-
-    const maturityDate = new Date(Number(periodInfo.maturityDate) * 1000);
-    const totalYield = Number(periodInfo.totalYield) / 1e18;
-    const isMatured = Date.now() >= Number(periodInfo.maturityDate) * 1000;
-    const isActive = periodInfo.isActive;
-
-    return {
-      maturityDate,
-      totalYield,
-      isMatured,
-      isActive
-    };
-  };
 
   
   // USDC token address for yield deposits
@@ -88,79 +180,34 @@ export function YieldDistributionTab() {
 
   // Get series ID from selected pool for deposit
   const selectedDepositPool = yrtSeries.find(pool => pool.poolAddress === depositForm.poolAddress);
-  const depositSeriesId = selectedDepositPool?.seriesId?.toString() || '';
+  const depositSeriesId = selectedDepositPool?.seriesId?.toString() || (selectedDepositPool ? '1' : '');
 
-  // Fetch periods for selected series (for deposit)
+  // Fetch periods for selected series (for deposit) using YRT_FACTORY
   const { data: depositPeriods, isLoading: isLoadingDepositPeriods } = useReadContract({
     address: CONTRACTS.YRT_FACTORY,
-    abi: [
-      // Temporarily add the new function ABI here until we update the main ABI file
-      {
-        "inputs": [{"internalType": "uint256", "name": "_seriesId", "type": "uint256"}],
-        "name": "getActivePeriodsBySeriesId",
-        "outputs": [
-          {"internalType": "uint256[]", "name": "activePeriodIds", "type": "uint256[]"},
-          {
-            "components": [
-              {"internalType": "uint96", "name": "maturityDate", "type": "uint96"},
-              {"internalType": "uint96", "name": "startedAt", "type": "uint96"},
-              {"internalType": "uint128", "name": "totalYield", "type": "uint128"},
-              {"internalType": "uint128", "name": "yieldClaimed", "type": "uint128"},
-              {"internalType": "bool", "name": "isActive", "type": "bool"}
-            ],
-            "internalType": "struct YRTFactory.PeriodInfo[]",
-            "name": "activePeriodInfos",
-            "type": "tuple[]"
-          }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-      }
-    ],
-    functionName: 'getActivePeriodsBySeriesId',
+    abi: YRT_FACTORY_ABI,
+    functionName: 'getPeriodsBySeriesId',
     args: depositSeriesId && /^\d+$/.test(depositSeriesId) ? [BigInt(depositSeriesId)] : undefined,
     query: {
       enabled: !!depositSeriesId && /^\d+$/.test(depositSeriesId),
     }
-  });
+  }) as { data: [bigint[], PeriodInfo[]] | undefined, isLoading: boolean };
+
 
   // Get series ID from selected pool for distribute
   const selectedDistributePool = yrtSeries.find(pool => pool.poolAddress === distributeForm.poolAddress);
-  const distributeSeriesId = selectedDistributePool?.seriesId?.toString() || '';
+  const distributeSeriesId = selectedDistributePool?.seriesId?.toString() || (selectedDistributePool ? '1' : '');
 
-  // Fetch periods for selected series (for distribute)
+  // Fetch periods for selected series (for distribute) using YRT_FACTORY
   const { data: distributePeriods, isLoading: isLoadingDistributePeriods } = useReadContract({
     address: CONTRACTS.YRT_FACTORY,
-    abi: [
-      // Temporarily add the new function ABI here
-      {
-        "inputs": [{"internalType": "uint256", "name": "_seriesId", "type": "uint256"}],
-        "name": "getReadyPeriodsBySeriesId",
-        "outputs": [
-          {"internalType": "uint256[]", "name": "readyPeriodIds", "type": "uint256[]"},
-          {
-            "components": [
-              {"internalType": "uint96", "name": "maturityDate", "type": "uint96"},
-              {"internalType": "uint96", "name": "startedAt", "type": "uint96"},
-              {"internalType": "uint128", "name": "totalYield", "type": "uint128"},
-              {"internalType": "uint128", "name": "yieldClaimed", "type": "uint128"},
-              {"internalType": "bool", "name": "isActive", "type": "bool"}
-            ],
-            "internalType": "struct YRTFactory.PeriodInfo[]",
-            "name": "readyPeriodInfos",
-            "type": "tuple[]"
-          }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-      }
-    ],
-    functionName: 'getReadyPeriodsBySeriesId',
+    abi: YRT_FACTORY_ABI,
+    functionName: 'getPeriodsBySeriesId',
     args: distributeSeriesId && /^\d+$/.test(distributeSeriesId) ? [BigInt(distributeSeriesId)] : undefined,
     query: {
       enabled: !!distributeSeriesId && /^\d+$/.test(distributeSeriesId),
     }
-  });
+  }) as { data: [bigint[], PeriodInfo[]] | undefined, isLoading: boolean };
 
   // Validate series and period existence
   const { data: seriesInfo } = useReadContract({
@@ -514,45 +561,36 @@ export function YieldDistributionTab() {
                     disabled={isDepositPending || isAutoDepositing || !depositForm.poolAddress || isLoadingDepositPeriods}
                   >
                     <SelectTrigger className="bg-[#2A2A2A]/50 border-[#3A3A3A] text-white">
-                      <SelectValue placeholder={isLoadingDepositPeriods ? "Loading periods..." : "Select period..."} />
+                      <SelectValue placeholder={isLoadingDepositPeriods ? "Loading periods..." : "Select period..."}>
+                        {depositForm.periodId ? `Period ${depositForm.periodId}` : (isLoadingDepositPeriods ? "Loading periods..." : "Select period...")}
+                      </SelectValue>
                     </SelectTrigger>
-                    <SelectContent className="bg-[#2A2A2A] border-[#3A3A3A] max-h-60">
+                    <SelectContent className="bg-[#2A2A2A] border-[#3A3A3A] max-h-60 w-full">
                       {isLoadingDepositPeriods ? (
                         <div className="p-4 text-center text-gray-400">
                           Loading periods...
                         </div>
                       ) : depositPeriods && depositPeriods[0] && depositPeriods[0].length > 0 ? (
                         depositPeriods[0].map((periodId: bigint, index: number) => {
-                          const periodInfo = depositPeriods[1]?.[index] as PeriodInfo;
+                          const periodInfo = depositPeriods[1]?.[index];
                           if (!periodInfo) return null;
 
-                          const maturityDate = new Date(Number(periodInfo.maturityDate) * 1000);
-                          const totalYield = Number(periodInfo.totalYield) / 1e18; // Convert from wei
+                          // Get period status for subtle indication
                           const isActive = periodInfo.isActive;
 
                           return (
                             <SelectItem
                               key={periodId.toString()}
                               value={periodId.toString()}
-                              className="text-white hover:bg-[#3A3A3A] py-3"
+                              className="text-white hover:bg-[#3A3A3A] focus:bg-[#3A3A3A] data-[highlighted]:bg-[#3A3A3A] py-3 px-4 cursor-pointer"
                             >
-                              <div className="flex flex-col space-y-1">
-                                <div className="flex items-center justify-between">
-                                  <span className="font-medium">Period {periodId.toString()}</span>
-                                  <span className={`text-xs px-2 py-1 rounded ${
-                                    isActive ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400'
-                                  }`}>
-                                    {isActive ? 'Active' : 'Inactive'}
-                                  </span>
-                                </div>
-                                <div className="text-xs text-gray-400">
-                                  Matures: {maturityDate.toLocaleDateString()}
-                                  {totalYield > 0 && (
-                                    <span className="ml-2 text-blue-400">
-                                      Yield: {totalYield.toFixed(2)} USDC
-                                    </span>
-                                  )}
-                                </div>
+                              <div className="flex items-center justify-between w-full gap-4">
+                                <span className="font-medium">Period {periodId.toString()}</span>
+                                <span className={`text-xs px-2 py-1 rounded flex-shrink-0 ${
+                                  isActive ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400'
+                                }`}>
+                                  {isActive ? 'Active' : 'Inactive'}
+                                </span>
                               </div>
                             </SelectItem>
                           );
@@ -731,67 +769,51 @@ export function YieldDistributionTab() {
                     disabled={isDistributePending || !distributeForm.poolAddress || isLoadingDistributePeriods}
                   >
                     <SelectTrigger className="bg-[#2A2A2A]/50 border-[#3A3A3A] text-white">
-                      <SelectValue placeholder={isLoadingDistributePeriods ? "Loading periods..." : "Select period..."} />
+                      <SelectValue placeholder={isLoadingDistributePeriods ? "Loading periods..." : "Select period..."}>
+                        {distributeForm.periodId ? `Period ${distributeForm.periodId}` : (isLoadingDistributePeriods ? "Loading periods..." : "Select period...")}
+                      </SelectValue>
                     </SelectTrigger>
-                    <SelectContent className="bg-[#2A2A2A] border-[#3A3A3A] max-h-60">
+                    <SelectContent className="bg-[#2A2A2A] border-[#3A3A3A] max-h-60 w-full">
                       {isLoadingDistributePeriods ? (
                         <div className="p-4 text-center text-gray-400">
                           Loading periods...
                         </div>
                       ) : distributePeriods && distributePeriods[0] && distributePeriods[0].length > 0 ? (
-                        distributePeriods[0].map((periodId: bigint, index: number) => {
-                          const periodInfo = distributePeriods[1]?.[index] as PeriodInfo;
-                          if (!periodInfo) return null;
+                        distributePeriods[0]
+                          .map((periodId: bigint, index: number) => {
+                            const periodInfo = distributePeriods[1]?.[index];
+                            if (!periodInfo) return null;
+                            
+                            // For distribute, only show matured periods with yield
+                            const isMatured = Date.now() >= Number(periodInfo.maturityDate) * 1000;
+                            const hasYield = Number(periodInfo.totalYield || 0) > 0;
+                            const isActive = periodInfo.isActive;
+                            
+                            if (!isMatured || !hasYield) return null;
 
-                          const maturityDate = new Date(Number(periodInfo.maturityDate) * 1000);
-                          const totalYield = Number(periodInfo.totalYield) / 1e18; // Convert from wei
-                          const isMatured = Date.now() >= Number(periodInfo.maturityDate) * 1000;
-                          const isActive = periodInfo.isActive;
-
-                          return (
-                            <SelectItem
-                              key={periodId.toString()}
-                              value={periodId.toString()}
-                              className="text-white hover:bg-[#3A3A3A] py-3"
-                            >
-                              <div className="flex flex-col space-y-1">
-                                <div className="flex items-center justify-between">
+                            return (
+                              <SelectItem
+                                key={periodId.toString()}
+                                value={periodId.toString()}
+                                className="text-white hover:bg-[#3A3A3A] focus:bg-[#3A3A3A] data-[highlighted]:bg-[#3A3A3A] py-3 px-4 cursor-pointer"
+                              >
+                                <div className="flex items-center justify-between w-full gap-4">
                                   <span className="font-medium">Period {periodId.toString()}</span>
-                                  <div className="flex items-center space-x-2">
+                                  <div className="flex items-center gap-2 flex-shrink-0">
                                     <span className={`text-xs px-2 py-1 rounded ${
-                                      isMatured ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'
+                                      isActive ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400'
                                     }`}>
-                                      {isMatured ? 'Ready' : 'Pending'}
+                                      {isActive ? 'Active' : 'Inactive'}
                                     </span>
-                                    {!isActive && (
-                                      <span className="text-xs px-2 py-1 rounded bg-gray-500/20 text-gray-400">
-                                        Inactive
-                                      </span>
-                                    )}
+                                    <span className="text-xs px-2 py-1 rounded bg-blue-500/20 text-blue-400">
+                                      Ready
+                                    </span>
                                   </div>
                                 </div>
-                                <div className="text-xs text-gray-400">
-                                  Maturity: {maturityDate.toLocaleDateString()}
-                                  {totalYield > 0 && (
-                                    <span className="ml-2 text-blue-400">
-                                      Available: {totalYield.toFixed(2)} USDC
-                                    </span>
-                                  )}
-                                </div>
-                                {isMatured && isActive && (
-                                  <div className="text-xs text-green-400">
-                                    ✓ Ready for distribution
-                                  </div>
-                                )}
-                                {!isMatured && (
-                                  <div className="text-xs text-yellow-400">
-                                    ⏳ Waiting for maturity date
-                                  </div>
-                                )}
-                              </div>
-                            </SelectItem>
-                          );
-                        })
+                              </SelectItem>
+                            );
+                          })
+                          .filter(Boolean)
                       ) : (
                         <div className="p-4 text-center text-gray-400">
                           {distributeForm.poolAddress ?
