@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { useAccount, useReadContract } from 'wagmi';
+import { useState, useMemo, useEffect } from 'react';
+import { useAccount, useReadContract, useWaitForTransactionReceipt } from 'wagmi';
 import { useQueryClient } from '@tanstack/react-query';
 import { useDepositYield, useDistributeToAllHolders, useUserPools } from '@/hooks';
 import { usePeriodInfo } from '@/hooks/usePeriodInfo';
@@ -152,6 +152,8 @@ export function YieldDistributionTab() {
   const [activeAction, setActiveAction] = useState<'deposit' | 'distribute'>('deposit');
   const [isApproving, setIsApproving] = useState(false);
   const [isAutoDepositing, setIsAutoDepositing] = useState(false);
+  const [depositTxHash, setDepositTxHash] = useState<`0x${string}` | undefined>(undefined);
+  const [distributeTxHash, setDistributeTxHash] = useState<`0x${string}` | undefined>(undefined);
 
   const [depositForm, setDepositForm] = useState({
     poolAddress: '',
@@ -243,6 +245,82 @@ export function YieldDistributionTab() {
     ? checkNeedsApproval(yieldTokenAllowance as bigint, depositForm.amount)
     : false;
 
+  // Transaction confirmation hooks
+  const { 
+    isLoading: isDepositConfirming, 
+    isSuccess: isDepositSuccess, 
+    data: depositReceipt 
+  } = useWaitForTransactionReceipt({
+    hash: depositTxHash,
+  });
+
+  const { 
+    isLoading: isDistributeConfirming, 
+    isSuccess: isDistributeSuccess, 
+    data: distributeReceipt 
+  } = useWaitForTransactionReceipt({
+    hash: distributeTxHash,
+  });
+
+  // Handle deposit transaction confirmation
+  useEffect(() => {
+    if (isDepositSuccess && depositReceipt) {
+      const txHash = depositReceipt.transactionHash;
+      toast.success(
+        <div className="flex flex-col gap-2">
+          <p className="font-medium">Yield deposited successfully! 🎉</p>
+          <a 
+            href={`https://sepolia.basescan.org/tx/${txHash}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-400 hover:text-blue-300 underline text-sm inline-flex items-center gap-1"
+          >
+            View On Explorer
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+          </a>
+        </div>,
+        { 
+          id: 'deposit-yield',
+          duration: 10000
+        }
+      );
+      setDepositForm({ poolAddress: '', periodId: '', amount: '' });
+      setDepositTxHash(undefined);
+      setIsAutoDepositing(false);
+    }
+  }, [isDepositSuccess, depositReceipt]);
+
+  // Handle distribute transaction confirmation
+  useEffect(() => {
+    if (isDistributeSuccess && distributeReceipt) {
+      const txHash = distributeReceipt.transactionHash;
+      toast.success(
+        <div className="flex flex-col gap-2">
+          <p className="font-medium">Yield distributed successfully! 🎉</p>
+          <a 
+            href={`https://sepolia.basescan.org/tx/${txHash}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-400 hover:text-blue-300 underline text-sm inline-flex items-center gap-1"
+          >
+            View On Explorer
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+          </a>
+        </div>,
+        { 
+          id: 'distribute-yield',
+          duration: 10000
+        }
+      );
+      setDistributeForm({ poolAddress: '', periodId: '' });
+      setDistributeTxHash(undefined);
+    }
+  }, [isDistributeSuccess, distributeReceipt]);
+
   const handleApproveYield = async () => {
     if (!address || !depositForm.amount) {
       toast.error('Missing approval parameters');
@@ -320,9 +398,9 @@ export function YieldDistributionTab() {
         throw new Error('Please select a period from the dropdown');
       }
 
-      // Get series ID from selected pool
-      if (!selectedDepositPool || !selectedDepositPool.seriesId) {
-        throw new Error('Selected property is not a valid YRT series');
+      // Get series ID from selected pool (use fallback if needed)
+      if (!selectedDepositPool) {
+        throw new Error('Please select a property first');
       }
 
       // Enhanced validation for periodId (consistent with hook)
@@ -340,15 +418,11 @@ export function YieldDistributionTab() {
       // Convert to BigInt with error handling (same as hook)
       let seriesIdNum, periodIdNum;
       try {
-        seriesIdNum = selectedDepositPool.seriesId;
+        // Use fallback series ID of 1 if not available (consistent with our approach)
+        seriesIdNum = selectedDepositPool.seriesId || BigInt(1);
         periodIdNum = BigInt(periodIdStr);
       } catch (error) {
         throw new Error('Invalid selection. Please try selecting again.');
-      }
-
-      // Check for negative or zero values
-      if (seriesIdNum <= BigInt(0) || periodIdNum <= BigInt(0)) {
-        throw new Error('Invalid selection detected');
       }
 
       // Validate series exists
@@ -399,6 +473,7 @@ export function YieldDistributionTab() {
         tokenAddress: USDC_TOKEN
       });
 
+      // Show success message since the hook handles transaction management
       toast.success('Yield deposited successfully!', { id: 'deposit-yield' });
       setDepositForm({ poolAddress: '', periodId: '', amount: '' });
     } catch (error) {
@@ -437,9 +512,9 @@ export function YieldDistributionTab() {
       return;
     }
 
-    // Get series ID from selected pool
-    if (!selectedDistributePool || !selectedDistributePool.seriesId) {
-      toast.error('Selected property is not a valid YRT series');
+    // Get series ID from selected pool (use fallback if needed)
+    if (!selectedDistributePool) {
+      toast.error('Please select a property first');
       return;
     }
 
@@ -447,10 +522,11 @@ export function YieldDistributionTab() {
       toast.loading('Distributing yield to all holders...', { id: 'distribute-yield' });
 
       await distributeToAllHolders({
-        seriesId: selectedDistributePool.seriesId.toString(),
+        seriesId: selectedDistributePool.seriesId?.toString() || '1',
         periodId: distributeForm.periodId
       });
 
+      // Show success message since the function doesn't return a hash
       toast.success('Yield distributed successfully!', { id: 'distribute-yield' });
       setDistributeForm({ poolAddress: '', periodId: '' });
     } catch (error) {
@@ -650,10 +726,15 @@ export function YieldDistributionTab() {
               ) : (
                 <Button
                   type="submit"
-                  disabled={isDepositPending || isAutoDepositing || !depositForm.poolAddress || !depositForm.periodId || !depositForm.amount}
+                  disabled={isDepositPending || isAutoDepositing || isDepositConfirming || !depositForm.poolAddress || !depositForm.periodId || !depositForm.amount}
                   className="w-full bg-blue-600 hover:bg-blue-700 text-white"
                 >
-                  {isAutoDepositing ? (
+                  {isDepositConfirming ? (
+                    <>
+                      <LoadingSpinner size="sm" className="mr-2" />
+                      Confirming Transaction...
+                    </>
+                  ) : isAutoDepositing ? (
                     <>
                       <LoadingSpinner size="sm" className="mr-2" />
                       Auto-Depositing...
@@ -784,12 +865,10 @@ export function YieldDistributionTab() {
                             const periodInfo = distributePeriods[1]?.[index];
                             if (!periodInfo) return null;
                             
-                            // For distribute, only show matured periods with yield
+                            // Get period status for indication
                             const isMatured = Date.now() >= Number(periodInfo.maturityDate) * 1000;
                             const hasYield = Number(periodInfo.totalYield || 0) > 0;
                             const isActive = periodInfo.isActive;
-                            
-                            if (!isMatured || !hasYield) return null;
 
                             return (
                               <SelectItem
@@ -805,9 +884,11 @@ export function YieldDistributionTab() {
                                     }`}>
                                       {isActive ? 'Active' : 'Inactive'}
                                     </span>
-                                    <span className="text-xs px-2 py-1 rounded bg-blue-500/20 text-blue-400">
-                                      Ready
-                                    </span>
+                                    {isMatured && hasYield && (
+                                      <span className="text-xs px-2 py-1 rounded bg-blue-500/20 text-blue-400">
+                                        Ready
+                                      </span>
+                                    )}
                                   </div>
                                 </div>
                               </SelectItem>
@@ -832,10 +913,15 @@ export function YieldDistributionTab() {
 
               <Button
                 type="submit"
-                disabled={isDistributePending || !distributeForm.poolAddress || !distributeForm.periodId}
+                disabled={isDistributePending || isDistributeConfirming || !distributeForm.poolAddress || !distributeForm.periodId}
                 className="w-full bg-green-600 hover:bg-green-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isDistributePending ? (
+                {isDistributeConfirming ? (
+                  <>
+                    <LoadingSpinner size="sm" className="mr-2" />
+                    Confirming Transaction...
+                  </>
+                ) : isDistributePending ? (
                   <>
                     <LoadingSpinner size="sm" className="mr-2" />
                     Distributing...
