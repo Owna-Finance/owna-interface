@@ -18,20 +18,21 @@ export function PeriodManagementTab() {
   const { address } = useAccount();
   const { startNewPeriod, isPending } = useStartNewPeriod();
 
-  // Fetch YRT series from user pools (more reliable approach)
+  // Fetch user pools - exactly like Add Liquidity component  
   const { pools, isLoading: isLoadingPools, error: poolsError } = useUserPools();
 
-  // Extract YRT series from pools
+  // Extract YRT series from user pools
   const yrtSeries = useMemo(() => {
     if (!pools) return [];
-    return pools.filter(pool => pool.isYRTPool);
+    // For period management, show ALL pools (not just YRT pools) to allow starting periods for any property
+    return pools;
   }, [pools]);
 
   const isLoadingSeries = isLoadingPools;
   const seriesError = poolsError;
 
   const [formData, setFormData] = useState({
-    seriesId: '',
+    poolAddress: '',
     durationSeconds: '2592000' // 30 days in seconds
   });
 
@@ -43,8 +44,15 @@ export function PeriodManagementTab() {
       return;
     }
 
-    if (!formData.seriesId || !formData.durationSeconds) {
+    if (!formData.poolAddress || !formData.durationSeconds) {
       toast.error('Please fill in all fields');
+      return;
+    }
+
+    // Find the selected pool to get its series ID
+    const selectedPool = yrtSeries.find(pool => pool.poolAddress === formData.poolAddress);
+    if (!selectedPool || !selectedPool.seriesId) {
+      toast.error('Please select a valid YRT property');
       return;
     }
 
@@ -52,13 +60,13 @@ export function PeriodManagementTab() {
       toast.loading('Starting new period...', { id: 'start-period' });
 
       await startNewPeriod({
-        seriesId: formData.seriesId,
+        seriesId: selectedPool.seriesId.toString(),
         durationInSeconds: parseInt(formData.durationSeconds)
       });
 
       toast.success('New period started successfully!', { id: 'start-period' });
 
-      setFormData({ seriesId: '', durationSeconds: '2592000' });
+      setFormData({ poolAddress: '', durationSeconds: '2592000' });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to start period', {
         id: 'start-period'
@@ -87,8 +95,8 @@ export function PeriodManagementTab() {
               <div className="space-y-2">
                 <Label htmlFor="seriesId" className="text-gray-300">Select Property</Label>
                 <Select
-                  value={formData.seriesId}
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, seriesId: value }))}
+                  value={formData.poolAddress}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, poolAddress: value }))}
                   disabled={isPending}
                 >
                   <SelectTrigger className="bg-[#2A2A2A]/50 border-[#3A3A3A] text-white">
@@ -111,7 +119,7 @@ export function PeriodManagementTab() {
                       yrtSeries.map((pool) => (
                         <SelectItem
                           key={pool.poolAddress}
-                          value={pool.seriesId?.toString() || ''}
+                          value={pool.poolAddress}
                           className="text-white hover:bg-[#3A3A3A] py-3"
                         >
                           <div className="flex items-center space-x-3">
@@ -127,7 +135,7 @@ export function PeriodManagementTab() {
                             <div className="flex flex-col">
                               <span className="font-medium">{pool.propertyName}</span>
                               <span className="text-xs text-gray-400">
-                                Series #{pool.seriesId?.toString() || 'N/A'} • {pool.token0Symbol}/{pool.token1Symbol}
+                                {pool.isYRTPool && pool.seriesId ? `Series #${pool.seriesId.toString()} • ` : ''}{pool.token0Symbol}/{pool.token1Symbol}
                               </span>
                             </div>
                           </div>
@@ -175,7 +183,7 @@ export function PeriodManagementTab() {
 
             <Button
               type="submit"
-              disabled={isPending || !address || !formData.seriesId}
+              disabled={isPending || !address || !formData.poolAddress}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium"
             >
               {isPending ? (

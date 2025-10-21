@@ -126,7 +126,7 @@ export default function PoolManagerPage() {
 
           {/* Main Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6 sm:space-y-8">
-            <TabsList className="bg-[#1A1A1A]/40 backdrop-blur-sm border border-[#2A2A2A]/50 p-1.5 sm:p-2 rounded-2xl grid w-full grid-cols-5 sm:grid-cols-5 gap-1 sm:gap-2 overflow-x-auto">
+            <TabsList className="bg-[#1A1A1A]/40 backdrop-blur-sm border border-[#2A2A2A]/50 p-1.5 sm:p-2 rounded-2xl grid w-full grid-cols-5 sm:grid-cols-5 gap-1 sm:gap-2">
               <TabsTrigger
                 value="overview"
                 className="flex items-center justify-center space-x-1 sm:space-x-2 data-[state=active]:bg-white data-[state=active]:text-black transition-all duration-300 px-2 sm:px-4 py-2 sm:py-3 rounded-xl text-xs sm:text-sm"
