@@ -43,24 +43,8 @@ export function useDistributeToAllHolders() {
     }
   };
 
-  // Handle transaction success and error states
-  useEffect(() => {
-    if (isSuccess && hash) {
-      toast.success('Distribution completed successfully!', {
-        id: 'distribute-toast',
-        style: {
-          background: '#111111',
-          border: '1px solid #2A2A2A',
-          color: '#ffffff',
-        },
-        duration: 5000,
-        action: {
-          label: 'View Transaction',
-          onClick: () => window.open(`https://sepolia.basescan.org/tx/${hash}`, '_blank')
-        }
-      });
-    }
-  }, [isSuccess, hash]);
+  // Success toast is now handled by the component to avoid conflicts
+  // Removed success toast from hook to prevent duplicate toasts
 
   useEffect(() => {
     if (error) {
@@ -74,19 +58,6 @@ export function useDistributeToAllHolders() {
       });
     }
   }, [error]);
-
-  useEffect(() => {
-    if (isConfirming) {
-      toast.loading('Confirming distribution transaction...', {
-        id: 'distribute-toast',
-        style: {
-          background: '#111111',
-          border: '1px solid #2A2A2A',
-          color: '#ffffff',
-        }
-      });
-    }
-  }, [isConfirming]);
 
   return {
     distributeToAllHolders,

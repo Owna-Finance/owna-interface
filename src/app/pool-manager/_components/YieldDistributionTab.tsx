@@ -116,7 +116,7 @@ function EnhancedPeriodItem({
         )}
         {isValidMaturityDate && isMatured && isActive && type === 'distribute' && (
           <div className="text-green-400 text-xs font-medium mt-1">
-            ✓ Ready for distribution
+            Ready for distribution
           </div>
         )}
       </div>
