@@ -23,6 +23,7 @@ export { useDEX } from './useDEX';
 export { useSwap } from './useSwap';
 export { useSecondaryMarket } from './useSecondaryMarket';
 export { useBuyTokenMarket } from './useBuyTokenMarket';
+export { useFaucet, type TokenType } from './useFaucet';
 export {
   useLiquidityPoolsData,
   usePoolDetails,

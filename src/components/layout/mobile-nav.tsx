@@ -14,7 +14,9 @@ import {
   ArrowRightLeft, 
   Layers, 
   Droplet,
-  Plus
+  Plus,
+  Droplets,
+  Settings
 } from 'lucide-react';
 
 interface MobileNavProps {
@@ -28,9 +30,19 @@ const navigationItems = [
     icon: LayoutDashboard
   },
   {
-    name: 'Create YRT',
-    href: '/create-yrt',
+    name: 'Add Property',
+    href: '/add-property',
     icon: Plus
+  },
+  {
+    name: 'Pool Manager',
+    href: '/pool-manager',
+    icon: Settings
+  },
+  {
+    name: 'DEX',
+    href: '/dex',
+    icon: ArrowRightLeft
   },
   {
     name: 'Market',
@@ -38,14 +50,9 @@ const navigationItems = [
     icon: Layers
   },
   {
-    name: 'Pools',
-    href: '/pools',
-    icon: Droplet
-  },
-  {
-    name: 'Swap',
-    href: '/swap',
-    icon: ArrowRightLeft
+    name: 'Faucet',
+    href: '/faucet',
+    icon: Droplets
   }
 ];
 
