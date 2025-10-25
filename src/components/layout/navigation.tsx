@@ -10,7 +10,8 @@ import {
   ArrowRightLeft,
   Layers,
   Plus,
-  Settings
+  Settings,
+  Droplets
 } from 'lucide-react';
 
 interface NavigationProps {
@@ -42,6 +43,11 @@ const navigationItems = [
     name: 'Market',
     href: '/market',
     icon: Layers
+  },
+  {
+    name: 'Faucet',
+    href: '/faucet',
+    icon: Droplets
   }
 ];
 
